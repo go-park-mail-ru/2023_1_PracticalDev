@@ -1,0 +1,23 @@
+name: Backend CI
+
+on:
+  push:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILDKIT: "1"
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: Jerome1337/gofmt-action@v1.0.4
+      
+      - name: Start DB
+        run: make db
+
+      - name: Run linter
+        run: make lint
+
+      - name: Run unit tests
+        run: make unit-test
