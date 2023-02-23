@@ -21,7 +21,7 @@ RUN --mount=target=. \
 FROM scratch AS coverage
 COPY --from=unit-test /out/cover.out /cover.out
 
-FROM golangci/golangci-lint:v1.43-alpine AS lint-base
+FROM golangci/golangci-lint:v1.51.2-alpine AS lint-base
 
 FROM base AS lint
 RUN --mount=target=. \
