@@ -21,6 +21,15 @@ RUN --mount=target=. \
 FROM scratch AS coverage
 COPY --from=unit-test /out/cover.out /cover.out
 
+FROM golang:1.19.6-alpine3.17 AS print-coverage
+WORKDIR /src
+COPY --from=unit-test /out/cover.out /cover.out
+RUN --mount=target=.,rw=true \
+    --mount=type=cache,target=/go/pkg/mod \
+    --mount=type=cache,target=/root/.cache/go-build \
+    go tool cover -func /cover.out > /out.stat
+CMD [ "cat", "/out.stat" ]
+
 FROM golangci/golangci-lint:v1.51.2-alpine AS lint-base
 
 FROM base AS lint
