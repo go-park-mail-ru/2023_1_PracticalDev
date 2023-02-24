@@ -40,6 +40,13 @@ services:
       restart_policy:
         condition: on-failure
 
+  nginx:
+    image: nginx
+    container_name: nginx_container
+    volumes:
+      - ./pickpin.conf:/etc/nginx/conf.d/pickpin.conf
+    network_mode: host
+
 networks:
   host:
     driver: bridge
