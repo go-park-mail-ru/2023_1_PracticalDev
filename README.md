@@ -14,6 +14,8 @@
 | make db             | Поднимает базу данных                      |
 | make deploy         | Поднимает фронт, бек, доку и бд            |
 
-Фронтенд доступен на [localhost](localhost) или [localhost:8000](localhost:8000)
-Бэкенд доступен на [localhost/api](localhost/api) или [localhost:8080](localhost:8080)
-OpenAPI доступен на [localhost/api/docs](localhost/api/docs)
+Фронтенд доступен на [localhost](http://localhost) или [localhost:8000](http://localhost:8000)
+
+Бэкенд доступен на [localhost/api](http://localhost/api) или [localhost:8080](http://localhost:8080)
+
+OpenAPI доступен на [localhost/api/docs](http://localhost/api/docs)
