@@ -3,6 +3,8 @@ package main
 import (
 	"fmt"
 	"net/http"
+
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 )
 
 func main() {
@@ -19,6 +21,8 @@ func main() {
 		Addr:    "0.0.0.0:8080",
 		Handler: mux,
 	}
+
+	db.Connect()
 
 	fmt.Println(server.ListenAndServe())
 }

@@ -24,7 +24,10 @@ jobs:
       - uses: actions/checkout@v3
 
       - name: Start DB
-        run: make db
+        run: make db && ./scripts/check_db_available.sh
+
+      - name: Run migrations
+        run: ./scripts/run_migrations.sh
 
       - name: Run unit tests
         run: make unit-test

@@ -30,6 +30,10 @@ lint:
 db:
 	docker compose -f docker-compose.yml up -d db
 
+.PHONY: migrations
+migrations:
+	./scripts/run_migrations.sh
+
 .PHONY: deploy
 deploy:
 	docker compose -f docker-compose.yml up -d
