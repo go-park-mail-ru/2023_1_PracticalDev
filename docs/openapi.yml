@@ -1,27 +1,231 @@
 openapi: 3.0.0
 
 info:
-  title: Sample API
-  description: Optional multiline or single-line description in [CommonMark](http://commonmark.org/help/) or HTML.
+  title: PickPin API
   version: 0.1.9
+  contact:
+    name: Grechko Georgy
+    url: t.me/geogreck
+
 
 servers:
-  - url: http://api.example.com/v1
-    description: Optional server description, e.g. Main (production) server
-  - url: http://staging-api.example.com
-    description: Optional server description, e.g. Internal staging server for testing
-    
+  - url: http://localhost/api/v1
+    description: Main server
+  - url: http://localhost/api/v0
+    description: Internal test server, powered by Express.js
+
+tags:
+  - name: Users
+  - name: Auth
+
 paths:
-  /users:
+  /users/{user_id}:
+    parameters:
+      - schema:
+          type: integer
+        name: id
+        in: path
+        required: true
     get:
-      summary: Returns a list of users.
-      description: Optional extended description in CommonMark or HTML.
+      summary: Returns user with specified id
       responses:
         "200": # status code
-          description: A JSON array of user names
+          description: A JSON of user
           content:
             application/json:
               schema:
-                type: array
-                items:
-                  type: string
+                $ref: "#/components/schemas/User"
+      tags:
+        - Users
+      security:
+        - cookieAuth: []
+  /auth/signup:
+    post:
+      summary: Creates new user and returnes authentication cookie.
+      security: []
+      tags:
+        - Auth
+      requestBody:
+        required: true
+        description: A JSON object containing the login and password.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - properties:
+                    email:
+                      $ref: "#/components/schemas/Email"
+                - properties:
+                    password:
+                      $ref: "#/components/schemas/Password"
+      responses:
+        "201":
+          description: >
+            Successfully created user.
+            The session ID is returned in a cookie named `JSESSIONID`. 
+            You need to include this cookie in subsequent requests.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: JSESSIONID=abcde12345; Path=/; HttpOnly
+        "400":
+          description: Bad request.
+          $ref: "#/components/responses/ErrResponseBadRequest"
+
+  /auth/login:
+    post:
+      summary: Logs in and returns the authentication cookie
+      requestBody:
+        required: true
+        description: A JSON object containing the login and password.
+        content:
+          application/json:
+            schema:
+              allOf:
+                - properties:
+                    email:
+                      $ref: "#/components/schemas/Email"
+                - properties:
+                    password:
+                      $ref: "#/components/schemas/Password"
+
+      security: []
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: >
+            Successfully authenticated.
+            The session ID is returned in a cookie named `JSESSIONID`. 
+            You need to include this cookie in subsequent requests.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: JSESSIONID=abcde12345; Path=/; HttpOnly
+        "400":
+          description: Bad request.
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          description: Not authorized.
+          $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          description: User not found
+          $ref: "#/components/responses/ErrResponseNoSuchUser"
+  /auth/logout:
+    delete:
+      summary: Logs out and deletes the authentication cookie.
+      security:
+        - cookieAuth: []
+      tags:
+        - Auth
+      responses:
+        "204":
+          description: Successfully logged out.
+        "400":
+          description: Bad request.
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          description: Not authorized.
+          $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          description: Cookie not found
+          $ref: "#/components/responses/ErrResponseNoSuchCookie"
+  /auth:
+    post:
+      summary: Updates existing authentication cookie.
+      security:
+        - cookieAuth: []
+      tags:
+        - Auth
+      responses:
+        "200":
+          description: >
+            Successfully updated cookie.
+            You need to include this cookie **now** in subsequent requests.
+          headers:
+            Set-Cookie:
+              schema:
+                type: string
+                example: JSESSIONID=abcde12345; Path=/; HttpOnly
+        "400":
+          description: Bad request.
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          description: Not authorized.
+          $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          description: Cookie not found
+          $ref: "#/components/responses/ErrResponseNoSuchCookie"
+        
+components:
+  schemas:
+    Email:
+      type: string
+      format: email
+      pattern: '/(?:[a-z0-9!#$%&*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&*+/=?^_`{|}~-]+)*|"(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21\x23-\x5b\x5d-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])*")@(?:(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?|\[(?:(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?)\.){3}(?:25[0-5]|2[0-4][0-9]|[01]?[0-9][0-9]?|[a-z0-9-]*[a-z0-9]:(?:[\x01-\x08\x0b\x0c\x0e-\x1f\x21-\x5a\x53-\x7f]|\\[\x01-\x09\x0b\x0c\x0e-\x7f])+)\])/'
+      example: vk@mail.ru
+    Password:
+      type: string
+      format: password
+      minLength: 8
+      maxLength: 100
+    Username:
+      type: string
+      minLength: 4
+      maxLength: 40
+      example: geogreck
+    User:
+      type: object
+      properties:
+        id:
+          type: integer
+        email:
+          $ref: "#/components/schemas/Email"
+        username:
+          $ref: "#/components/schemas/Username"
+    Error:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Error title
+        status:
+          type: integer
+          description: HTTP status code
+        detail:
+          type: string
+          description: Verbose error details
+  securitySchemes:
+    cookieAuth:
+      type: apiKey
+      in: cookie
+      name: SESSIONID
+  responses:
+    ErrResponseBadRequest:
+      description: Bad request
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrResponseNoSuchUser:
+      description: User not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrResponseNoSuchCookie:
+      description: Cookie not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrUnauthorized:
+      description: Not authorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+
+
