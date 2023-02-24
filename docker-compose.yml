@@ -28,6 +28,18 @@ services:
     networks:
       - host
 
+  docs:
+    image: nginx
+    container_name: docs
+    volumes:
+      - ./docs/index.html:/usr/share/nginx/html/index.html:ro
+      - ./docs/openapi.yml:/usr/share/nginx/html/openapi.yml:ro
+    ports:
+      - 8081:80
+    deploy:
+      restart_policy:
+        condition: on-failure
+
 networks:
   host:
     driver: bridge
