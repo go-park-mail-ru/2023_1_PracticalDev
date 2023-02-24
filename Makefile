@@ -29,3 +29,7 @@ lint:
 .PHONY: db
 db:
 	docker compose -f docker-compose.yml up -d db
+
+.PHONY: deploy
+deploy:
+	docker compose -f docker-compose.yml up -d

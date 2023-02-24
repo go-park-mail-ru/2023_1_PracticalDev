@@ -12,3 +12,8 @@
 | make coverage       | Генерирует coverage.out                    |
 | make lint           | Запускает проверку линтером                |
 | make db             | Поднимает базу данных                      |
+| make deploy         | Поднимает фронт, бек, доку и бд            |
+
+Фронтенд доступен на [localhost](localhost) или [localhost:8000](localhost:8000)
+Бэкенд доступен на [localhost/api](localhost/api) или [localhost:8080](localhost:8080)
+OpenAPI доступен на [localhost/api/docs](localhost/api/docs)
