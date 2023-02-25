@@ -1,13 +1,27 @@
 package users
 
 import (
-	"errors"
-	"strconv"
+	"log"
+	"net/http"
+
+	"github.com/julienschmidt/httprouter"
 )
 
-func GetUser(id int) (string, error) {
-	if id < 1000 {
-		return "Got user with id:" + strconv.Itoa(id), nil
+func chainLogger(handler httprouter.Handle, logger *log.Logger) httprouter.Handle {
+	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+		logger.Println("New request from:", r.RemoteAddr)
+		handler(w, r, p)
 	}
-	return "", errors.New("404: User not found")
+}
+
+func RegisterHandlers(mux *httprouter.Router, logger *log.Logger) {
+	mux.GET("/users/:id", chainLogger(getUser, logger))
+}
+
+func getUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
+	id := p.ByName("id")
+	_, err := w.Write([]byte("{user : {id:" + id + "}}"))
+	if err != nil {
+		return
+	}
 }

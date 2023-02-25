@@ -3,8 +3,9 @@ module github.com/go-park-mail-ru/2023_1_PracticalDev
 go 1.18
 
 require (
+	github.com/julienschmidt/httprouter v1.3.0
 	github.com/lib/pq v1.10.7
-	github.com/stretchr/testify v1.8.1
+	github.com/stretchr/testify v1.8.2
 )
 
 require (

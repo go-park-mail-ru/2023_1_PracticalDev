@@ -1,28 +1,35 @@
 package main
 
 import (
-	"fmt"
+	"log"
 	"net/http"
+	"os"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users"
+	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
-	mux := http.NewServeMux()
+	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
 
-	mux.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		_, err := w.Write([]byte("Hello World!"))
-		if err != nil {
-			fmt.Println(err)
-		}
-	})
+	_, err := db.New(logger)
+	if err != nil {
+		return
+	}
+
+	mux := httprouter.New()
+
+	users.RegisterHandlers(mux, logger)
 
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
 		Handler: mux,
 	}
 
-	db.Connect()
-
-	fmt.Println(server.ListenAndServe())
+	logger.Println("Starting server...")
+	err = server.ListenAndServe()
+	if err != nil {
+		logger.Printf("Failed to start server, %s", err.Error())
+	}
 }
