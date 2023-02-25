@@ -18,7 +18,10 @@ func ErrorHandler(handler func(w http.ResponseWriter, r *http.Request, p httprou
 		err := handler(w, r, p)
 		if err != nil {
 			log.Error(err)
-			w.Write([]byte(err.Error()))
+			_, err = w.Write([]byte(err.Error()))
+			if err != nil {
+				log.Error(err)
+			}
 		}
 	}
 }
