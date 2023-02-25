@@ -1,35 +1,35 @@
 package main
 
 import (
-	"log"
 	"net/http"
 	"os"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users"
 	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
-	logger := log.New(os.Stdout, "", log.Ldate|log.Ltime)
+	logger := log.New()
 
-	_, err := db.New(logger)
+	db, err := db.New(logger)
 	if err != nil {
-		return
+		os.Exit(1)
 	}
 
 	mux := httprouter.New()
 
-	users.RegisterHandlers(mux, logger)
+	users.RegisterHandlers(mux, logger, users.NewService(users.NewRepository(db, logger)))
 
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
 		Handler: mux,
 	}
 
-	logger.Println("Starting server...")
+	logger.Info("Starting server...")
 	err = server.ListenAndServe()
 	if err != nil {
-		logger.Printf("Failed to start server, %s", err.Error())
+		logger.Error("Failed to start server, ", err.Error())
 	}
 }

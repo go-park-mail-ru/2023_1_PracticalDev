@@ -1,27 +1,46 @@
 package users
 
 import (
-	"log"
+	"encoding/json"
 	"net/http"
+	"strconv"
 
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/julienschmidt/httprouter"
 )
 
-func chainLogger(handler httprouter.Handle, logger *log.Logger) httprouter.Handle {
-	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		logger.Println("New request from:", r.RemoteAddr)
-		handler(w, r, p)
-	}
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv Service) {
+	del := delivery{serv, logger}
+
+	mux.GET("/users/:id", middleware.Logger(middleware.ErrorHandler(del.getUser, logger), logger))
 }
 
-func RegisterHandlers(mux *httprouter.Router, logger *log.Logger) {
-	mux.GET("/users/:id", chainLogger(getUser, logger))
+type delivery struct {
+	serv Service
+	log  log.Logger
 }
 
-func getUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-	id := p.ByName("id")
-	_, err := w.Write([]byte("{user : {id:" + id + "}}"))
+func (del delivery) getUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	str_id := p.ByName("id")
+	id, err := strconv.Atoi(str_id)
 	if err != nil {
-		return
+		w.WriteHeader(http.StatusBadRequest)
+		return err
 	}
+
+	user, err := del.serv.GetUser(id)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return err
+	}
+
+	data, err := json.Marshal(user)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return err
+	}
+
+	_, err = w.Write(data)
+	return err
 }
