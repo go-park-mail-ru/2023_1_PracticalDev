@@ -1,0 +1,22 @@
+name: Openapi CI
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+    paths:
+      - "**/openapi.yml"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    env:
+      DOCKER_BUILDKIT: "1"
+    defaults:
+      run:
+        working-directory: docs/
+    steps:
+    - uses: actions/checkout@v3
+    - name: Run linter
+      run: make lint

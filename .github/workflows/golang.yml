@@ -1,0 +1,36 @@
+name: Backend CI
+
+on:
+  push:
+
+env:
+  DOCKER_BUILDKIT: "1"
+
+jobs:
+  Lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - uses: Jerome1337/gofmt-action@v1.0.4
+
+      - name: Run lint
+        run: make lint
+
+  Unit-test:
+    runs-on: ubuntu-latest
+    needs: [Lint]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Start DB
+        run: make db && ./scripts/check_db_available.sh
+
+      - name: Run migrations
+        run: ./scripts/run_migrations.sh
+
+      - name: Run unit tests
+        run: make unit-test
+
+      - name: Get coverage
+        run: make print-coverage
