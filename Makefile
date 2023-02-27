@@ -30,6 +30,10 @@ lint:
 db:
 	docker compose -f docker-compose.yml up -d db
 
+.PHONY: redis
+redis:
+	docker compose -f docker-compose.yml up -d redis
+
 .PHONY: migrations
 migrations:
 	./scripts/run_migrations.sh
