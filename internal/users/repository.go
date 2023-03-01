@@ -2,7 +2,6 @@ package users
 
 import (
 	"database/sql"
-
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
@@ -28,6 +27,7 @@ func (rep repository) GetUser(id int) (models.User, error) {
 
 	user := models.User{}
 	rows.Next()
-	err = rows.Scan(&user.Id, &user.Email, &user.Username)
+	err = rows.Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword)
 	return user, err
 }
+

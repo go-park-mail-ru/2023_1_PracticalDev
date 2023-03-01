@@ -1,4 +1,4 @@
-INSERT INTO users(username, password, name, email, account_type)
+INSERT INTO users(username, hashed_password, name, email, account_type)
 VALUES ('geogreck', '1234', 'George', 'geogreck@vk.com', 'personal'),
        ('kirill', '1234', 'Kirill', 'figma@vk.com', 'personal'),
        ('slava', '1234', 'Slava', 'iu7@vk.com', 'personal');
