@@ -5,12 +5,12 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/posts"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/redis"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -18,17 +18,17 @@ func main() {
 	logger := log.New()
 
 	db, err := db.New(logger)
-  if err != nil {
+	if err != nil {
 		os.Exit(1)
 	}
 
-  ctx := context.Background()
-  rdb, err := redis.NewRedisClien(logger, ctx)
+	ctx := context.Background()
+	rdb, err := redis.NewRedisClien(logger, ctx)
 
-  if err != nil {
-    logger.Warn(err)
-    os.Exit(1)
-  }
+	if err != nil {
+		logger.Warn(err)
+		os.Exit(1)
+	}
 
 	mux := httprouter.New()
 

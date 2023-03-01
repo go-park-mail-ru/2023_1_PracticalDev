@@ -72,8 +72,8 @@ func (del delivery) Logout(w http.ResponseWriter, r *http.Request, p httprouter.
 		w.WriteHeader(http.StatusUnauthorized)
 		return err
 	}
- 
-  del.serv.DeleteSession(cookie.Value)
+
+	del.serv.DeleteSession(cookie.Value)
 	http.SetCookie(w, &tmp)
 	w.WriteHeader(http.StatusNoContent)
 	return nil

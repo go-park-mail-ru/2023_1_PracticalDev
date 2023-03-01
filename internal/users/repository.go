@@ -30,4 +30,3 @@ func (rep repository) GetUser(id int) (models.User, error) {
 	err = rows.Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword)
 	return user, err
 }
-
