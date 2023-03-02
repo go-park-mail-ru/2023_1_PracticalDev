@@ -6,7 +6,7 @@ if [ -z $network ];
 then
     echo No database network found
     exit 1
-else 
+else
 docker run --rm \
     -e PGPASSWORD=pickpinpswd \
     --network=$network \
