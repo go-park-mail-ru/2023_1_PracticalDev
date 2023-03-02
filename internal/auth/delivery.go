@@ -51,7 +51,12 @@ func (del delivery) Authenticate(w http.ResponseWriter, r *http.Request, p httpr
 	livingTime := 3 * time.Hour
 	expiration := time.Now().Add(livingTime)
 	cookie := http.Cookie{Name: "JSESSIONID", Value: token, Expires: expiration, HttpOnly: true}
-	del.serv.SetSession(token, user, livingTime)
+
+	if err := del.serv.SetSession(token, user, livingTime); err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
 	http.SetCookie(w, &cookie)
 	return nil
 }
@@ -73,7 +78,11 @@ func (del delivery) Logout(w http.ResponseWriter, r *http.Request, p httprouter.
 		return err
 	}
 
-	del.serv.DeleteSession(cookie.Value)
+	if err = del.serv.DeleteSession(cookie.Value); err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+		return err
+	}
+
 	http.SetCookie(w, &tmp)
 	w.WriteHeader(http.StatusNoContent)
 	return nil
