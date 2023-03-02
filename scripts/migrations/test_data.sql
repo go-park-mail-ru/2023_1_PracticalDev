@@ -6,10 +6,10 @@ VALUES ('geogreck', '1234', 'George', 'geogreck@vk.com', 'personal'),
 INSERT INTO boards(name, privacy, user_id)
 VALUES ('Notes', 'public', 1),
        ('Saved', 'public', 1),
-       ('Good images', 'private', 1),
+       ('Good images', 'secret', 1),
        ('Pictures', 'public', 2),
        ('My board', 'public', 2),
-       ('ToDo', 'private', 3);
+       ('ToDo', 'secret', 3);
 
 INSERT INTO pins(title, board_id)
 VALUES ('Road', 1),
