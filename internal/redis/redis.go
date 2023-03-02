@@ -6,7 +6,7 @@ import (
 	"github.com/redis/go-redis/v9"
 )
 
-func NewRedisClien(logger log.Logger, ctx context.Context) (*redis.Client, error) {
+func NewRedisClient(logger log.Logger, ctx context.Context) (*redis.Client, error) {
 	logger.Info("Connecting to redis...")
 
 	rdb := redis.NewClient(&redis.Options{

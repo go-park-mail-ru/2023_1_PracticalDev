@@ -23,7 +23,7 @@ func main() {
 	}
 
 	ctx := context.Background()
-	rdb, err := redis.NewRedisClien(logger, ctx)
+	rdb, err := redis.NewRedisClient(logger, ctx)
 
 	if err != nil {
 		logger.Warn(err)
