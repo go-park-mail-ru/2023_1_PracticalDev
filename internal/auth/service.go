@@ -9,8 +9,8 @@ type Service interface {
 	Authenticate(login, hashed_password string) (models.User, error)
 	Register(user models.User) error
 	SetSession(id string, user models.User, expiration time.Duration) error
-	CheckAuth(id string) error
-	DeleteSession(id string) error
+	CheckAuth(userId, sessionId string) error
+	DeleteSession(userId, sessionId string) error
 }
 
 func NewService(rep Repository) Service {
@@ -29,12 +29,12 @@ func (serv service) SetSession(id string, user models.User, expiration time.Dura
 	return serv.rep.SetSession(id, user, expiration)
 }
 
-func (serv service) CheckAuth(id string) error {
-	return serv.rep.CheckAuth(id)
+func (serv service) CheckAuth(userId, sessionId string) error {
+	return serv.rep.CheckAuth(userId, sessionId)
 }
 
-func (serv service) DeleteSession(id string) error {
-	return serv.rep.DeleteSession(id)
+func (serv service) DeleteSession(userId, sessionId string) error {
+	return serv.rep.DeleteSession(userId, sessionId)
 }
 
 func (serv service) Register(user models.User) error {

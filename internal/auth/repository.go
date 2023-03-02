@@ -6,6 +6,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"strconv"
 	"time"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
@@ -23,9 +24,9 @@ var (
 type Repository interface {
 	Authenticate(email, hashedPassword string) (models.User, error)
 	SetSession(id string, user models.User, expiration time.Duration) error
-	CheckAuth(id string) error
+	CheckAuth(userId, sessionId string) error
 	Register(user models.User) error
-	DeleteSession(id string) error
+	DeleteSession(userId, sessionId string) error
 }
 
 func NewRepository(db *sql.DB, rdb *redis.Client, ctx context.Context, log log.Logger) Repository {
@@ -59,19 +60,19 @@ func (rep repository) Authenticate(email, password string) (models.User, error) 
 	return user, nil
 }
 
-func (rep repository) SetSession(id string, user models.User, expiration time.Duration) error {
+func (rep repository) SetSession(sessionId string, user models.User, expiration time.Duration) error {
 	tmp, _ := json.Marshal(user)
-	err := rep.rdb.Set(rep.ctx, id, string(tmp), expiration).Err()
+	err := rep.rdb.HSet(rep.ctx, strconv.Itoa(user.Id), sessionId, tmp).Err()
 	return err
 }
 
-func (rep repository) CheckAuth(id string) error {
-	_, err := rep.rdb.Get(rep.ctx, id).Result()
+func (rep repository) CheckAuth(userId, sessionId string) error {
+	_, err := rep.rdb.HGet(rep.ctx, userId, sessionId).Result()
 	return err
 }
 
-func (rep repository) DeleteSession(id string) error {
-	return rep.rdb.Del(rep.ctx, id).Err()
+func (rep repository) DeleteSession(userId, sessionId string) error {
+	return rep.rdb.HDel(rep.ctx, userId, sessionId).Err()
 }
 
 func (rep repository) Register(user models.User) error {
