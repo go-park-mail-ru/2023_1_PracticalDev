@@ -2,6 +2,7 @@ package auth
 
 import (
 	"context"
+
 	"database/sql"
 	"encoding/json"
 	"errors"
@@ -10,11 +11,13 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/redis/go-redis/v9"
+	"golang.org/x/crypto/bcrypt"
 )
 
 var (
-	UserAlreadyExistsError = errors.New("user with this email already exists")
-	UserCreationError      = errors.New("Failed to create user")
+	UserAlreadyExistsError    = errors.New("user with this email already exists")
+	UserCreationError         = errors.New("failed to create user")
+	WrongPasswordOrLoginError = errors.New("wrong password or login")
 )
 
 type Repository interface {
@@ -36,13 +39,21 @@ type repository struct {
 	log log.Logger
 }
 
-func (rep repository) Authenticate(email, hashedPassword string) (models.User, error) {
-	authCommand := "SELECT * FROM users WHERE email = $1 AND hashed_password = $2"
-	row := rep.db.QueryRow(authCommand, email, hashedPassword)
+func (rep repository) Authenticate(email, password string) (models.User, error) {
+	authCommand := "SELECT * FROM users WHERE email = $1"
+	row := rep.db.QueryRow(authCommand, email)
+	if err := row.Err(); err != nil {
+		return models.User{}, WrongPasswordOrLoginError
+	}
+
 	user := models.User{}
 
 	if err := row.Scan(&user.Id, &user.Email, &user.Username, &user.HashedPassword); err != nil {
 		return models.User{}, err
+	}
+
+	if err := bcrypt.CompareHashAndPassword([]byte(user.HashedPassword), []byte(password)); err != nil {
+		return models.User{}, WrongPasswordOrLoginError
 	}
 
 	return user, nil
@@ -70,8 +81,11 @@ func (rep repository) Register(user models.User) error {
 		return UserAlreadyExistsError
 	}
 
+	hash, _ := bcrypt.GenerateFromPassword([]byte(user.HashedPassword), bcrypt.DefaultCost)
+
 	insertCommand := "INSERT INTO users (username, email, hashed_password) VALUES ($1, $2, $3)"
-	if _, err := rep.db.Exec(insertCommand, user.Username, user.Email, user.HashedPassword); err != nil {
+
+	if _, err := rep.db.Exec(insertCommand, user.Username, user.Email, string(hash)); err != nil {
 		return UserCreationError
 	}
 
