@@ -19,8 +19,7 @@ CREATE TABLE IF NOT EXISTS boards
     name        varchar(256) NOT NULL,
     description varchar(500),
     privacy     privacy      NOT NULL,
-    user_id     int
-
+    user_id     int          NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS pins
@@ -30,16 +29,16 @@ CREATE TABLE IF NOT EXISTS pins
     title        varchar(100),
     description  varchar(500),
     media_source varchar,
-    board_id     int
+    board_id     int    NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS comments
 (
-    id          serial NOT NULL PRIMARY KEY,
+    id          serial    NOT NULL PRIMARY KEY,
     description text,
-    created_at  timestamp,
-    pin_id      int,
-    user_id     int
+    created_at  timestamp NOT NULL DEFAULT now(),
+    pin_id      int       NOT NULL,
+    user_id     int       NOT NULL
 );
 
 ALTER TABLE ONLY boards
