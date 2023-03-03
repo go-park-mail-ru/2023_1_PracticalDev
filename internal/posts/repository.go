@@ -8,7 +8,7 @@ import (
 )
 
 type Repository interface {
-	GetPosts() ([]models.Pin, error)
+	GetPosts(limit, offset int) ([]models.Pin, error)
 }
 
 func NewRepository(db *sql.DB, log log.Logger) Repository {
@@ -20,8 +20,8 @@ type repository struct {
 	log log.Logger
 }
 
-func (rep repository) GetPosts() ([]models.Pin, error) {
-	rows, err := rep.db.Query("SELECT id, title FROM pins")
+func (rep repository) GetPosts(limit, offset int) ([]models.Pin, error) {
+	rows, err := rep.db.Query("SELECT id, title FROM pins ORDER BY created_at DESC LIMIT $1 OFFSET $2", limit, offset)
 	if err != nil {
 		return []models.Pin{}, err
 	}

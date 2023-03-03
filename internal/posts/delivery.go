@@ -3,6 +3,7 @@ package posts
 import (
 	"encoding/json"
 	"net/http"
+	"strconv"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
@@ -21,7 +22,29 @@ type delivery struct {
 }
 
 func (del delivery) getPosts(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	pins, err := del.serv.GetPosts()
+	queryValues := r.URL.Query()
+	page := 1
+	var err error
+	strPage := queryValues.Get("page")
+	if strPage != "" {
+		page, err = strconv.Atoi(strPage)
+		if err != nil || page < 1 {
+			w.WriteHeader(http.StatusBadRequest)
+			return err
+		}
+	}
+
+	limit := 30
+	strLimit := queryValues.Get("limit")
+	if strLimit != "" {
+		limit, err = strconv.Atoi(strLimit)
+		if err != nil || limit < 0 {
+			w.WriteHeader(http.StatusBadRequest)
+			return err
+		}
+	}
+
+	pins, err := del.serv.GetPosts(page, limit)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return err
