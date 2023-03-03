@@ -21,7 +21,7 @@ type repository struct {
 }
 
 func (rep repository) GetUser(id int) (models.User, error) {
-	rows, err := rep.db.Query("SELECT user_id, username, email FROM users WHERE user_id = $1", id)
+	rows, err := rep.db.Query("SELECT id, username, email FROM users WHERE id = $1", id)
 	if err != nil {
 		return models.User{}, err
 	}
