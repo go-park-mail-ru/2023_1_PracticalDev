@@ -20,12 +20,12 @@ func TestGetPosts(t *testing.T) {
 	cases := []TestCase{
 		{
 			Parameters: ``,
-			Response:   `[{"id":1,"link":"","title":"Road","description":"","media_source":"","board_id":0},{"id":2,"link":"","title":"Ice","description":"","media_source":"","board_id":0},{"id":3,"link":"","title":"Future","description":"","media_source":"","board_id":0},{"id":4,"link":"","title":"Color","description":"","media_source":"","board_id":0},{"id":5,"link":"","title":"Question","description":"","media_source":"","board_id":0},{"id":6,"link":"","title":"Shops","description":"","media_source":"","board_id":0},{"id":7,"link":"","title":"School","description":"","media_source":"","board_id":0}]`,
+			Response:   `[{"id":1,"link":"","title":"Road","description":"","media_source":"","board_id":1},{"id":2,"link":"","title":"Ice","description":"","media_source":"","board_id":1},{"id":3,"link":"","title":"Future","description":"","media_source":"","board_id":1},{"id":4,"link":"","title":"Color","description":"","media_source":"","board_id":2},{"id":5,"link":"","title":"Question","description":"","media_source":"","board_id":2},{"id":6,"link":"","title":"Shops","description":"","media_source":"","board_id":3},{"id":7,"link":"","title":"School","description":"","media_source":"","board_id":4}]`,
 			StatusCode: http.StatusOK,
 		},
 		{
 			Parameters: `?page=2&limit=3`,
-			Response:   `[{"id":4,"link":"","title":"Color","description":"","media_source":"","board_id":0},{"id":5,"link":"","title":"Question","description":"","media_source":"","board_id":0},{"id":6,"link":"","title":"Shops","description":"","media_source":"","board_id":0}]`,
+			Response:   `[{"id":4,"link":"","title":"Color","description":"","media_source":"","board_id":2},{"id":5,"link":"","title":"Question","description":"","media_source":"","board_id":2},{"id":6,"link":"","title":"Shops","description":"","media_source":"","board_id":3}]`,
 			StatusCode: http.StatusOK,
 		},
 		{
@@ -70,8 +70,8 @@ func TestGetPosts(t *testing.T) {
 		err = del.getPosts(w, req, nil)
 
 		if w.Code != item.StatusCode {
-			t.Errorf("[%d] wrong StatusCode: got %d, expected %d",
-				caseNum, w.Code, item.StatusCode)
+			t.Errorf("[%d] wrong StatusCode: \ngot %d, \nexpected %d, \nerr %d",
+				caseNum, w.Code, item.StatusCode, err)
 		}
 
 		resp := w.Result()
