@@ -63,7 +63,11 @@ paths:
               schema:
                 $ref: "#/components/schemas/Pin"
         "400":
-          description: Invalid parameters
+          description: Bad request.
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          description: Not authorized.
+          $ref: "#/components/responses/ErrUnauthorized"
       tags:
         - Posts
       security:
