@@ -7,13 +7,14 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	"github.com/julienschmidt/httprouter"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer auth.Authorizer, serv Service) {
 	del := delivery{serv, logger}
 
-	mux.GET("/users/:id", middleware.Logger(middleware.ErrorHandler(del.getUser, logger), logger))
+	mux.GET("/users/:id", middleware.Logger(middleware.ErrorHandler(authorizer(del.getUser) , logger), logger))
 }
 
 type delivery struct {
