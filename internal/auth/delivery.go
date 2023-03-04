@@ -49,7 +49,7 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 	expiration := time.Now().Add(livingTime)
 	sessionCookie := http.Cookie{Name: "JSESSIONID", Value: strconv.Itoa(user.Id) + "$" + token, Expires: expiration, HttpOnly: true}
 
-	if err := del.serv.SetSession(token, user, livingTime); err != nil {
+	if err := del.serv.SetSession(token, &user, livingTime); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
