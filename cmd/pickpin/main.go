@@ -33,13 +33,13 @@ func main() {
 	mux := httprouter.New()
 
 
-  authServ := auth.NewService(auth.NewRepository(db, rdb, ctx, logger))
-  authorizer := auth.NewAuthorizer(authServ)
+	authServ := auth.NewService(auth.NewRepository(db, rdb, ctx, logger))
+	authorizer := auth.NewAuthorizer(authServ)
 	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
 	auth.RegisterHandlers(mux, logger, authServ)
 
 	server := http.Server{
-	Addr:    "0.0.0.0:8080",
+		Addr:    "0.0.0.0:8080",
 		Handler: mux,
 	}
 
