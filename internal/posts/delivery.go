@@ -21,7 +21,7 @@ type delivery struct {
 	log  log.Logger
 }
 
-func (del delivery) getPosts(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) getPosts(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	queryValues := r.URL.Query()
 	page := 1
 	var err error

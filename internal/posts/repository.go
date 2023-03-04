@@ -11,7 +11,7 @@ type Repository interface {
 }
 
 func NewRepository(db *sql.DB, log log.Logger) Repository {
-	return repository{db, log}
+	return &repository{db, log}
 }
 
 type repository struct {
@@ -19,7 +19,7 @@ type repository struct {
 	log log.Logger
 }
 
-func (rep repository) GetPosts(limit, offset int) ([]models.Pin, error) {
+func (rep *repository) GetPosts(limit, offset int) ([]models.Pin, error) {
 	rows, err := rep.db.Query(`SELECT id, link, title, description, media_source, board_id 
 									FROM pins 
 									ORDER BY created_at DESC 
