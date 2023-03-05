@@ -13,7 +13,7 @@ import (
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv Service) {
 	del := delivery{serv, logger}
 
-	mux.GET("/posts", middleware.Logger(middleware.ErrorHandler(del.getPosts, logger), logger))
+	mux.GET("/posts", middleware.Logger(middleware.ErrorHandler(middleware.CorsChecker(del.getPosts), logger), logger))
 }
 
 type delivery struct {
@@ -56,6 +56,7 @@ func (del *delivery) getPosts(w http.ResponseWriter, r *http.Request, p httprout
 		return err
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	return err
 }

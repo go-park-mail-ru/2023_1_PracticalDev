@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"net/http"
 	"os"
 
@@ -31,6 +32,7 @@ func main() {
 	}
 
 	mux := httprouter.New()
+	mux.GlobalOPTIONS = http.HandlerFunc(middleware.OptionsHandler)
 
 	authServ := auth.NewService(auth.NewRepository(db, rdb, ctx, logger))
 	authorizer := auth.NewAuthorizer(authServ)
