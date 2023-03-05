@@ -4,14 +4,14 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/router"
 	"github.com/julienschmidt/httprouter"
 )
 
-type Handler func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error
-type Authorizer func(h Handler) Handler
+type Authorizer func(h router.Handler) router.Handler
 
-func NewAuthorizer(serv Service) func(h Handler) Handler {
-	return func(handler Handler) Handler {
+func NewAuthorizer(serv Service) func(h router.Handler) router.Handler {
+	return func(handler router.Handler) router.Handler {
 		return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 			sessionCookie, err := r.Cookie("JSESSIONID")
 

@@ -12,14 +12,14 @@ VALUES ('Notes', 'public', 1),
        ('My board', 'public', 2),
        ('ToDo', 'secret', 3);
 
-INSERT INTO pins(title, board_id)
-VALUES ('Road', 1),
-       ('Ice', 1),
-       ('Future', 1),
-       ('Color', 2),
-       ('Question', 2),
-       ('Shops', 3),
-       ('School', 4);
+INSERT INTO pins(title, board_id, media_source)
+VALUES ('Road', 1, 'https://wg.grechkogv.ru/assets/pet7.webp'),
+       ('Ice', 1, 'https://wg.grechkogv.ru/assets/armorChest4.webp'),
+       ('Future', 1, 'https://wg.grechkogv.ru/assets/pet6.webp'),
+       ('Color', 2, 'https://wg.grechkogv.ru/assets/pet8.webp'),
+       ('Question', 2, 'https://wg.grechkogv.ru/assets/weapon5.webp'),
+       ('Shops', 3, 'https://wg.grechkogv.ru/assets/weapon1.webp'),
+       ('School', 4, 'https://wg.grechkogv.ru/assets/armorBeing3.webp');
 
 INSERT INTO comments(description, pin_id, user_id)
 VALUES ('Why?', 1, 2),

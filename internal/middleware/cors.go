@@ -1,11 +1,11 @@
 package middleware
 
 import (
-	"github.com/julienschmidt/httprouter"
 	"net/http"
-)
 
-type HandlerFunc func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/router"
+	"github.com/julienschmidt/httprouter"
+)
 
 var allowedOrigins = map[string]interface{}{
 	"http://pickpin.ru": nil,
@@ -23,7 +23,7 @@ func OptionsHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func CorsChecker(handler HandlerFunc) HandlerFunc {
+func CorsChecker(handler router.Handler) router.Handler {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 		origin := r.Header.Get("Origin")
 		if _, allowed := allowedOrigins[origin]; allowed {

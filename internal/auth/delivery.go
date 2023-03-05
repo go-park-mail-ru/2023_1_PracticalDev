@@ -49,7 +49,7 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 	token := uuid.New().String()
 	livingTime := 3 * time.Hour
 	expiration := time.Now().Add(livingTime)
-	sessionCookie := http.Cookie{Name: "JSESSIONID", Value: strconv.Itoa(user.Id) + "$" + token, Expires: expiration, HttpOnly: true}
+	sessionCookie := http.Cookie{Name: "JSESSIONID", Value: strconv.Itoa(user.Id) + "$" + token, Expires: expiration, HttpOnly: true, Path: "/"}
 
 	session := models.Session{
 		UserId:    user.Id,
@@ -108,6 +108,6 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
-	w.WriteHeader(http.StatusCreated)
+	w.WriteHeader(http.StatusNoContent)
 	return nil
 }

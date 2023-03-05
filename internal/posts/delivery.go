@@ -5,15 +5,16 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/julienschmidt/httprouter"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer auth.Authorizer, serv Service) {
 	del := delivery{serv, logger}
 
-	mux.GET("/posts", middleware.Logger(middleware.ErrorHandler(middleware.CorsChecker(del.getPosts), logger), logger))
+	mux.GET("/posts", middleware.Logger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getPosts)), logger), logger))
 }
 
 type delivery struct {

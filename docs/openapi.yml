@@ -93,16 +93,10 @@ paths:
                     password:
                       $ref: "#/components/schemas/Password"
       responses:
-        "201":
+        "204":
           description: >
             Successfully created user.
-            The session ID is returned in a cookie named `JSESSIONID`. 
-            You need to include this cookie in subsequent requests.
-          headers:
-            Set-Cookie:
-              schema:
-                type: string
-                example: JSESSIONID=abcde12345; Path=/; HttpOnly
+            Log in to get SESSION cookie. 
         "400":
           description: Bad request.
           $ref: "#/components/responses/ErrResponseBadRequest"
