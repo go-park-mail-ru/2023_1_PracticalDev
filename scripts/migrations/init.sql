@@ -24,12 +24,13 @@ CREATE TABLE IF NOT EXISTS boards
 
 CREATE TABLE IF NOT EXISTS pins
 (
-    id           serial NOT NULL PRIMARY KEY,
+    id           serial    NOT NULL PRIMARY KEY,
     link         varchar(2048),
     title        varchar(100),
     description  varchar(500),
+    created_at   timestamp NOT NULL DEFAULT now(),
     media_source varchar,
-    board_id     int    NOT NULL
+    board_id     int       NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS comments

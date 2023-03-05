@@ -29,6 +29,9 @@ jobs:
       - name: Run migrations
         run: ./scripts/run_migrations.sh
 
+      - name: Populate DB with test data
+        run: ././scripts/populate_db.sh
+        
       - name: Run unit tests
         run: make unit-test
 

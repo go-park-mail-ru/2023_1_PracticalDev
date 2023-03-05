@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/posts"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users"
 	"github.com/julienschmidt/httprouter"
 )
@@ -21,6 +22,7 @@ func main() {
 	mux := httprouter.New()
 
 	users.RegisterHandlers(mux, logger, users.NewService(users.NewRepository(db, logger)))
+	posts.RegisterHandlers(mux, logger, posts.NewService(posts.NewRepository(db, logger)))
 
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
