@@ -20,12 +20,12 @@ func TestGetPosts(t *testing.T) {
 	cases := []TestCase{
 		{
 			Parameters: ``,
-			Response:   `[{"id":1,"link":"","title":"Road","description":"","media_source":"","board_id":1},{"id":2,"link":"","title":"Ice","description":"","media_source":"","board_id":1},{"id":3,"link":"","title":"Future","description":"","media_source":"","board_id":1},{"id":4,"link":"","title":"Color","description":"","media_source":"","board_id":2},{"id":5,"link":"","title":"Question","description":"","media_source":"","board_id":2},{"id":6,"link":"","title":"Shops","description":"","media_source":"","board_id":3},{"id":7,"link":"","title":"School","description":"","media_source":"","board_id":4}]`,
+			Response:   `[{"id":1,"link":"","title":"Road","description":"","media_source":"https://wg.grechkogv.ru/assets/pet7.webp","board_id":1},{"id":2,"link":"","title":"Ice","description":"","media_source":"https://wg.grechkogv.ru/assets/armorChest4.webp","board_id":1},{"id":3,"link":"","title":"Future","description":"","media_source":"https://wg.grechkogv.ru/assets/pet6.webp","board_id":1},{"id":4,"link":"","title":"Color","description":"","media_source":"https://wg.grechkogv.ru/assets/pet8.webp","board_id":2},{"id":5,"link":"","title":"Question","description":"","media_source":"https://wg.grechkogv.ru/assets/weapon5.webp","board_id":2},{"id":6,"link":"","title":"Shops","description":"","media_source":"https://wg.grechkogv.ru/assets/weapon1.webp","board_id":3},{"id":7,"link":"","title":"School","description":"","media_source":"https://wg.grechkogv.ru/assets/armorBeing3.webp","board_id":4}]`,
 			StatusCode: http.StatusOK,
 		},
 		{
 			Parameters: `?page=2&limit=3`,
-			Response:   `[{"id":4,"link":"","title":"Color","description":"","media_source":"","board_id":2},{"id":5,"link":"","title":"Question","description":"","media_source":"","board_id":2},{"id":6,"link":"","title":"Shops","description":"","media_source":"","board_id":3}]`,
+			Response:   `[{"id":4,"link":"","title":"Color","description":"","media_source":"https://wg.grechkogv.ru/assets/pet8.webp","board_id":2},{"id":5,"link":"","title":"Question","description":"","media_source":"https://wg.grechkogv.ru/assets/weapon5.webp","board_id":2},{"id":6,"link":"","title":"Shops","description":"","media_source":"https://wg.grechkogv.ru/assets/weapon1.webp","board_id":3}]`,
 			StatusCode: http.StatusOK,
 		},
 		{
