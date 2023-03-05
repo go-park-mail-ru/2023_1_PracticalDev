@@ -1,4 +1,4 @@
-# 2023_1_PracticalDev [![Docs](https://godoc.org/github.com/github.com/go-park-mail-ru/2023_1_PracticalDev?status.svg)](http://pkg.go.dev/github.com/github.com/go-park-mail-ru/2023_1_PracticalDev)
+# 2023_1_PracticalDev [![Docs](https://godoc.org/github.com/go-park-mail-ru/2023_1_PracticalDev?status.svg)](http://pkg.go.dev/github.com/go-park-mail-ru/2023_1_PracticalDev)
 
 Проект Pinterest команды "Practical Dev"
 

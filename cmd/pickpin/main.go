@@ -1,12 +1,15 @@
 package main
 
 import (
+	"context"
 	"net/http"
 	"os"
 
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/posts"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/redis"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users"
 	"github.com/julienschmidt/httprouter"
 )
@@ -19,11 +22,21 @@ func main() {
 		os.Exit(1)
 	}
 
+	ctx := context.Background()
+	rdb, err := redis.NewRedisClient(logger, ctx)
+
+	if err != nil {
+		logger.Warn(err)
+		os.Exit(1)
+	}
+
 	mux := httprouter.New()
 
-	users.RegisterHandlers(mux, logger, users.NewService(users.NewRepository(db, logger)))
+	authServ := auth.NewService(auth.NewRepository(db, rdb, ctx, logger))
+	authorizer := auth.NewAuthorizer(authServ)
+	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
+	auth.RegisterHandlers(mux, logger, authServ)
 	posts.RegisterHandlers(mux, logger, posts.NewService(posts.NewRepository(db, logger)))
-
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
 		Handler: mux,

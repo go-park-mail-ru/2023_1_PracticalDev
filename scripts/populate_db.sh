@@ -1,8 +1,8 @@
 #!/bin/bash
 
-network=$(docker network ls | grep 'db' | awk '{print $2}')
+network=$(docker network ls | awk '{print $2}' | grep 'db') 
 
-if [ -z $network ];
+if [[ -z $network ]];
 then
     echo No database network found
     exit 1

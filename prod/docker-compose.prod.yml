@@ -17,6 +17,21 @@ services:
       restart_policy:
         condition: on-failure
 
+  redis:
+    image: redis:latest
+    container_name: redis
+    restart: always
+    environment:
+      REDIS_PASSWORD: "${REDIS_PASSWORD}"
+    command: redis-server --requirepass "${REDIS_PASSWORD}"
+    ports:
+      - "${REDIS_PORT}:6379"
+    networks:
+      - redis-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+
   backend:
     build: "."
     container_name: backend

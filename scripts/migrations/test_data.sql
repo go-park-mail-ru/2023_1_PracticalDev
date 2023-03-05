@@ -1,7 +1,8 @@
-INSERT INTO users(username, password, name, email, account_type)
-VALUES ('geogreck', '1234', 'George', 'geogreck@vk.com', 'personal'),
-       ('kirill', '1234', 'Kirill', 'figma@vk.com', 'personal'),
-       ('slava', '1234', 'Slava', 'iu7@vk.com', 'personal');
+INSERT INTO users(username, hashed_password, name, email, account_type)
+VALUES ('geogreck', '$2a$10$Whoj5L2Bpn6qrvCxT5Ld8Oc4TOQXzlaqXdUFURPaA2/f10ij1Ffgm', 'George', 'geogreck@vk.com', 'personal'),
+       ('kirill', '$2a$10$Whoj5L2Bpn6qrvCxT5Ld8Oc4TOQXzlaqXdUFURPaA2/f10ij1Ffgm', 'Kirill', 'figma@vk.com', 'personal'),
+       ('slava', '$2a$10$Whoj5L2Bpn6qrvCxT5Ld8Oc4TOQXzlaqXdUFURPaA2/f10ij1Ffgm', 'Slava', 'iu7@vk.com', 'personal'),
+       ('evgenii', '$2a$10$Whoj5L2Bpn6qrvCxT5Ld8Oc4TOQXzlaqXdUFURPaA2/f10ij1Ffgm', 'evgenii', 'test@vk.com', 'personal');
 
 INSERT INTO boards(name, privacy, user_id)
 VALUES ('Notes', 'public', 1),
