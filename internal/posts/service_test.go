@@ -27,7 +27,7 @@ func TestServiceGetPosts(t *testing.T) {
 					Link:        "",
 					Title:       "Road",
 					Description: "",
-					MediaSource: "",
+					MediaSource: "https://wg.grechkogv.ru/assets/pet7.webp",
 					BoardId:     1,
 				},
 				{
@@ -35,7 +35,7 @@ func TestServiceGetPosts(t *testing.T) {
 					Link:        "",
 					Title:       "Ice",
 					Description: "",
-					MediaSource: "",
+					MediaSource: "https://wg.grechkogv.ru/assets/armorChest4.webp",
 					BoardId:     1,
 				},
 				{
@@ -43,7 +43,7 @@ func TestServiceGetPosts(t *testing.T) {
 					Link:        "",
 					Title:       "Future",
 					Description: "",
-					MediaSource: "",
+					MediaSource: "https://wg.grechkogv.ru/assets/pet6.webp",
 					BoardId:     1,
 				},
 				{
@@ -51,7 +51,7 @@ func TestServiceGetPosts(t *testing.T) {
 					Link:        "",
 					Title:       "Color",
 					Description: "",
-					MediaSource: "",
+					MediaSource: "https://wg.grechkogv.ru/assets/pet8.webp",
 					BoardId:     2,
 				},
 				{
@@ -59,7 +59,7 @@ func TestServiceGetPosts(t *testing.T) {
 					Link:        "",
 					Title:       "Question",
 					Description: "",
-					MediaSource: "",
+					MediaSource: "https://wg.grechkogv.ru/assets/weapon5.webp",
 					BoardId:     2,
 				},
 				{
@@ -67,7 +67,7 @@ func TestServiceGetPosts(t *testing.T) {
 					Link:        "",
 					Title:       "Shops",
 					Description: "",
-					MediaSource: "",
+					MediaSource: "https://wg.grechkogv.ru/assets/weapon1.webp",
 					BoardId:     3,
 				},
 				{
@@ -75,7 +75,7 @@ func TestServiceGetPosts(t *testing.T) {
 					Link:        "",
 					Title:       "School",
 					Description: "",
-					MediaSource: "",
+					MediaSource: "https://wg.grechkogv.ru/assets/armorBeing3.webp",
 					BoardId:     4,
 				},
 			},
@@ -90,7 +90,7 @@ func TestServiceGetPosts(t *testing.T) {
 					Link:        "",
 					Title:       "Color",
 					Description: "",
-					MediaSource: "",
+					MediaSource: "https://wg.grechkogv.ru/assets/pet8.webp",
 					BoardId:     2,
 				},
 				{
@@ -98,7 +98,7 @@ func TestServiceGetPosts(t *testing.T) {
 					Link:        "",
 					Title:       "Question",
 					Description: "",
-					MediaSource: "",
+					MediaSource: "https://wg.grechkogv.ru/assets/weapon5.webp",
 					BoardId:     2,
 				},
 				{
@@ -106,7 +106,7 @@ func TestServiceGetPosts(t *testing.T) {
 					Link:        "",
 					Title:       "Shops",
 					Description: "",
-					MediaSource: "",
+					MediaSource: "https://wg.grechkogv.ru/assets/weapon1.webp",
 					BoardId:     3,
 				},
 			},
