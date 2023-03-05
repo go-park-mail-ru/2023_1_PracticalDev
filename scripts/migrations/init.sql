@@ -1,17 +1,16 @@
-<<<<<<< HEAD
 CREATE TYPE account_type AS ENUM ('personal', 'business');
 CREATE TYPE privacy AS ENUM ('public', 'secret');
 
 CREATE TABLE IF NOT EXISTS users
 (
-    id            serial       NOT NULL PRIMARY KEY,
-    username      text         NOT NULL,
-    email         text         NOT NULL,
-    hashed_password      bytea        NOT NULL,
-    name          varchar(256) NOT NULL,
-    profile_image varchar,
-    website_url   varchar,
-    account_type  account_type NOT NULL
+    id              serial       NOT NULL PRIMARY KEY,
+    username        text         NOT NULL,
+    email           text         NOT NULL,
+    hashed_password bytea        NOT NULL,
+    name            varchar(256) NOT NULL,
+    profile_image   varchar,
+    website_url     varchar,
+    account_type    account_type NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS boards

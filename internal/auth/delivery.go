@@ -3,15 +3,17 @@ package auth
 import (
 	"encoding/json"
 	"errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models/api"
-	"github.com/google/uuid"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models/api"
+	"github.com/google/uuid"
+	"github.com/julienschmidt/httprouter"
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv Service) {
@@ -49,12 +51,20 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 	expiration := time.Now().Add(livingTime)
 	sessionCookie := http.Cookie{Name: "JSESSIONID", Value: strconv.Itoa(user.Id) + "$" + token, Expires: expiration, HttpOnly: true}
 
-	if err := del.serv.SetSession(token, &user, livingTime); err != nil {
+	session := models.Session{
+		UserId:    user.Id,
+		UserEmail: user.Email,
+	}
+
+	if err := del.serv.SetSession(token, &session, livingTime); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
 	http.SetCookie(w, &sessionCookie)
+	usr, _ := json.Marshal(user)
+
+	w.Write(usr)
 	return nil
 }
 
@@ -98,7 +108,6 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
-
 	w.WriteHeader(http.StatusCreated)
 	return nil
 }

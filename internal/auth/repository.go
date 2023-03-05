@@ -24,7 +24,7 @@ var (
 
 type Repository interface {
 	Authenticate(email, hashedPassword string) (models.User, error)
-	SetSession(id string, user *models.User, expiration time.Duration) error
+	SetSession(id string, session *models.Session, expiration time.Duration) error
 	CheckAuth(userId, sessionId string) error
 	Register(user *api.RegisterParams) error
 	DeleteSession(userId, sessionId string) error
@@ -46,7 +46,9 @@ func (rep *repository) Authenticate(email, password string) (models.User, error)
 	row := rep.db.QueryRow(authCommand, email)
 	user := models.User{}
 	hasher := hasher.NewHasher()
-	err := row.Scan(&user.Id, &user.Email, &user.Username, &user.HashedPassword)
+
+	var profile_image, website_url sql.NullString
+	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword, &user.Name, &profile_image, &website_url, &user.Account_type)
 
 	if err != nil {
 		if err.Error() == "no rows in result set" {
@@ -60,15 +62,19 @@ func (rep *repository) Authenticate(email, password string) (models.User, error)
 		return models.User{}, WrongPasswordOrLoginError
 	}
 
+	user.Website_url = website_url.String
+	user.Profile_image = profile_image.String
+
 	return user, nil
 }
 
-func (rep *repository) SetSession(sessionId string, user *models.User, expiration time.Duration) error {
-	tmp, _ := json.Marshal(user)
-	err := rep.rdb.HSet(rep.ctx, strconv.Itoa(user.Id), sessionId, tmp).Err()
+func (rep *repository) SetSession(sessionId string, session *models.Session, expiration time.Duration) error {
+	tmp, _ := json.Marshal(session)
+
+	err := rep.rdb.HSet(rep.ctx, strconv.Itoa(session.UserId), sessionId, tmp).Err()
 
 	if err != nil {
-		rep.rdb.Expire(rep.ctx, strconv.Itoa(user.Id), expiration)
+		rep.rdb.Expire(rep.ctx, strconv.Itoa(session.UserId), expiration)
 	}
 
 	return err
@@ -99,9 +105,10 @@ func (rep *repository) Register(user *api.RegisterParams) error {
 
 	hash, _ := hasher.GetHashedPassword(user.Password)
 
-	insertCommand := "INSERT INTO users (username, email, hashed_password) VALUES ($1, $2, $3)"
+	insertCommand := "INSERT INTO users (username, name, email, hashed_password, account_type) VALUES ($1, $2, $3, $4, $5)"
 
-	if _, err := rep.db.Exec(insertCommand, user.Username, user.Email, string(hash)); err != nil {
+	if _, err := rep.db.Exec(insertCommand, user.Username, user.Name, user.Email, string(hash), "personal"); err != nil {
+		rep.log.Info(err)
 		return UserCreationError
 	}
 

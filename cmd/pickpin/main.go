@@ -37,7 +37,7 @@ func main() {
 	authorizer := auth.NewAuthorizer(authServ)
 	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
 	auth.RegisterHandlers(mux, logger, authServ)
-
+  posts.RegisterHandlers(mux, logger, posts.NewService(posts.NewRepository(db, logger)))
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
 		Handler: mux,

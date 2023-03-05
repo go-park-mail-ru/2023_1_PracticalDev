@@ -10,7 +10,7 @@ import (
 type Service interface {
 	Authenticate(login, hashed_password string) (models.User, error)
 	Register(user *api.RegisterParams) error
-	SetSession(id string, user *models.User, expiration time.Duration) error
+	SetSession(id string, session *models.Session, expiration time.Duration) error
 	CheckAuth(userId, sessionId string) error
 	DeleteSession(userId, sessionId string) error
 }
@@ -27,8 +27,8 @@ func (serv *service) Authenticate(email, hashed_password string) (models.User, e
 	return serv.rep.Authenticate(email, hashed_password)
 }
 
-func (serv *service) SetSession(id string, user *models.User, expiration time.Duration) error {
-	return serv.rep.SetSession(id, user, expiration)
+func (serv *service) SetSession(id string, session *models.Session, expiration time.Duration) error {
+	return serv.rep.SetSession(id, session, expiration)
 }
 
 func (serv *service) CheckAuth(userId, sessionId string) error {
