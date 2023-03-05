@@ -64,7 +64,7 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 	http.SetCookie(w, &sessionCookie)
 	usr, _ := json.Marshal(user)
 
-  _, err = w.Write(usr) 
+	_, err = w.Write(usr)
 	return err
 }
 
