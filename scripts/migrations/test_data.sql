@@ -1,7 +1,8 @@
-INSERT INTO users(username, password, name, email, account_type)
-VALUES ('geogreck', '1234', 'George', 'geogreck@vk.com', 'personal'),
-       ('kirill', '1234', 'Kirill', 'figma@vk.com', 'personal'),
-       ('slava', '1234', 'Slava', 'iu7@vk.com', 'personal');
+INSERT INTO users(username, hashed_password, name, email, account_type)
+VALUES ('geogreck', '$2a$10$A4Ab/cuy/oLNvm4VxGoO/ezKL.fiew5e.eKTkUOWIVxoBh8XFO4lS', 'George', 'geogreck@vk.com', 'personal'),
+       ('kirill', '$2a$10$Whoj5L2Bpn6qrvCxT5Ld8Oc4TOQXzlaqXdUFURPaA2/f10ij1Ffgm', 'Kirill', 'figma@vk.com', 'personal'),
+       ('slava', '$2a$10$Whoj5L2Bpn6qrvCxT5Ld8Oc4TOQXzlaqXdUFURPaA2/f10ij1Ffgm', 'Slava', 'iu7@vk.com', 'personal'),
+       ('evgenii', '$2a$10$Whoj5L2Bpn6qrvCxT5Ld8Oc4TOQXzlaqXdUFURPaA2/f10ij1Ffgm', 'evgenii', 'test@vk.com', 'personal');
 
 INSERT INTO boards(name, privacy, user_id)
 VALUES ('Notes', 'public', 1),
@@ -11,14 +12,17 @@ VALUES ('Notes', 'public', 1),
        ('My board', 'public', 2),
        ('ToDo', 'secret', 3);
 
-INSERT INTO pins(title, board_id)
-VALUES ('Road', 1),
-       ('Ice', 1),
-       ('Future', 1),
-       ('Color', 2),
-       ('Question', 2),
-       ('Shops', 3),
-       ('School', 4);
+INSERT INTO pins(title, board_id, media_source)
+VALUES ('Road', 1, 'https://wg.grechkogv.ru/assets/pet7.webp'),
+       ('Ice', 1, 'https://wg.grechkogv.ru/assets/armorChest4.webp'),
+       ('Future', 1, 'https://wg.grechkogv.ru/assets/pet6.webp'),
+       ('Color', 2, 'https://wg.grechkogv.ru/assets/pet8.webp'),
+       ('Shops', 3, 'https://i.pinimg.com/564x/2f/93/56/2f9356b9346e82c14bf286c6a107bc7a.jpg'),
+       ('Shops', 3, 'https://i.pinimg.com/564x/32/ff/71/32ff717c3cd3bd3d1886c775b59f0769.jpg'),
+       ('Shops', 3, 'https://i.pinimg.com/564x/ce/e3/01/cee3011f3e19de4377dbf98f397c027b.jpg'),
+       ('Shops', 3, 'https://i.pinimg.com/564x/a6/ba/55/a6ba553df2a0c0f3894ef328a86fb373.jpg'),
+       ('Shops', 3, 'https://i.pinimg.com/564x/43/2d/3b/432d3b28d1661439245422e9218ffcce.jpg'),
+       ('School', 4, 'https://i.pinimg.com/564x/98/9d/3f/989d3f5c158dcac7ca4d115bff866d84.jpg');
 
 INSERT INTO comments(description, pin_id, user_id)
 VALUES ('Why?', 1, 2),
