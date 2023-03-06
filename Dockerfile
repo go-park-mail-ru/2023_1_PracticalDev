@@ -13,6 +13,7 @@ RUN --mount=target=. \
     go build -o /out/pickpin cmd/pickpin/*.go
 
 FROM base AS unit-test
+ENV PGHOST=localhost
 RUN --mount=target=. \
     --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \

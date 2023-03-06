@@ -16,6 +16,7 @@ servers:
 
 tags:
   - name: Users
+  - name: Posts
   - name: Auth
 
 paths:
@@ -38,11 +39,44 @@ paths:
       tags:
         - Users
       security:
-        - cookieAuth: []
+        - cookieAuth: [ ]
+
+  /posts:
+    parameters:
+      - schema:
+          type: integer
+        name: page
+        in: query
+        required: false
+      - schema:
+          type: integer
+        name: limit
+        in: query
+        required: false
+    get:
+      summary: Returns a segment of posts according to the page and the number of pins in one page (limit parameter)
+      responses:
+        "200": # status code
+          description: A JSON array of pins
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pin"
+        "400":
+          description: Bad request.
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          description: Not authorized.
+          $ref: "#/components/responses/ErrUnauthorized"
+      tags:
+        - Posts
+      security:
+        - cookieAuth: [ ]
+
   /auth/signup:
     post:
       summary: Creates new user and returnes authentication cookie.
-      security: []
+      security: [ ]
       tags:
         - Auth
       requestBody:
@@ -59,16 +93,10 @@ paths:
                     password:
                       $ref: "#/components/schemas/Password"
       responses:
-        "201":
+        "204":
           description: >
             Successfully created user.
-            The session ID is returned in a cookie named `JSESSIONID`. 
-            You need to include this cookie in subsequent requests.
-          headers:
-            Set-Cookie:
-              schema:
-                type: string
-                example: JSESSIONID=abcde12345; Path=/; HttpOnly
+            Log in to get SESSION cookie. 
         "400":
           description: Bad request.
           $ref: "#/components/responses/ErrResponseBadRequest"
@@ -90,7 +118,7 @@ paths:
                     password:
                       $ref: "#/components/schemas/Password"
 
-      security: []
+      security: [ ]
       tags:
         - Auth
       responses:
@@ -117,7 +145,7 @@ paths:
     delete:
       summary: Logs out and deletes the authentication cookie.
       security:
-        - cookieAuth: []
+        - cookieAuth: [ ]
       tags:
         - Auth
       responses:
@@ -136,7 +164,7 @@ paths:
     post:
       summary: Updates existing authentication cookie.
       security:
-        - cookieAuth: []
+        - cookieAuth: [ ]
       tags:
         - Auth
       responses:
@@ -158,7 +186,7 @@ paths:
         "404":
           description: Cookie not found
           $ref: "#/components/responses/ErrResponseNoSuchCookie"
-        
+
 components:
   schemas:
     Email:
@@ -176,6 +204,14 @@ components:
       minLength: 4
       maxLength: 40
       example: geogreck
+    Link:
+      type: string
+      minLength: 4
+      maxLength: 100
+      example: http://pickpin.ru
+    MediaSource:
+      type: string
+      example: picture.jpg
     User:
       type: object
       properties:
@@ -185,6 +221,21 @@ components:
           $ref: "#/components/schemas/Email"
         username:
           $ref: "#/components/schemas/Username"
+    Pin:
+      type: object
+      properties:
+        id:
+          type: integer
+        link:
+          $ref: "#/components/schemas/Link"
+        title:
+          type: string
+        description:
+          type: string
+        media_source:
+          $ref: "#/components/schemas/MediaSource"
+        board_id:
+          type: integer
     Error:
       type: object
       properties:
@@ -227,5 +278,3 @@ components:
         application/problem+json:
           schema:
             $ref: "#/components/schemas/Error"
-
-

@@ -24,6 +24,7 @@ VALUES ('Road', 1, 'https://wg.grechkogv.ru/assets/pet7.webp'),
        ('Shops', 3, 'https://i.pinimg.com/564x/43/2d/3b/432d3b28d1661439245422e9218ffcce.jpg'),
        ('School', 4, 'https://i.pinimg.com/564x/98/9d/3f/989d3f5c158dcac7ca4d115bff866d84.jpg');
 
+
 INSERT INTO comments(description, pin_id, user_id)
 VALUES ('Why?', 1, 2),
        ('It is good.', 1, 3),
