@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-type ServiceTestCase struct {
+type serviceTestCase struct {
 	Page    int
 	Limit   int
 	Pins    []models.Pin
@@ -17,7 +17,7 @@ type ServiceTestCase struct {
 }
 
 func TestServiceGetPosts(t *testing.T) {
-	cases := []ServiceTestCase{
+	cases := []serviceTestCase{
 		{
 			Page:  1,
 			Limit: 30,

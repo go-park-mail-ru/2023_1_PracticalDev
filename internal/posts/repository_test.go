@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-type RepositoryTestCase struct {
+type repositoryTestCase struct {
 	Limit   int
 	Offset  int
 	Pins    []models.Pin
@@ -17,7 +17,7 @@ type RepositoryTestCase struct {
 }
 
 func TestRepositoryGetPosts(t *testing.T) {
-	cases := []RepositoryTestCase{
+	cases := []repositoryTestCase{
 		{
 			Limit:  30,
 			Offset: 0,

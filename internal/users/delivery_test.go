@@ -19,7 +19,7 @@ type testCase struct {
 	isError    bool
 }
 
-func TestGetUser(t *testing.T) {
+func TestDeliveryGetUser(t *testing.T) {
 	cases := []testCase{
 		{
 			Id:         "1",

@@ -48,7 +48,7 @@ func (rep *repository) Authenticate(email, password string) (models.User, error)
 	hasher := hasher.NewHasher()
 
 	var profile_image, website_url sql.NullString
-	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword, &user.Name, &profile_image, &website_url, &user.Account_type)
+	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword, &user.Name, &profile_image, &website_url, &user.AccountType)
 	if err != nil {
 		if err.Error() == "no rows in result set" {
 			return models.User{}, WrongPasswordOrLoginError
@@ -61,8 +61,8 @@ func (rep *repository) Authenticate(email, password string) (models.User, error)
 		return models.User{}, WrongPasswordOrLoginError
 	}
 
-	user.Website_url = website_url.String
-	user.Profile_image = profile_image.String
+	user.WebsiteUrl = website_url.String
+	user.ProfileImage = profile_image.String
 
 	return user, nil
 }
