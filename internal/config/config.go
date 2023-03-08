@@ -10,6 +10,9 @@ var envVars = map[string]string{
 	"POSTGRES_PASSWORD": "pickpinpswd",
 	"LOG_LEVELS":        "*",
 	"POSTGRES_SSL":      "disable",
+	"REDIS_PASSWORD":    "pickpinpswd",
+	"REDIS_HOST":        "redis",
+	"REDIS_PORT":        "6379",
 }
 
 func init() {

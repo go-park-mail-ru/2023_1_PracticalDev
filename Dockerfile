@@ -14,6 +14,7 @@ RUN --mount=target=. \
 
 FROM base AS unit-test
 ENV PGHOST=localhost
+ENV REDIS_HOST=localhost
 RUN --mount=target=. \
     --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
