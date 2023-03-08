@@ -1,8 +1,8 @@
 INSERT INTO users(username, hashed_password, name, email, account_type)
 VALUES ('geogreck', '$2a$10$A4Ab/cuy/oLNvm4VxGoO/ezKL.fiew5e.eKTkUOWIVxoBh8XFO4lS', 'George', 'geogreck@vk.com', 'personal'),
-       ('kirill', '$2a$10$Whoj5L2Bpn6qrvCxT5Ld8Oc4TOQXzlaqXdUFURPaA2/f10ij1Ffgm', 'Kirill', 'figma@vk.com', 'personal'),
-       ('slava', '$2a$10$Whoj5L2Bpn6qrvCxT5Ld8Oc4TOQXzlaqXdUFURPaA2/f10ij1Ffgm', 'Slava', 'iu7@vk.com', 'personal'),
-       ('evgenii', '$2a$10$Whoj5L2Bpn6qrvCxT5Ld8Oc4TOQXzlaqXdUFURPaA2/f10ij1Ffgm', 'evgenii', 'test@vk.com', 'personal');
+       ('kirill', '$2a$10$A4Ab/cuy/oLNvm4VxGoO/ezKL.fiew5e.eKTkUOWIVxoBh8XFO4lS', 'Kirill', 'figma@vk.com', 'personal'),
+       ('slava', '$2a$10$A4Ab/cuy/oLNvm4VxGoO/ezKL.fiew5e.eKTkUOWIVxoBh8XFO4lS', 'Slava', 'iu7@vk.com', 'personal'),
+       ('evgenii', '$2a$10$A4Ab/cuy/oLNvm4VxGoO/ezKL.fiew5e.eKTkUOWIVxoBh8XFO4lS', 'evgenii', 'test@vk.com', 'personal');
 
 INSERT INTO boards(name, privacy, user_id)
 VALUES ('Notes', 'public', 1),

@@ -29,19 +29,19 @@ var (
 var existingUsers []api.LoginParams = []api.LoginParams{
 	{
 		Email:    "geogreck@vk.com",
-		Password: "1234",
+		Password: "12345678",
 	},
 	{
 		Email:    "figma@vk.com",
-		Password: "1234",
+		Password: "12345678",
 	},
 	{
 		Email:    "iu7@vk.com",
-		Password: "1234",
+		Password: "12345678",
 	},
 	{
 		Email:    "test@vk.com",
-		Password: "1234",
+		Password: "12345678",
 	},
 }
 
