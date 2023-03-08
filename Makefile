@@ -9,7 +9,7 @@ run: build
 	docker compose -f docker-compose.yml up -d --build backend
 
 .PHONY: unit-test
-unit-test: db
+unit-test: db redis
 	DOCKER_BUILDKIT=1 docker build . --target unit-test --network=host
 
 .PHONY: unit-test-with-coverage

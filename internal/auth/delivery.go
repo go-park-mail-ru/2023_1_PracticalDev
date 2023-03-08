@@ -16,6 +16,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
+var BadRequestError = errors.New("bad request")
+
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv Service) {
 	del := delivery{serv, logger}
 	mux.POST("/auth/login", middleware.Logger(middleware.ErrorHandler(del.Authenticate, logger), logger))
@@ -36,14 +38,13 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 
 	if err := decoder.Decode(&data); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return errors.New("bad request")
+		return BadRequestError
 	}
 
 	user, err := del.serv.Authenticate(data.Email, data.Password)
-
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
-		return errors.New("wrong login or password")
+		return WrongPasswordOrLoginError
 	}
 
 	token := uuid.New().String()
@@ -70,13 +71,17 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 
 func (del *delivery) Logout(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	sessionCookie, err := r.Cookie("JSESSIONID")
-
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return err
 	}
 
 	tmp := strings.Split(sessionCookie.Value, "$")
+	if len(tmp) != 2 {
+		w.WriteHeader(http.StatusBadRequest)
+		return BadRequestError
+	}
+
 	userId, sessionId := tmp[0], tmp[1]
 
 	newCookie := http.Cookie{

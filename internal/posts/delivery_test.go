@@ -1,13 +1,14 @@
 package posts
 
 import (
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"io/ioutil"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 )
 
 type TestCase struct {
