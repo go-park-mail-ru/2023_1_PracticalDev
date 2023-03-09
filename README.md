@@ -2,7 +2,29 @@
 
 Проект Pinterest команды "Practical Dev"
 
-Руководство по использованию:
+[Ссылка на репозиторий по фронтенду](https://github.com/frontend-park-mail-ru/2023_1_PracticalDev)
+
+Ссылка на деплой - [сайт](http://pickpin.ru), [api](http://pickpin.ru/api), [OpenAPI](http://pickpin.ru/api/docs)
+
+## Авторы 
+
+- [Гречко Георгий](https://github.com/geogreck)
+
+- [Кирилл Киселев](https://github.com/t1d333)
+
+- [Евгений Димитриев](https://github.com/UjinIaly)
+
+- [Вячеслав Шагалов](https://github.com/SlavaShagalov)
+
+## Менторы
+
+- [Дмитрий Ильин](https://github.com/Neytrinoo) - Backend
+
+- [Фарис Набиев](https://github.com/rflban) - Frontend
+
+
+## Руководство по использованию:
+
 | | |
 |---------------------|--------------------------------------------|
 | make build          | Собирает весь `backend`                    |

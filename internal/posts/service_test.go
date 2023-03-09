@@ -9,7 +9,7 @@ import (
 	"testing"
 )
 
-type ServiceTestCase struct {
+type serviceTestCase struct {
 	Page    int
 	Limit   int
 	Pins    []models.Pin
@@ -17,7 +17,7 @@ type ServiceTestCase struct {
 }
 
 func TestServiceGetPosts(t *testing.T) {
-	cases := []ServiceTestCase{
+	cases := []serviceTestCase{
 		{
 			Page:  1,
 			Limit: 30,
@@ -57,25 +57,49 @@ func TestServiceGetPosts(t *testing.T) {
 				{
 					Id:          5,
 					Link:        "",
-					Title:       "Question",
+					Title:       "Shops",
 					Description: "",
-					MediaSource: "https://wg.grechkogv.ru/assets/weapon5.webp",
-					BoardId:     2,
+					MediaSource: "https://i.pinimg.com/564x/2f/93/56/2f9356b9346e82c14bf286c6a107bc7a.jpg",
+					BoardId:     3,
 				},
 				{
 					Id:          6,
 					Link:        "",
 					Title:       "Shops",
 					Description: "",
-					MediaSource: "https://wg.grechkogv.ru/assets/weapon1.webp",
+					MediaSource: "https://i.pinimg.com/564x/32/ff/71/32ff717c3cd3bd3d1886c775b59f0769.jpg",
 					BoardId:     3,
 				},
 				{
 					Id:          7,
 					Link:        "",
+					Title:       "Shops",
+					Description: "",
+					MediaSource: "https://i.pinimg.com/564x/ce/e3/01/cee3011f3e19de4377dbf98f397c027b.jpg",
+					BoardId:     3,
+				},
+				{
+					Id:          8,
+					Link:        "",
+					Title:       "Shops",
+					Description: "",
+					MediaSource: "https://i.pinimg.com/564x/a6/ba/55/a6ba553df2a0c0f3894ef328a86fb373.jpg",
+					BoardId:     3,
+				},
+				{
+					Id:          9,
+					Link:        "",
+					Title:       "Shops",
+					Description: "",
+					MediaSource: "https://i.pinimg.com/564x/43/2d/3b/432d3b28d1661439245422e9218ffcce.jpg",
+					BoardId:     3,
+				},
+				{
+					Id:          10,
+					Link:        "",
 					Title:       "School",
 					Description: "",
-					MediaSource: "https://wg.grechkogv.ru/assets/armorBeing3.webp",
+					MediaSource: "https://i.pinimg.com/564x/98/9d/3f/989d3f5c158dcac7ca4d115bff866d84.jpg",
 					BoardId:     4,
 				},
 			},
@@ -96,17 +120,17 @@ func TestServiceGetPosts(t *testing.T) {
 				{
 					Id:          5,
 					Link:        "",
-					Title:       "Question",
+					Title:       "Shops",
 					Description: "",
-					MediaSource: "https://wg.grechkogv.ru/assets/weapon5.webp",
-					BoardId:     2,
+					MediaSource: "https://i.pinimg.com/564x/2f/93/56/2f9356b9346e82c14bf286c6a107bc7a.jpg",
+					BoardId:     3,
 				},
 				{
 					Id:          6,
 					Link:        "",
 					Title:       "Shops",
 					Description: "",
-					MediaSource: "https://wg.grechkogv.ru/assets/weapon1.webp",
+					MediaSource: "https://i.pinimg.com/564x/32/ff/71/32ff717c3cd3bd3d1886c775b59f0769.jpg",
 					BoardId:     3,
 				},
 			},

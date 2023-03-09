@@ -30,8 +30,8 @@ func (rep repository) GetUser(id int) (models.User, error) {
 
 	user := models.User{}
 	rows.Next()
-	err = rows.Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword, &user.Name, &profile_image, &website_url, &user.Account_type)
-	user.Profile_image = profile_image.String
-	user.Website_url = website_url.String
+	err = rows.Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword, &user.Name, &profile_image, &website_url, &user.AccountType)
+	user.ProfileImage = profile_image.String
+	user.WebsiteUrl = website_url.String
 	return user, err
 }

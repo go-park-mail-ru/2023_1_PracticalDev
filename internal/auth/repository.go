@@ -2,17 +2,17 @@ package auth
 
 import (
 	"context"
-
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"strconv"
+	"time"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/hasher"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models/api"
 	"github.com/redis/go-redis/v9"
-	"strconv"
-	"time"
 )
 
 var (
@@ -48,8 +48,7 @@ func (rep *repository) Authenticate(email, password string) (models.User, error)
 	hasher := hasher.NewHasher()
 
 	var profile_image, website_url sql.NullString
-	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword, &user.Name, &profile_image, &website_url, &user.Account_type)
-
+	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword, &user.Name, &profile_image, &website_url, &user.AccountType)
 	if err != nil {
 		if err.Error() == "no rows in result set" {
 			return models.User{}, WrongPasswordOrLoginError
@@ -62,8 +61,8 @@ func (rep *repository) Authenticate(email, password string) (models.User, error)
 		return models.User{}, WrongPasswordOrLoginError
 	}
 
-	user.Website_url = website_url.String
-	user.Profile_image = profile_image.String
+	user.WebsiteUrl = website_url.String
+	user.ProfileImage = profile_image.String
 
 	return user, nil
 }
@@ -72,7 +71,6 @@ func (rep *repository) SetSession(sessionId string, session *models.Session, exp
 	tmp, _ := json.Marshal(session)
 
 	err := rep.rdb.HSet(rep.ctx, strconv.Itoa(session.UserId), sessionId, tmp).Err()
-
 	if err != nil {
 		rep.rdb.Expire(rep.ctx, strconv.Itoa(session.UserId), expiration)
 	}
@@ -86,7 +84,11 @@ func (rep *repository) CheckAuth(userId, sessionId string) error {
 }
 
 func (rep *repository) DeleteSession(userId, sessionId string) error {
-	return rep.rdb.HDel(rep.ctx, userId, sessionId).Err()
+	if err := rep.rdb.HGet(rep.ctx, userId, sessionId).Err(); err != nil {
+		return err
+	}
+	rep.rdb.HDel(rep.ctx, userId, sessionId)
+	return nil
 }
 
 func (rep *repository) Register(user *api.RegisterParams) error {
