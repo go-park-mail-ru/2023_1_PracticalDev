@@ -7,9 +7,16 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func Logger(handler httprouter.Handle, log log.Logger) httprouter.Handle {
+func HandleLogger(handler httprouter.Handle, log log.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
-		log.Info("New request: ", r.Method, r.URL, r.Proto)
+		log.Info("New request: ", r.Method, r.URL, r.Proto, "Origin="+r.Header.Get("Origin"))
 		handler(w, r, p)
+	}
+}
+
+func HandlerFuncLogger(handler http.HandlerFunc, log log.Logger) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		log.Info("New request: ", r.Method, r.URL, r.Proto, "Origin="+r.Header.Get("Origin"))
+		handler(w, r)
 	}
 }

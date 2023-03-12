@@ -14,7 +14,7 @@ import (
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer auth.Authorizer, serv Service) {
 	del := delivery{serv, logger}
 
-	mux.GET("/users/:id", middleware.Logger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getUser)), logger), logger))
+	mux.GET("/users/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getUser)), logger), logger))
 }
 
 type delivery struct {

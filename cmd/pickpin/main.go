@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
 	"net/http"
 	"os"
 
@@ -33,13 +34,16 @@ func main() {
 	}
 
 	mux := httprouter.New()
-	mux.GlobalOPTIONS = http.HandlerFunc(middleware.OptionsHandler)
+	mux.GlobalOPTIONS = middleware.HandlerFuncLogger(middleware.OptionsHandler, logger)
 
 	authServ := auth.NewService(auth.NewRepository(db, rdb, ctx, logger))
 	authorizer := auth.NewAuthorizer(authServ)
+
 	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
 	auth.RegisterHandlers(mux, logger, authServ)
 	posts.RegisterHandlers(mux, logger, authorizer, posts.NewService(posts.NewRepository(db, logger)))
+	ping.RegisterHandlers(mux, logger)
+
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
 		Handler: mux,

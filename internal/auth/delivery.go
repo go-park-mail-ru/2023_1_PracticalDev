@@ -20,9 +20,9 @@ var BadRequestError = errors.New("bad request")
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv Service) {
 	del := delivery{serv, logger}
-	mux.POST("/auth/login", middleware.Logger(middleware.ErrorHandler(del.Authenticate, logger), logger))
-	mux.DELETE("/auth/logout", middleware.Logger(middleware.ErrorHandler(del.Logout, logger), logger))
-	mux.POST("/auth/signup", middleware.Logger(middleware.ErrorHandler(del.Register, logger), logger))
+	mux.POST("/auth/login", middleware.HandleLogger(middleware.ErrorHandler(del.Authenticate, logger), logger))
+	mux.DELETE("/auth/logout", middleware.HandleLogger(middleware.ErrorHandler(del.Logout, logger), logger))
+	mux.POST("/auth/signup", middleware.HandleLogger(middleware.ErrorHandler(del.Register, logger), logger))
 }
 
 type delivery struct {
