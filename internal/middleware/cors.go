@@ -10,11 +10,11 @@ import (
 
 const mainOrigin = "http://pickpin.ru"
 
-var allowedOrigins = map[string]interface{}{
-	mainOrigin:                nil,
-	"http://localhost":        nil,
-	"http://127.0.0.1":        nil,
-	"https://park.vk.company": nil,
+var allowedOrigins = map[string]struct{}{
+	mainOrigin:                {},
+	"http://localhost":        {},
+	"http://127.0.0.1":        {},
+	"https://park.vk.company": {},
 }
 
 func OptionsHandler(w http.ResponseWriter, r *http.Request) {
