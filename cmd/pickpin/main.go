@@ -2,9 +2,10 @@ package main
 
 import (
 	"context"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
 	"net/http"
 	"os"
+
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 
@@ -27,7 +28,6 @@ func main() {
 
 	ctx := context.Background()
 	rdb, err := redis.NewRedisClient(logger, ctx)
-
 	if err != nil {
 		logger.Warn(err)
 		os.Exit(1)
@@ -37,7 +37,7 @@ func main() {
 	mux.GlobalOPTIONS = middleware.HandlerFuncLogger(middleware.OptionsHandler, logger)
 
 	authServ := auth.NewService(auth.NewRepository(db, rdb, ctx, logger))
-	authorizer := auth.NewAuthorizer(authServ)
+	authorizer := middleware.NewAuthorizer(authServ)
 
 	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
 	auth.RegisterHandlers(mux, logger, authServ)
