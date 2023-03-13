@@ -68,7 +68,7 @@ services:
   frontend:
     build: 
       context: https://github.com/frontend-park-mail-ru/2023_1_PracticalDev.git#main
-      dockerfile: Dockerfile.prod
+      dockerfile: prod/Dockerfile.prod
     container_name: frontend
     command: npm run server
     ports:
