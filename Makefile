@@ -38,6 +38,11 @@ redis:
 migrations:
 	./scripts/run_migrations.sh
 
+.PHONY: fill-test-data
+fill-test-data:
+	./scripts/run_migrations.sh
+	./scripts/populate_db.sh
+
 .PHONY: deploy
 deploy:
-	docker compose -f docker-compose.yml up -d
+	docker compose -f docker-compose.yml up -d --build

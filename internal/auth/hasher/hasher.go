@@ -13,8 +13,7 @@ func NewHasher() Hasher {
 	return &hasher{}
 }
 
-type hasher struct {
-}
+type hasher struct{}
 
 func (h *hasher) GetHashedPassword(password string) (string, error) {
 	pswd, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
