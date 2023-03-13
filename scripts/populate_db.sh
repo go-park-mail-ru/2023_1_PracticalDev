@@ -1,6 +1,6 @@
 #!/bin/bash
 
-network=$(docker network ls | grep 'db-network' | awk '{print $2}')
+network=$(docker network ls | grep 'db_network' | awk '{print $2}')
 
 if [[ -z $network ]];
 then
