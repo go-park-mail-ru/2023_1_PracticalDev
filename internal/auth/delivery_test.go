@@ -29,19 +29,19 @@ var (
 var existingUsers []api.LoginParams = []api.LoginParams{
 	{
 		Email:    "geogreck@vk.com",
-		Password: "12345678",
+		Password: "12345Aa_",
 	},
 	{
 		Email:    "figma@vk.com",
-		Password: "12345678",
+		Password: "12345Aa_",
 	},
 	{
 		Email:    "iu7@vk.com",
-		Password: "12345678",
+		Password: "12345Aa_",
 	},
 	{
 		Email:    "test@vk.com",
-		Password: "12345678",
+		Password: "12345Aa_",
 	},
 }
 
@@ -98,7 +98,7 @@ func TestAuthenticate(t *testing.T) {
 		{
 			req: api.LoginParams{
 				Email:    "123@vk.com",
-				Password: "12345678",
+				Password: "12345Aa_",
 			},
 			expectedCode: http.StatusNotFound,
 		},
