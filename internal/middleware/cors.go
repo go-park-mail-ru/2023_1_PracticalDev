@@ -35,7 +35,8 @@ func OptionsHandler(w http.ResponseWriter, r *http.Request) {
 func CorsChecker(handler router.Handler) router.Handler {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 		origin := r.Header.Get("Origin")
-		if r.Header.Get("Sec-Fetch-Site") == "same-origin" {
+		secFetchSite := r.Header.Get("Sec-Fetch-Site")
+		if secFetchSite == "same-origin" || secFetchSite == "none" {
 			return handler(w, r, p)
 		} else if _, allowed := allowedOrigins[origin]; allowed {
 			w.Header().Set("Access-Control-Allow-Origin", origin)
