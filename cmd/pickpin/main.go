@@ -10,6 +10,7 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/posts"
@@ -39,9 +40,10 @@ func main() {
 	authServ := auth.NewService(auth.NewRepository(db, rdb, ctx, logger))
 	authorizer := middleware.NewAuthorizer(authServ)
 
-	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
 	auth.RegisterHandlers(mux, logger, authServ)
+	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
 	posts.RegisterHandlers(mux, logger, authorizer, posts.NewService(posts.NewRepository(db, logger)))
+	boards.RegisterHandlers(mux, logger, authorizer, boards.NewService(boards.NewRepository(db, logger)))
 	ping.RegisterHandlers(mux, logger)
 
 	server := http.Server{

@@ -40,6 +40,7 @@ func NewAuthorizer(serv AuthService) func(h router.Handler) router.Handler {
 				return err
 			}
 
+			p = append(p, httprouter.Param{Key: "user-id", Value: userId})
 			return handler(w, r, p)
 		}
 	}
