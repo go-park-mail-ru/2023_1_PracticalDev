@@ -2,14 +2,21 @@ package boards
 
 import (
 	"database/sql"
+	"errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 
+var (
+	ErrDeleteBoard   = errors.New("failed to delete board")
+	ErrBoardNotFound = errors.New("board not found")
+)
+
 type Repository interface {
+	CreateBoard(board *models.Board) (models.Board, error)
 	GetBoards(userId int) ([]models.Board, error)
 	GetBoard(id int) (models.Board, error)
-	CreateBoard(board *models.Board) (models.Board, error)
+	DeleteBoard(id int) error
 }
 
 func NewRepository(db *sql.DB, log log.Logger) Repository {
@@ -19,6 +26,19 @@ func NewRepository(db *sql.DB, log log.Logger) Repository {
 type repository struct {
 	db  *sql.DB
 	log log.Logger
+}
+
+func (rep *repository) CreateBoard(board *models.Board) (models.Board, error) {
+	const insertCommand = `INSERT INTO boards (name, description, privacy, user_id) 
+				      	   VALUES ($1, $2, $3, $4)
+						   RETURNING *;`
+
+	row := rep.db.QueryRow(insertCommand, board.Name, board.Description, board.Privacy, board.UserId)
+	createdBoard := models.Board{}
+	var description sql.NullString
+	err := row.Scan(&createdBoard.Id, &createdBoard.Name, &description, &createdBoard.Privacy, &createdBoard.UserId)
+	createdBoard.Description = description.String
+	return createdBoard, err
 }
 
 func (rep *repository) GetBoards(userId int) ([]models.Board, error) {
@@ -63,15 +83,17 @@ func (rep *repository) GetBoard(id int) (models.Board, error) {
 	return board, err
 }
 
-func (rep *repository) CreateBoard(board *models.Board) (models.Board, error) {
-	const insertCommand = `INSERT INTO boards (name, description, privacy, user_id) 
-				      	   VALUES ($1, $2, $3, $4)
-						   RETURNING *;`
+func (rep *repository) DeleteBoard(id int) error {
+	const deleteCommand = `DELETE FROM boards 
+						   WHERE id = $1;`
 
-	row := rep.db.QueryRow(insertCommand, board.Name, board.Description, board.Privacy, board.UserId)
-	createdBoard := models.Board{}
-	var description sql.NullString
-	err := row.Scan(&createdBoard.Id, &createdBoard.Name, &description, &createdBoard.Privacy, &createdBoard.UserId)
-	createdBoard.Description = description.String
-	return createdBoard, err
+	res, err := rep.db.Exec(deleteCommand, id)
+	if err != nil {
+		return ErrDeleteBoard
+	}
+	count, err := res.RowsAffected()
+	if err != nil || count < 1 {
+		return ErrBoardNotFound
+	}
+	return nil
 }

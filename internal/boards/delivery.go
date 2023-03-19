@@ -13,9 +13,10 @@ import (
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, serv Service) {
 	del := delivery{serv, logger}
 
+	mux.POST("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.createBoard)), logger), logger))
 	mux.GET("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getBoards)), logger), logger))
 	mux.GET("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getBoard)), logger), logger))
-	mux.POST("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.createBoard)), logger), logger))
+	mux.DELETE("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.deleteBoard)), logger), logger))
 }
 
 type delivery struct {
@@ -103,5 +104,23 @@ func (del *delivery) createBoard(w http.ResponseWriter, r *http.Request, p httpr
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
+	return err
+}
+
+func (del *delivery) deleteBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strId := p.ByName("id")
+	id, err := strconv.Atoi(strId)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return err
+	}
+
+	err = del.serv.DeleteBoard(id)
+	switch err {
+	case ErrDeleteBoard:
+		w.WriteHeader(http.StatusInternalServerError)
+	case ErrBoardNotFound:
+		w.WriteHeader(http.StatusNotFound)
+	}
 	return err
 }
