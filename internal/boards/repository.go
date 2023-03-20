@@ -7,6 +7,16 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 
+type PartialUpdateBoardParams struct {
+	Id                int
+	Name              string
+	UpdateName        bool
+	Description       string
+	UpdateDescription bool
+	Privacy           string
+	UpdatePrivacy     bool
+}
+
 var (
 	ErrDeleteBoard   = errors.New("failed to delete board")
 	ErrBoardNotFound = errors.New("board not found")
@@ -16,6 +26,7 @@ type Repository interface {
 	CreateBoard(board *models.Board) (models.Board, error)
 	GetBoards(userId int) ([]models.Board, error)
 	GetBoard(id int) (models.Board, error)
+	PartialUpdateBoard(params *PartialUpdateBoardParams) (models.Board, error)
 	DeleteBoard(id int) error
 }
 
@@ -81,6 +92,30 @@ func (rep *repository) GetBoard(id int) (models.Board, error) {
 	err = rows.Scan(&board.Id, &board.Name, &description, &board.Privacy, &board.UserId)
 	board.Description = description.String
 	return board, err
+}
+
+func (rep *repository) PartialUpdateBoard(params *PartialUpdateBoardParams) (models.Board, error) {
+	const partialUpdateBoard = `UPDATE boards
+								SET name = CASE WHEN $1::boolean THEN $2::VARCHAR ELSE name END,
+    							description = CASE WHEN $3::boolean THEN $4::TEXT ELSE description END,
+    							privacy = CASE WHEN $5::boolean THEN $6::privacy ELSE privacy END
+								WHERE id = $7
+								RETURNING *;`
+
+	row := rep.db.QueryRow(partialUpdateBoard,
+		params.UpdateName,
+		params.Name,
+		params.UpdateDescription,
+		params.Description,
+		params.UpdatePrivacy,
+		params.Privacy,
+		params.Id,
+	)
+	var updatedBoard models.Board
+	var description sql.NullString
+	err := row.Scan(&updatedBoard.Id, &updatedBoard.Name, &description, &updatedBoard.Privacy, &updatedBoard.UserId)
+	updatedBoard.Description = description.String
+	return updatedBoard, err
 }
 
 func (rep *repository) DeleteBoard(id int) error {

@@ -6,6 +6,7 @@ type Service interface {
 	CreateBoard(board *models.Board) (models.Board, error)
 	GetBoards(userId int) ([]models.Board, error)
 	GetBoard(id int) (models.Board, error)
+	PartialUpdateBoard(params *PartialUpdateBoardParams) (models.Board, error)
 	DeleteBoard(id int) error
 }
 
@@ -27,6 +28,10 @@ func (serv *service) GetBoards(userId int) ([]models.Board, error) {
 
 func (serv *service) GetBoard(id int) (models.Board, error) {
 	return serv.rep.GetBoard(id)
+}
+
+func (serv *service) PartialUpdateBoard(params *PartialUpdateBoardParams) (models.Board, error) {
+	return serv.rep.PartialUpdateBoard(params)
 }
 
 func (serv *service) DeleteBoard(id int) error {
