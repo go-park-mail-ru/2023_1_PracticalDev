@@ -23,13 +23,48 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer midd
 	mux.POST("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.createBoard)), logger), logger))
 	mux.GET("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getBoards)), logger), logger))
 	mux.GET("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getBoard)), logger), logger))
-	mux.PUT("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.partialUpdateBoard)), logger), logger))
+	mux.PUT("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.fullUpdateBoard)), logger), logger))
+	mux.PATCH("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.partialUpdateBoard)), logger), logger))
 	mux.DELETE("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.deleteBoard)), logger), logger))
 }
 
 type delivery struct {
 	serv Service
 	log  log.Logger
+}
+
+func (del *delivery) createBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strUserId := p.ByName("user-id")
+	userId, err := strconv.Atoi(strUserId)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return err
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+	board := models.Board{}
+	if err = decoder.Decode(&board); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return err
+	}
+	board.UserId = userId
+
+	createdBoard, err := del.serv.CreateBoard(&board)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	data, err := json.Marshal(createdBoard)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	return err
 }
 
 func (del *delivery) getBoards(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -81,9 +116,9 @@ func (del *delivery) getBoard(w http.ResponseWriter, r *http.Request, p httprout
 	return err
 }
 
-func (del *delivery) createBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strUserId := p.ByName("user-id")
-	userId, err := strconv.Atoi(strUserId)
+func (del *delivery) fullUpdateBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strId := p.ByName("id")
+	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
@@ -96,15 +131,26 @@ func (del *delivery) createBoard(w http.ResponseWriter, r *http.Request, p httpr
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
-	board.UserId = userId
+	board.Id = id
 
-	createdBoard, err := del.serv.CreateBoard(&board)
+	params := FullUpdateBoardParams{
+		Id:          board.Id,
+		Name:        board.Name,
+		Description: board.Description,
+		Privacy:     board.Privacy,
+	}
+
+	updatedBoard, err := del.serv.FullUpdateBoard(&params)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			w.WriteHeader(http.StatusNotFound)
+			return err
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
-	data, err := json.Marshal(createdBoard)
+	data, err := json.Marshal(updatedBoard)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err

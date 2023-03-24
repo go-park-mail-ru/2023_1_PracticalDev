@@ -17,6 +17,13 @@ type PartialUpdateBoardParams struct {
 	UpdatePrivacy     bool
 }
 
+type FullUpdateBoardParams struct {
+	Id          int
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Privacy     string `json:"privacy"`
+}
+
 var (
 	ErrDeleteBoard   = errors.New("failed to delete board")
 	ErrBoardNotFound = errors.New("board not found")
@@ -26,6 +33,7 @@ type Repository interface {
 	CreateBoard(board *models.Board) (models.Board, error)
 	GetBoards(userId int) ([]models.Board, error)
 	GetBoard(id int) (models.Board, error)
+	FullUpdateBoard(params *FullUpdateBoardParams) (models.Board, error)
 	PartialUpdateBoard(params *PartialUpdateBoardParams) (models.Board, error)
 	DeleteBoard(id int) error
 }
@@ -94,6 +102,27 @@ func (rep *repository) GetBoard(id int) (models.Board, error) {
 	return board, err
 }
 
+func (rep *repository) FullUpdateBoard(params *FullUpdateBoardParams) (models.Board, error) {
+	const fullUpdateBoard = `UPDATE boards
+								SET name =  $1::VARCHAR,
+    							description = $2::TEXT,
+    							privacy = $3::privacy
+								WHERE id = $4
+								RETURNING *;`
+
+	row := rep.db.QueryRow(fullUpdateBoard,
+		params.Name,
+		params.Description,
+		params.Privacy,
+		params.Id,
+	)
+	var updatedBoard models.Board
+	var description sql.NullString
+	err := row.Scan(&updatedBoard.Id, &updatedBoard.Name, &description, &updatedBoard.Privacy, &updatedBoard.UserId)
+	updatedBoard.Description = description.String
+	return updatedBoard, err
+}
+
 func (rep *repository) PartialUpdateBoard(params *PartialUpdateBoardParams) (models.Board, error) {
 	const partialUpdateBoard = `UPDATE boards
 								SET name = CASE WHEN $1::boolean THEN $2::VARCHAR ELSE name END,
@@ -131,4 +160,19 @@ func (rep *repository) DeleteBoard(id int) error {
 		return ErrBoardNotFound
 	}
 	return nil
+}
+
+func (rep *repository) checkAccess(id, userId int) (bool, error) {
+	const checkCommand = `SELECT EXISTS(SELECT id
+     			          				FROM boards
+              			  				WHERE id = $1 AND user_id = $2);`
+
+	row := rep.db.QueryRow(checkCommand,
+		id,
+		userId,
+	)
+
+	var access bool
+	err := row.Scan(&access)
+	return access, err
 }
