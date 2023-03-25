@@ -8,13 +8,13 @@ import (
 )
 
 type createBoardParams struct {
-	Name        string `json:"name,omitempty"`
-	Description string `json:"description,omitempty"`
-	Privacy     string `json:"privacy,omitempty"`
+	Name        string
+	Description string
+	Privacy     string
 	UserId      int
 }
 
-type PartialUpdateBoardParams struct {
+type partialUpdateBoardParams struct {
 	Id                int
 	Name              string
 	UpdateName        bool
@@ -26,9 +26,9 @@ type PartialUpdateBoardParams struct {
 
 type FullUpdateBoardParams struct {
 	Id          int
-	Name        string `json:"name"`
-	Description string `json:"description"`
-	Privacy     string `json:"privacy"`
+	Name        string
+	Description string
+	Privacy     string
 }
 
 var (
@@ -41,7 +41,7 @@ type Repository interface {
 	GetBoards(userId int) ([]models.Board, error)
 	GetBoard(id int) (models.Board, error)
 	FullUpdateBoard(params *FullUpdateBoardParams) (models.Board, error)
-	PartialUpdateBoard(params *PartialUpdateBoardParams) (models.Board, error)
+	PartialUpdateBoard(params *partialUpdateBoardParams) (models.Board, error)
 	DeleteBoard(id int) error
 }
 
@@ -59,7 +59,12 @@ func (rep *repository) CreateBoard(params *createBoardParams) (models.Board, err
 				      	   VALUES ($1, $2, $3, $4)
 						   RETURNING *;`
 
-	row := rep.db.QueryRow(insertCommand, params.Name, params.Description, params.Privacy, params.UserId)
+	row := rep.db.QueryRow(insertCommand,
+		params.Name,
+		params.Description,
+		params.Privacy,
+		params.UserId,
+	)
 	createdBoard := models.Board{}
 	var description sql.NullString
 	err := row.Scan(&createdBoard.Id, &createdBoard.Name, &description, &createdBoard.Privacy, &createdBoard.UserId)
@@ -111,7 +116,7 @@ func (rep *repository) GetBoard(id int) (models.Board, error) {
 
 func (rep *repository) FullUpdateBoard(params *FullUpdateBoardParams) (models.Board, error) {
 	const fullUpdateBoard = `UPDATE boards
-								SET name =  $1::VARCHAR,
+								SET name = $1::VARCHAR,
     							description = $2::TEXT,
     							privacy = $3::privacy
 								WHERE id = $4
@@ -130,7 +135,7 @@ func (rep *repository) FullUpdateBoard(params *FullUpdateBoardParams) (models.Bo
 	return updatedBoard, err
 }
 
-func (rep *repository) PartialUpdateBoard(params *PartialUpdateBoardParams) (models.Board, error) {
+func (rep *repository) PartialUpdateBoard(params *partialUpdateBoardParams) (models.Board, error) {
 	const partialUpdateBoard = `UPDATE boards
 								SET name = CASE WHEN $1::boolean THEN $2::VARCHAR ELSE name END,
     							description = CASE WHEN $3::boolean THEN $4::TEXT ELSE description END,

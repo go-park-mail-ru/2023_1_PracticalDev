@@ -5,22 +5,27 @@ import (
 	"encoding/json"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
 )
 
 type apiCreateBoard struct {
-	Name        string  `json:"name,omitempty"`
-	Description string  `json:"description,omitempty"`
-	Privacy     *string `json:"privacy,omitempty"`
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Privacy     *string `json:"privacy"`
 }
 
-type apiBoardPartialUpdate struct {
-	Name        *string `json:"name,omitempty"`
-	Description *string `json:"description,omitempty"`
-	Privacy     *string `json:"privacy,omitempty"`
+type apiFullUpdateBoard struct {
+	Name        string  `json:"name"`
+	Description string  `json:"description"`
+	Privacy     *string `json:"privacy"`
+}
+
+type apiPartialUpdateBoard struct {
+	Name        *string `json:"name"`
+	Description *string `json:"description"`
+	Privacy     *string `json:"privacy"`
 }
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, serv Service) {
@@ -58,11 +63,11 @@ func (del *delivery) createBoard(w http.ResponseWriter, r *http.Request, p httpr
 	params := createBoardParams{
 		Name:        apiBoard.Name,
 		Description: apiBoard.Description,
-		Privacy:     *apiBoard.Privacy,
+		Privacy:     "secret",
 		UserId:      userId,
 	}
-	if apiBoard.Privacy == nil {
-		params.Privacy = "secret" // default
+	if apiBoard.Privacy != nil {
+		params.Privacy = *apiBoard.Privacy
 	}
 
 	createdBoard, err := del.serv.CreateBoard(&params)
@@ -140,20 +145,22 @@ func (del *delivery) fullUpdateBoard(w http.ResponseWriter, r *http.Request, p h
 		return err
 	}
 
+	var apiBoard apiFullUpdateBoard
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	board := models.Board{}
-	if err = decoder.Decode(&board); err != nil {
+	if err = decoder.Decode(&apiBoard); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
-	board.Id = id
 
 	params := FullUpdateBoardParams{
-		Id:          board.Id,
-		Name:        board.Name,
-		Description: board.Description,
-		Privacy:     board.Privacy,
+		Id:          id,
+		Name:        apiBoard.Name,
+		Description: apiBoard.Description,
+		Privacy:     "secret",
+	}
+	if apiBoard.Privacy != nil {
+		params.Privacy = *apiBoard.Privacy
 	}
 
 	updatedBoard, err := del.serv.FullUpdateBoard(&params)
@@ -178,45 +185,45 @@ func (del *delivery) fullUpdateBoard(w http.ResponseWriter, r *http.Request, p h
 }
 
 func (del *delivery) partialUpdateBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strUserId := p.ByName("id")
-	userId, err := strconv.Atoi(strUserId)
+	strId := p.ByName("id")
+	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
 
+	var apiBoard apiPartialUpdateBoard
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	var request apiBoardPartialUpdate
-	if err = decoder.Decode(&request); err != nil {
+	if err = decoder.Decode(&apiBoard); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
 
-	params := PartialUpdateBoardParams{
-		Id:      userId,
+	params := partialUpdateBoardParams{
+		Id:      id,
 		Privacy: "secret",
 	}
-	if request.Name != nil {
+	if apiBoard.Name != nil {
 		params.UpdateName = true
-		params.Name = *request.Name
+		params.Name = *apiBoard.Name
 	}
-	if request.Description != nil {
+	if apiBoard.Description != nil {
 		params.UpdateDescription = true
-		params.Description = *request.Description
+		params.Description = *apiBoard.Description
 	}
-	if request.Privacy != nil {
+	if apiBoard.Privacy != nil {
 		params.UpdatePrivacy = true
-		params.Privacy = *request.Privacy
+		params.Privacy = *apiBoard.Privacy
 	}
 
 	updatedBoard, err := del.serv.PartialUpdateBoard(&params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusNotFound)
-			return err
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
 		}
-		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
