@@ -96,7 +96,8 @@ func (del *delivery) getBoards(w http.ResponseWriter, r *http.Request, p httprou
 		return err
 	}
 
-	data, err := json.Marshal(boards)
+	response := map[string]interface{}{"items": boards}
+	data, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
