@@ -9,6 +9,9 @@ type Service interface {
 	FullUpdateBoard(params *FullUpdateBoardParams) (models.Board, error)
 	PartialUpdateBoard(params *partialUpdateBoardParams) (models.Board, error)
 	DeleteBoard(id int) error
+
+	CheckWriteAccess(userId, boardId string) (bool, error)
+	CheckReadAccess(userId, boardId string) (bool, error)
 }
 
 func NewService(rep Repository) Service {
@@ -41,4 +44,12 @@ func (serv *service) PartialUpdateBoard(params *partialUpdateBoardParams) (model
 
 func (serv *service) DeleteBoard(id int) error {
 	return serv.rep.DeleteBoard(id)
+}
+
+func (serv *service) CheckWriteAccess(userId, boardId string) (bool, error) {
+	return serv.rep.CheckWriteAccess(userId, boardId)
+}
+
+func (serv *service) CheckReadAccess(userId, boardId string) (bool, error) {
+	return serv.rep.CheckReadAccess(userId, boardId)
 }

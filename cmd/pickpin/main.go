@@ -37,13 +37,19 @@ func main() {
 	mux := httprouter.New()
 	mux.GlobalOPTIONS = middleware.HandlerFuncLogger(middleware.OptionsHandler, logger)
 
+	boardsRepo := boards.NewRepository(db, logger)
+
+	boardsServ := boards.NewService(boardsRepo)
+
+	boardsAccessChecker := middleware.NewAccessChecker(boardsServ)
+
 	authServ := auth.NewService(auth.NewRepository(db, rdb, ctx, logger))
 	authorizer := middleware.NewAuthorizer(authServ)
 
 	auth.RegisterHandlers(mux, logger, authServ)
 	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
 	posts.RegisterHandlers(mux, logger, authorizer, posts.NewService(posts.NewRepository(db, logger)))
-	boards.RegisterHandlers(mux, logger, authorizer, boards.NewService(boards.NewRepository(db, logger)))
+	boards.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ)
 	ping.RegisterHandlers(mux, logger)
 
 	server := http.Server{

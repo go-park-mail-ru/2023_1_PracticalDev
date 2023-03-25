@@ -10,13 +10,7 @@ import (
 	"strconv"
 )
 
-type apiCreateBoard struct {
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Privacy     *string `json:"privacy"`
-}
-
-type apiFullUpdateBoard struct {
+type apiBoard struct {
 	Name        string  `json:"name"`
 	Description string  `json:"description"`
 	Privacy     *string `json:"privacy"`
@@ -28,15 +22,15 @@ type apiPartialUpdateBoard struct {
 	Privacy     *string `json:"privacy"`
 }
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, serv Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, access middleware.AccessChecker, serv Service) {
 	del := delivery{serv, logger}
 
 	mux.POST("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.createBoard)), logger), logger))
 	mux.GET("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getBoards)), logger), logger))
-	mux.GET("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getBoard)), logger), logger))
-	mux.PUT("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.fullUpdateBoard)), logger), logger))
-	mux.PATCH("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.partialUpdateBoard)), logger), logger))
-	mux.DELETE("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.deleteBoard)), logger), logger))
+	mux.GET("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.ReadChecker(del.getBoard))), logger), logger))
+	mux.PUT("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.fullUpdateBoard))), logger), logger))
+	mux.PATCH("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.partialUpdateBoard))), logger), logger))
+	mux.DELETE("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.deleteBoard))), logger), logger))
 }
 
 type delivery struct {
@@ -52,22 +46,22 @@ func (del *delivery) createBoard(w http.ResponseWriter, r *http.Request, p httpr
 		return err
 	}
 
-	var apiBoard apiCreateBoard
+	var request apiBoard
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	if err = decoder.Decode(&apiBoard); err != nil {
+	if err = decoder.Decode(&request); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
 
 	params := createBoardParams{
-		Name:        apiBoard.Name,
-		Description: apiBoard.Description,
+		Name:        request.Name,
+		Description: request.Description,
 		Privacy:     "secret",
 		UserId:      userId,
 	}
-	if apiBoard.Privacy != nil {
-		params.Privacy = *apiBoard.Privacy
+	if request.Privacy != nil {
+		params.Privacy = *request.Privacy
 	}
 
 	createdBoard, err := del.serv.CreateBoard(&params)
@@ -145,22 +139,22 @@ func (del *delivery) fullUpdateBoard(w http.ResponseWriter, r *http.Request, p h
 		return err
 	}
 
-	var apiBoard apiFullUpdateBoard
+	var request apiBoard
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	if err = decoder.Decode(&apiBoard); err != nil {
+	if err = decoder.Decode(&request); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
 
 	params := FullUpdateBoardParams{
 		Id:          id,
-		Name:        apiBoard.Name,
-		Description: apiBoard.Description,
+		Name:        request.Name,
+		Description: request.Description,
 		Privacy:     "secret",
 	}
-	if apiBoard.Privacy != nil {
-		params.Privacy = *apiBoard.Privacy
+	if request.Privacy != nil {
+		params.Privacy = *request.Privacy
 	}
 
 	updatedBoard, err := del.serv.FullUpdateBoard(&params)
@@ -192,10 +186,10 @@ func (del *delivery) partialUpdateBoard(w http.ResponseWriter, r *http.Request, 
 		return err
 	}
 
-	var apiBoard apiPartialUpdateBoard
+	var request apiPartialUpdateBoard
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	if err = decoder.Decode(&apiBoard); err != nil {
+	if err = decoder.Decode(&request); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
@@ -204,17 +198,17 @@ func (del *delivery) partialUpdateBoard(w http.ResponseWriter, r *http.Request, 
 		Id:      id,
 		Privacy: "secret",
 	}
-	if apiBoard.Name != nil {
+	if request.Name != nil {
 		params.UpdateName = true
-		params.Name = *apiBoard.Name
+		params.Name = *request.Name
 	}
-	if apiBoard.Description != nil {
+	if request.Description != nil {
 		params.UpdateDescription = true
-		params.Description = *apiBoard.Description
+		params.Description = *request.Description
 	}
-	if apiBoard.Privacy != nil {
+	if request.Privacy != nil {
 		params.UpdatePrivacy = true
-		params.Privacy = *apiBoard.Privacy
+		params.Privacy = *request.Privacy
 	}
 
 	updatedBoard, err := del.serv.PartialUpdateBoard(&params)

@@ -43,6 +43,8 @@ type Repository interface {
 	FullUpdateBoard(params *FullUpdateBoardParams) (models.Board, error)
 	PartialUpdateBoard(params *partialUpdateBoardParams) (models.Board, error)
 	DeleteBoard(id int) error
+	CheckWriteAccess(userId, boardId string) (bool, error)
+	CheckReadAccess(userId, boardId string) (bool, error)
 }
 
 func NewRepository(db *sql.DB, log log.Logger) Repository {
@@ -174,15 +176,27 @@ func (rep *repository) DeleteBoard(id int) error {
 	return nil
 }
 
-func (rep *repository) checkAccess(id, userId int) (bool, error) {
+func (rep *repository) CheckWriteAccess(userId, boardId string) (bool, error) {
 	const checkCommand = `SELECT EXISTS(SELECT id
      			          				FROM boards
               			  				WHERE id = $1 AND user_id = $2);`
 
 	row := rep.db.QueryRow(checkCommand,
-		id,
+		boardId,
 		userId,
 	)
+
+	var access bool
+	err := row.Scan(&access)
+	return access, err
+}
+
+func (rep *repository) CheckReadAccess(userId, boardId string) (bool, error) {
+	const checkCommand = `SELECT EXISTS(SELECT
+              							FROM boards
+              							WHERE id = $1 AND (privacy = 'public' OR user_id = $2));`
+
+	row := rep.db.QueryRow(checkCommand, boardId, userId)
 
 	var access bool
 	err := row.Scan(&access)
