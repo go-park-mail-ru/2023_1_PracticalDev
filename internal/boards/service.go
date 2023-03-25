@@ -3,7 +3,7 @@ package boards
 import "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 
 type Service interface {
-	CreateBoard(board *models.Board) (models.Board, error)
+	CreateBoard(params *createBoardParams) (models.Board, error)
 	GetBoards(userId int) ([]models.Board, error)
 	GetBoard(id int) (models.Board, error)
 	FullUpdateBoard(params *FullUpdateBoardParams) (models.Board, error)
@@ -19,8 +19,8 @@ type service struct {
 	rep Repository
 }
 
-func (serv *service) CreateBoard(board *models.Board) (models.Board, error) {
-	return serv.rep.CreateBoard(board)
+func (serv *service) CreateBoard(params *createBoardParams) (models.Board, error) {
+	return serv.rep.CreateBoard(params)
 }
 
 func (serv *service) GetBoards(userId int) ([]models.Board, error) {

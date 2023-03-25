@@ -11,6 +11,12 @@ import (
 	"strconv"
 )
 
+type apiCreateBoard struct {
+	Name        string  `json:"name,omitempty"`
+	Description string  `json:"description,omitempty"`
+	Privacy     *string `json:"privacy,omitempty"`
+}
+
 type apiBoardPartialUpdate struct {
 	Name        *string `json:"name,omitempty"`
 	Description *string `json:"description,omitempty"`
@@ -41,16 +47,25 @@ func (del *delivery) createBoard(w http.ResponseWriter, r *http.Request, p httpr
 		return err
 	}
 
+	var apiBoard apiCreateBoard
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	board := models.Board{}
-	if err = decoder.Decode(&board); err != nil {
+	if err = decoder.Decode(&apiBoard); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
-	board.UserId = userId
 
-	createdBoard, err := del.serv.CreateBoard(&board)
+	params := createBoardParams{
+		Name:        apiBoard.Name,
+		Description: apiBoard.Description,
+		Privacy:     *apiBoard.Privacy,
+		UserId:      userId,
+	}
+	if apiBoard.Privacy == nil {
+		params.Privacy = "secret" // default
+	}
+
+	createdBoard, err := del.serv.CreateBoard(&params)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err

@@ -347,12 +347,6 @@ components:
     MediaSource:
       type: string
       example: picture.jpg
-    Privacy:
-      type: string
-      enum:
-        - secret
-        - public
-      example: secret
     User:
       type: object
       properties:
@@ -372,7 +366,11 @@ components:
         description:
           type: string
         privacy:
-          $ref: "#/components/schemas/Privacy"
+          type: string
+          enum:
+            - secret
+            - public
+          example: secret
         user_id:
           type: integer
       example: {
@@ -387,10 +385,16 @@ components:
       properties:
         name:
           type: string
+          required: true
         description:
           type: string
+          required: false
         privacy:
-          $ref: "#/components/schemas/Privacy"
+          type: string
+          enum:
+            - secret
+            - public
+          required: false
       example: {
         "name": "Notes",
         "description": "Board for notes",
@@ -404,7 +408,11 @@ components:
         description:
           type: string
         privacy:
-          $ref: "#/components/schemas/Privacy"
+          type: string
+          enum:
+            - secret
+            - public
+          example: secret
       example: {
         "name": "Notes",
         "description": "Board for notes",

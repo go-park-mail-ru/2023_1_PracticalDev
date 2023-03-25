@@ -7,6 +7,13 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 
+type createBoardParams struct {
+	Name        string `json:"name,omitempty"`
+	Description string `json:"description,omitempty"`
+	Privacy     string `json:"privacy,omitempty"`
+	UserId      int
+}
+
 type PartialUpdateBoardParams struct {
 	Id                int
 	Name              string
@@ -30,7 +37,7 @@ var (
 )
 
 type Repository interface {
-	CreateBoard(board *models.Board) (models.Board, error)
+	CreateBoard(params *createBoardParams) (models.Board, error)
 	GetBoards(userId int) ([]models.Board, error)
 	GetBoard(id int) (models.Board, error)
 	FullUpdateBoard(params *FullUpdateBoardParams) (models.Board, error)
@@ -47,12 +54,12 @@ type repository struct {
 	log log.Logger
 }
 
-func (rep *repository) CreateBoard(board *models.Board) (models.Board, error) {
+func (rep *repository) CreateBoard(params *createBoardParams) (models.Board, error) {
 	const insertCommand = `INSERT INTO boards (name, description, privacy, user_id) 
 				      	   VALUES ($1, $2, $3, $4)
 						   RETURNING *;`
 
-	row := rep.db.QueryRow(insertCommand, board.Name, board.Description, board.Privacy, board.UserId)
+	row := rep.db.QueryRow(insertCommand, params.Name, params.Description, params.Privacy, params.UserId)
 	createdBoard := models.Board{}
 	var description sql.NullString
 	err := row.Scan(&createdBoard.Id, &createdBoard.Name, &description, &createdBoard.Privacy, &createdBoard.UserId)
