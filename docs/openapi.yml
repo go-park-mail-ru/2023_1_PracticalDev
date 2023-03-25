@@ -74,24 +74,6 @@ paths:
         - cookieAuth: [ ]
 
   /boards:
-    get:
-      tags:
-        - Boards
-      summary: Returns all boards that the user has access to
-      description: Returns all boards that the user has access to
-      responses:
-        "200":
-          description: A JSON array of boards
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Boards"
-        "400":
-          $ref: "#/components/responses/ErrResponseBadRequest"
-        "401":
-          $ref: "#/components/responses/ErrUnauthorized"
-      security:
-        - cookieAuth: [ ]
     post:
       tags:
         - Boards
@@ -111,6 +93,24 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Board"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+      security:
+        - cookieAuth: [ ]
+    get:
+      tags:
+        - Boards
+      summary: Returns all boards that the user has access to
+      description: Returns all boards that the user has access to
+      responses:
+        "200":
+          description: A JSON array of boards
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Boards"
         "400":
           $ref: "#/components/responses/ErrResponseBadRequest"
         "401":
@@ -160,6 +160,8 @@ paths:
           $ref: "#/components/responses/ErrResponseBadRequest"
         "401":
           $ref: "#/components/responses/ErrUnauthorized"
+        "403":
+          $ref: "#/components/responses/ErrForbidden"
       security:
         - cookieAuth: [ ]
     patch:
@@ -185,6 +187,8 @@ paths:
           $ref: "#/components/responses/ErrResponseBadRequest"
         "401":
           $ref: "#/components/responses/ErrUnauthorized"
+        "403":
+          $ref: "#/components/responses/ErrForbidden"
       security:
         - cookieAuth: [ ]
     delete:
@@ -199,6 +203,8 @@ paths:
           $ref: "#/components/responses/ErrResponseBadRequest"
         "401":
           $ref: "#/components/responses/ErrUnauthorized"
+        "403":
+          $ref: "#/components/responses/ErrForbidden"
       security:
         - cookieAuth: [ ]
 
@@ -483,6 +489,12 @@ components:
             $ref: "#/components/schemas/Error"
     ErrUnauthorized:
       description: Not authorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrForbidden:
+      description: Forbidden
       content:
         application/problem+json:
           schema:
