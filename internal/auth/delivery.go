@@ -97,11 +97,13 @@ func (del *delivery) CheckAuth(w http.ResponseWriter, r *http.Request, p httprou
 	userId, sessionId, err := parseSessionCookie(sessionCookie)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		return err
 	}
 
 	user, err := del.serv.CheckAuth(userId, sessionId)
 	if err != nil {
 		w.WriteHeader(http.StatusUnauthorized)
+		return err
 	}
 
 	decoder := json.NewEncoder(w)
@@ -109,6 +111,7 @@ func (del *delivery) CheckAuth(w http.ResponseWriter, r *http.Request, p httprou
 
 	if err = decoder.Encode(user); err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
+		return err
 	}
 
 	w.WriteHeader(http.StatusOK)
