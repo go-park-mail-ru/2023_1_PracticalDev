@@ -10,27 +10,15 @@ import (
 	"strconv"
 )
 
-type apiBoard struct {
-	Name        string  `json:"name"`
-	Description string  `json:"description"`
-	Privacy     *string `json:"privacy"`
-}
-
-type apiPartialUpdateBoard struct {
-	Name        *string `json:"name"`
-	Description *string `json:"description"`
-	Privacy     *string `json:"privacy"`
-}
-
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, access middleware.AccessChecker, serv Service) {
 	del := delivery{serv, logger}
 
-	mux.POST("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.createBoard)), logger), logger))
-	mux.GET("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getBoards)), logger), logger))
-	mux.GET("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.ReadChecker(del.getBoard))), logger), logger))
-	mux.PUT("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.fullUpdateBoard))), logger), logger))
-	mux.PATCH("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.partialUpdateBoard))), logger), logger))
-	mux.DELETE("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.deleteBoard))), logger), logger))
+	mux.POST("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.create)), logger), logger))
+	mux.GET("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.list)), logger), logger))
+	mux.GET("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.ReadChecker(del.get))), logger), logger))
+	mux.PUT("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.fullUpdate))), logger), logger))
+	mux.PATCH("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.partialUpdate))), logger), logger))
+	mux.DELETE("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.delete))), logger), logger))
 }
 
 type delivery struct {
@@ -38,7 +26,7 @@ type delivery struct {
 	log  log.Logger
 }
 
-func (del *delivery) createBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
@@ -46,7 +34,7 @@ func (del *delivery) createBoard(w http.ResponseWriter, r *http.Request, p httpr
 		return err
 	}
 
-	var request apiBoard
+	var request createRequest
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 	if err = decoder.Decode(&request); err != nil {
@@ -81,7 +69,7 @@ func (del *delivery) createBoard(w http.ResponseWriter, r *http.Request, p httpr
 	return err
 }
 
-func (del *delivery) getBoards(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
@@ -95,7 +83,7 @@ func (del *delivery) getBoards(w http.ResponseWriter, r *http.Request, p httprou
 		return err
 	}
 
-	response := map[string]interface{}{"items": boards}
+	response := listResponse{Boards: boards}
 	data, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -107,7 +95,7 @@ func (del *delivery) getBoards(w http.ResponseWriter, r *http.Request, p httprou
 	return err
 }
 
-func (del *delivery) getBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
@@ -121,7 +109,14 @@ func (del *delivery) getBoard(w http.ResponseWriter, r *http.Request, p httprout
 		return err
 	}
 
-	data, err := json.Marshal(board)
+	response := getResponse{
+		Id:          board.Id,
+		Name:        board.Name,
+		Description: board.Description,
+		Privacy:     board.Privacy,
+		UserId:      board.UserId,
+	}
+	data, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -131,7 +126,7 @@ func (del *delivery) getBoard(w http.ResponseWriter, r *http.Request, p httprout
 	return err
 }
 
-func (del *delivery) fullUpdateBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
@@ -139,7 +134,7 @@ func (del *delivery) fullUpdateBoard(w http.ResponseWriter, r *http.Request, p h
 		return err
 	}
 
-	var request apiBoard
+	var request fullUpdateRequest
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 	if err = decoder.Decode(&request); err != nil {
@@ -157,7 +152,7 @@ func (del *delivery) fullUpdateBoard(w http.ResponseWriter, r *http.Request, p h
 		params.Privacy = *request.Privacy
 	}
 
-	updatedBoard, err := del.serv.FullUpdateBoard(&params)
+	board, err := del.serv.FullUpdateBoard(&params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusNotFound)
@@ -167,7 +162,14 @@ func (del *delivery) fullUpdateBoard(w http.ResponseWriter, r *http.Request, p h
 		return err
 	}
 
-	data, err := json.Marshal(updatedBoard)
+	response := fullUpdateResponse{
+		Id:          board.Id,
+		Name:        board.Name,
+		Description: board.Description,
+		Privacy:     board.Privacy,
+		UserId:      board.UserId,
+	}
+	data, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -178,7 +180,7 @@ func (del *delivery) fullUpdateBoard(w http.ResponseWriter, r *http.Request, p h
 	return err
 }
 
-func (del *delivery) partialUpdateBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
@@ -186,7 +188,7 @@ func (del *delivery) partialUpdateBoard(w http.ResponseWriter, r *http.Request, 
 		return err
 	}
 
-	var request apiPartialUpdateBoard
+	var request partialUpdateRequest
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
 	if err = decoder.Decode(&request); err != nil {
@@ -211,7 +213,7 @@ func (del *delivery) partialUpdateBoard(w http.ResponseWriter, r *http.Request, 
 		params.Privacy = *request.Privacy
 	}
 
-	updatedBoard, err := del.serv.PartialUpdateBoard(&params)
+	board, err := del.serv.PartialUpdateBoard(&params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusNotFound)
@@ -221,7 +223,14 @@ func (del *delivery) partialUpdateBoard(w http.ResponseWriter, r *http.Request, 
 		return err
 	}
 
-	data, err := json.Marshal(updatedBoard)
+	response := partialUpdateResponse{
+		Id:          board.Id,
+		Name:        board.Name,
+		Description: board.Description,
+		Privacy:     board.Privacy,
+		UserId:      board.UserId,
+	}
+	data, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -232,7 +241,7 @@ func (del *delivery) partialUpdateBoard(w http.ResponseWriter, r *http.Request, 
 	return err
 }
 
-func (del *delivery) deleteBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
