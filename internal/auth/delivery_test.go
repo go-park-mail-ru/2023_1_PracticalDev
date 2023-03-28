@@ -137,7 +137,7 @@ func TestRegister(t *testing.T) {
 				Name:     "test",
 				Password: "12345",
 			},
-			expectedCode: http.StatusNoContent,
+			expectedCode: http.StatusOK,
 		},
 		{
 			req: api.RegisterParams{
@@ -146,7 +146,7 @@ func TestRegister(t *testing.T) {
 				Name:     "test",
 				Password: "12345",
 			},
-			expectedCode: http.StatusNoContent,
+			expectedCode: http.StatusOK,
 		},
 		{
 			req: api.RegisterParams{

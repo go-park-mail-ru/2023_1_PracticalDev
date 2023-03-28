@@ -46,6 +46,7 @@ services:
       - nginx-network
       - db-network
       - redis-network
+      - api-network
     deploy:
       restart_policy:
         condition: on-failure
@@ -67,7 +68,7 @@ services:
   frontend:
     build: 
       context: https://github.com/frontend-park-mail-ru/2023_1_PracticalDev.git#main
-      dockerfile: Dockerfile.prod
+      dockerfile: prod/Dockerfile.prod
     container_name: frontend
     command: npm run server
     ports:
@@ -98,7 +99,13 @@ services:
 networks:
   nginx-network:
     driver: bridge
+    name: nginx_network
   db-network:
     driver: bridge
+    name: db_network
   redis-network:
     driver: bridge
+    name: redis_network
+  api-network:
+    driver: bridge
+    name: api_network

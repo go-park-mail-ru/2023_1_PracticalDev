@@ -73,6 +73,141 @@ paths:
       security:
         - cookieAuth: [ ]
 
+  /boards:
+    post:
+      tags:
+        - Boards
+      summary: Create a new board
+      description: Create a new board
+      requestBody:
+        description: A JSON object containing the data to create board.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CreateBoard"
+      responses:
+        "200":
+          description: A JSON object of created board.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+      security:
+        - cookieAuth: [ ]
+    get:
+      tags:
+        - Boards
+      summary: Returns all boards that the user has access to
+      description: Returns all boards that the user has access to
+      responses:
+        "200":
+          description: A JSON array of boards
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Boards"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+      security:
+        - cookieAuth: [ ]
+
+  /boards/{board_id}:
+    get:
+      tags:
+        - Boards
+      summary: Returns board with board_id
+      description: Returns board with board_id
+      responses:
+        "200":
+          description: A JSON object of board.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+      security:
+        - cookieAuth: [ ]
+    put:
+      tags:
+        - Boards
+      summary: Full update of board
+      description: Full update of board
+      requestBody:
+        description: A JSON object containing the data to update board.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/FullUpdateBoard"
+      responses:
+        "200":
+          description: A JSON object of updated board.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "403":
+          $ref: "#/components/responses/ErrForbidden"
+      security:
+        - cookieAuth: [ ]
+    patch:
+      tags:
+        - Boards
+      summary: Partial update of board
+      description: Partial update of board
+      requestBody:
+        description: A JSON object containing the data to update board.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/PartialUpdateBoard"
+      responses:
+        "200":
+          description: A JSON object of updated board.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Board"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "403":
+          $ref: "#/components/responses/ErrForbidden"
+      security:
+        - cookieAuth: [ ]
+    delete:
+      tags:
+        - Boards
+      summary: Delete board
+      description: Delete board
+      responses:
+        "204":
+          description: Board deleted successfully.
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "403":
+          $ref: "#/components/responses/ErrForbidden"
+      security:
+        - cookieAuth: [ ]
+
   /auth/signup:
     post:
       summary: Creates new user and returnes authentication cookie.
@@ -221,6 +356,94 @@ components:
           $ref: "#/components/schemas/Email"
         username:
           $ref: "#/components/schemas/Username"
+    Board:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        description:
+          type: string
+        privacy:
+          type: string
+          enum:
+            - secret
+            - public
+          example: secret
+        user_id:
+          type: integer
+      example: {
+        "id": 3,
+        "name": "Notes",
+        "description": "Board for notes",
+        "privacy": "secret",
+        "user_id": 4
+      }
+    CreateBoard:
+      type: object
+      properties:
+        name:
+          type: string
+          required: true
+        description:
+          type: string
+          required: false
+        privacy:
+          type: string
+          enum:
+            - secret
+            - public
+          required: false
+      example: {
+        "name": "Notes",
+        "description": "Board for notes",
+        "privacy": "secret",
+      }
+    FullUpdateBoard:
+      type: object
+      properties:
+        name:
+          type: string
+        description:
+          type: string
+        privacy:
+          type: string
+          enum:
+            - secret
+            - public
+          example: secret
+      example: {
+        "name": "Notes",
+        "description": "Board for notes",
+        "privacy": "secret",
+      }
+    PartialUpdateBoard:
+      type: object
+      properties:
+        name:
+          type: string
+          required: false
+        description:
+          type: string
+          required: false
+        privacy:
+          type: string
+          enum:
+            - secret
+            - public
+          example: secret
+          required: false
+      example: {
+        "name": "Notes"
+      }
+    Boards:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Board"
     Pin:
       type: object
       properties:
@@ -274,6 +497,12 @@ components:
             $ref: "#/components/schemas/Error"
     ErrUnauthorized:
       description: Not authorized
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrForbidden:
+      description: Forbidden
       content:
         application/problem+json:
           schema:

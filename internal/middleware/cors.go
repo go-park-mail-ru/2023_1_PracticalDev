@@ -1,7 +1,6 @@
 package middleware
 
 import (
-	"errors"
 	"net/http"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/router"
@@ -34,15 +33,12 @@ func OptionsHandler(w http.ResponseWriter, r *http.Request) {
 
 func CorsChecker(handler router.Handler) router.Handler {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-		origin := r.Header.Get("Origin")
-		if r.Header.Get("Sec-Fetch-Site") == "same-origin" {
-			return handler(w, r, p)
-		} else if _, allowed := allowedOrigins[origin]; allowed {
-			w.Header().Set("Access-Control-Allow-Origin", origin)
-			return handler(w, r, p)
+		origin := mainOrigin
+		gotOrigin := r.Header.Get("Origin")
+		if _, allowed := allowedOrigins[gotOrigin]; allowed {
+			origin = gotOrigin
 		}
-		w.Header().Set("Access-Control-Allow-Origin", mainOrigin)
-		w.WriteHeader(http.StatusForbidden)
-		return errors.New("CORS: origin not allowed")
+		w.Header().Set("Access-Control-Allow-Origin", origin)
+		return handler(w, r, p)
 	}
 }
