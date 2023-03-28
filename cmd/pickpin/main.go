@@ -22,6 +22,7 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	_db "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/redis"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users"
 	"github.com/julienschmidt/httprouter"
@@ -63,6 +64,7 @@ func main() {
 
 	auth.RegisterHandlers(mux, logger, authServ)
 	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
+	profile.RegisterHandlers(mux, logger, authorizer, profile.NewService(profile.NewRepository(db, logger)))
 	_boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ)
 	ping.RegisterHandlers(mux, logger)
 	pinsDelivery.RegisterHandlers(mux, logger, authorizer, middleware.NewAccessChecker(pinsServ), pinsServ)
