@@ -16,6 +16,8 @@ type Repository interface {
 	GetPins(page, limit int) ([]models.Pin, error)
 	UpdatePin(params *models.Pin) (models.Pin, error)
 	DeletePin(id int) error
+	AddPinToBoard(boardId, pinId int) error
+	RemovePinFromBoard(boardId, pinId int) error
 
 	CheckWriteAccess(userId, pinId string) (bool, error)
 	CheckReadAccess(userId, pinId string) (bool, error)
@@ -52,7 +54,7 @@ func (repo *repository) CreatePin(params *models.Pin, image *models.Image) (mode
 	retrievedPin := models.Pin{}
 	var title, description, mediaSource sql.NullString
 
-	err = row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+	err = row.Scan(&retrievedPin.Id, &title, &mediaSource, &description, &retrievedPin.Author)
 
 	retrievedPin.Title = title.String
 	retrievedPin.Description = description.String
@@ -85,7 +87,7 @@ func (repo *repository) GetPinsByUser(userId int, page, limit int) ([]models.Pin
 						ORDER BY created_at DESC 
 						LIMIT $2 OFFSET $3;`
 
-	rows, err := repo.db.Query(getCommand, userId, limit, page)
+	rows, err := repo.db.Query(getCommand, userId, limit, (page-1)*limit)
 
 	if err != nil {
 		return []models.Pin{}, err
@@ -108,14 +110,14 @@ func (repo *repository) GetPinsByUser(userId int, page, limit int) ([]models.Pin
 }
 
 func (repo *repository) GetPinsByBoard(boardId int, page, limit int) ([]models.Pin, error) {
-	const getCommand = `SELECT id, title, description, media_source, author_id 
+	const getCommand = `SELECT pins.id, title, description, media_source, author_id 
 						FROM pins 
 						JOIN boards_pins AS b
-						ON b.board_id = $1 AND b.pin_id = id
+						ON b.board_id = $1 AND b.pin_id = pins.id
 						ORDER BY created_at DESC 
 						LIMIT $2 OFFSET $3;`
 
-	rows, err := repo.db.Query(getCommand, boardId, limit, page)
+	rows, err := repo.db.Query(getCommand, boardId, limit, (page-1)*limit)
 
 	if err != nil {
 		return []models.Pin{}, err
@@ -143,7 +145,7 @@ func (repo *repository) GetPins(page, limit int) ([]models.Pin, error) {
 						ORDER BY created_at DESC 
 						LIMIT $1 OFFSET $2;`
 
-	rows, err := repo.db.Query(getCommand, limit, page)
+	rows, err := repo.db.Query(getCommand, limit, (page-1)*limit)
 
 	if err != nil {
 		return []models.Pin{}, err
@@ -192,6 +194,36 @@ func (repo *repository) DeletePin(id int) error {
 							   WHERE id = $1;`
 
 	res, err := repo.db.Exec(deleteCommand, id)
+	if err != nil {
+		return err
+	}
+	count, err := res.RowsAffected()
+	if err != nil || count < 1 {
+		return err
+	}
+	return nil
+}
+
+func (repo *repository) AddPinToBoard(boardId, pinId int) error {
+	const addCommand = `INSERT INTO boards_pins(pin_id, board_id)
+						VALUES($1, $2)`
+
+	res, err := repo.db.Exec(addCommand, pinId, boardId)
+	if err != nil {
+		return err
+	}
+	count, err := res.RowsAffected()
+	if err != nil || count < 1 {
+		return err
+	}
+	return nil
+}
+
+func (repo *repository) RemovePinFromBoard(boardId, pinId int) error {
+	const addCommand = `DELETE FROM boards_pins
+						WHERE pin_id = $1 AND board_id = $2`
+
+	res, err := repo.db.Exec(addCommand, pinId, boardId)
 	if err != nil {
 		return err
 	}

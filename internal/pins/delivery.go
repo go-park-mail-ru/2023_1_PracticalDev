@@ -24,6 +24,8 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer midd
 	mux.GET("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getPinsByBoard)), logger), logger))
 	mux.PUT("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.updatePin))), logger), logger))
 	mux.DELETE("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.deletePin))), logger), logger))
+	mux.POST("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.addPinToBoard))), logger), logger))
+	mux.DELETE("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.removePinFromBoard))), logger), logger))
 }
 
 type delivery struct {
@@ -282,6 +284,62 @@ func (del delivery) deletePin(w http.ResponseWriter, r *http.Request, p httprout
 	}
 	err = del.serv.DeletePin(id)
 
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+	return nil
+}
+
+func (del delivery) addPinToBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strBoardId := p.ByName("id")
+
+	boardId, err := strconv.Atoi(strBoardId)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return err
+	}
+
+	var id struct {
+		Id int `json:"id"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+	if err := decoder.Decode(&id); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return err
+	}
+
+	err = del.serv.AddPinToBoard(boardId, id.Id)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+	return nil
+}
+
+func (del delivery) removePinFromBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strBoardId := p.ByName("id")
+
+	boardId, err := strconv.Atoi(strBoardId)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return err
+	}
+
+	var id struct {
+		Id int `json:"id"`
+	}
+
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+	if err := decoder.Decode(&id); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return err
+	}
+
+	err = del.serv.RemovePinFromBoard(boardId, id.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err

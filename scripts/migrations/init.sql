@@ -69,6 +69,10 @@ ALTER TABLE ONLY boards_pins
     ADD  CONSTRAINT fk_board_pins_id
     FOREIGN KEY (pin_id) REFERENCES pins (id) ON DELETE CASCADE;
 
+ALTER TABLE ONLY boards_pins
+    ADD  CONSTRAINT unique_id
+    UNIQUE (board_id, pin_id);
+
 ALTER TABLE ONLY pins
     ADD CONSTRAINT fk_pins_author_id
         FOREIGN KEY (author_id)

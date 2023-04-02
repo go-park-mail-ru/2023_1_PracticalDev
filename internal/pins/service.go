@@ -12,6 +12,8 @@ type Service interface {
 	GetPins(page, limit int) ([]models.Pin, error)
 	UpdatePin(params *models.Pin) (models.Pin, error)
 	DeletePin(id int) error
+	AddPinToBoard(boardId, pinId int) error
+	RemovePinFromBoard(boardId, pinId int) error
 
 	CheckWriteAccess(userId, pinId string) (bool, error)
 	CheckReadAccess(userId, pinId string) (bool, error)
@@ -51,6 +53,13 @@ func (serv service) UpdatePin(params *models.Pin) (models.Pin, error) {
 
 func (serv service) DeletePin(id int) error {
 	return serv.rep.DeletePin(id)
+}
+
+func (serv service) AddPinToBoard(boardId, pinId int) error {
+	return serv.rep.AddPinToBoard(boardId, pinId)
+}
+func (serv service) RemovePinFromBoard(boardId, pinId int) error {
+	return serv.rep.RemovePinFromBoard(boardId, pinId)
 }
 
 func (serv service) CheckWriteAccess(userId, pinId string) (bool, error) {
