@@ -12,7 +12,7 @@ VALUES ('Notes', 'public', 1),
        ('My board', 'public', 2),
        ('ToDo', 'secret', 3);
 
-INSERT INTO pins(title, board_id, media_source)
+INSERT INTO pins(title, author_id, media_source)
 VALUES ('Road', 1, 'https://wg.grechkogv.ru/assets/pet7.webp'),
        ('Ice', 1, 'https://wg.grechkogv.ru/assets/armorChest4.webp'),
        ('Future', 1, 'https://wg.grechkogv.ru/assets/pet6.webp'),

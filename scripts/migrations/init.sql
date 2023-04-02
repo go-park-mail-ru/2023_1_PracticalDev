@@ -30,7 +30,14 @@ CREATE TABLE IF NOT EXISTS pins
     description  varchar(500),
     created_at   timestamp NOT NULL DEFAULT now(),
     media_source varchar,
-    board_id     int       NOT NULL
+    author_id    int       NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS boards_pins
+(
+    id          serial       NOT NULL PRIMARY KEY,
+    board_id     int       NOT NULL,
+    pin_id     int       NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS comments
@@ -47,10 +54,25 @@ ALTER TABLE ONLY boards
         FOREIGN KEY (user_id)
             REFERENCES users (id);
 
-ALTER TABLE ONLY pins
+ALTER TABLE ONLY boards_pins
     ADD CONSTRAINT fk_pins_board_id
         FOREIGN KEY (board_id)
             REFERENCES boards (id);
+
+ALTER TABLE ONLY boards_pins
+    ADD CONSTRAINT fk_board_pins_id
+        FOREIGN KEY (pin_id)
+            REFERENCES pins (id);
+
+ALTER TABLE ONLY boards_pins
+    DROP CONSTRAINT fk_board_pins_id,
+    ADD  CONSTRAINT fk_board_pins_id
+    FOREIGN KEY (pin_id) REFERENCES pins (id) ON DELETE CASCADE;
+
+ALTER TABLE ONLY pins
+    ADD CONSTRAINT fk_pins_author_id
+        FOREIGN KEY (author_id)
+            REFERENCES users (id);
 
 ALTER TABLE ONLY comments
     ADD CONSTRAINT fk_pins_pin_id
@@ -61,3 +83,8 @@ ALTER TABLE ONLY comments
     ADD CONSTRAINT fk_pins_user_id
         FOREIGN KEY (user_id)
             REFERENCES users (id);
+
+ALTER TABLE ONLY comments
+    DROP CONSTRAINT fk_pins_pin_id,
+    ADD  CONSTRAINT fk_pins_pin_id
+    FOREIGN KEY (pin_id) REFERENCES pins (id) ON DELETE CASCADE;

@@ -1,12 +1,13 @@
 package posts
 
 import (
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"os"
 	"reflect"
 	"testing"
+
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 
 type serviceTestCase struct {
@@ -24,83 +25,63 @@ func TestServiceGetPosts(t *testing.T) {
 			Pins: []models.Pin{
 				{
 					Id:          1,
-					Link:        "",
 					Title:       "Road",
 					Description: "",
 					MediaSource: "https://wg.grechkogv.ru/assets/pet7.webp",
-					BoardId:     1,
 				},
 				{
 					Id:          2,
-					Link:        "",
 					Title:       "Ice",
 					Description: "",
 					MediaSource: "https://wg.grechkogv.ru/assets/armorChest4.webp",
-					BoardId:     1,
 				},
 				{
 					Id:          3,
-					Link:        "",
 					Title:       "Future",
 					Description: "",
 					MediaSource: "https://wg.grechkogv.ru/assets/pet6.webp",
-					BoardId:     1,
 				},
 				{
 					Id:          4,
-					Link:        "",
 					Title:       "Color",
 					Description: "",
 					MediaSource: "https://wg.grechkogv.ru/assets/pet8.webp",
-					BoardId:     2,
 				},
 				{
 					Id:          5,
-					Link:        "",
 					Title:       "Shops",
 					Description: "",
 					MediaSource: "https://i.pinimg.com/564x/2f/93/56/2f9356b9346e82c14bf286c6a107bc7a.jpg",
-					BoardId:     3,
 				},
 				{
 					Id:          6,
-					Link:        "",
 					Title:       "Shops",
 					Description: "",
 					MediaSource: "https://i.pinimg.com/564x/32/ff/71/32ff717c3cd3bd3d1886c775b59f0769.jpg",
-					BoardId:     3,
 				},
 				{
 					Id:          7,
-					Link:        "",
 					Title:       "Shops",
 					Description: "",
 					MediaSource: "https://i.pinimg.com/564x/ce/e3/01/cee3011f3e19de4377dbf98f397c027b.jpg",
-					BoardId:     3,
 				},
 				{
 					Id:          8,
-					Link:        "",
 					Title:       "Shops",
 					Description: "",
 					MediaSource: "https://i.pinimg.com/564x/a6/ba/55/a6ba553df2a0c0f3894ef328a86fb373.jpg",
-					BoardId:     3,
 				},
 				{
 					Id:          9,
-					Link:        "",
 					Title:       "Shops",
 					Description: "",
 					MediaSource: "https://i.pinimg.com/564x/43/2d/3b/432d3b28d1661439245422e9218ffcce.jpg",
-					BoardId:     3,
 				},
 				{
 					Id:          10,
-					Link:        "",
 					Title:       "School",
 					Description: "",
 					MediaSource: "https://i.pinimg.com/564x/98/9d/3f/989d3f5c158dcac7ca4d115bff866d84.jpg",
-					BoardId:     4,
 				},
 			},
 			IsError: false,
@@ -111,27 +92,21 @@ func TestServiceGetPosts(t *testing.T) {
 			Pins: []models.Pin{
 				{
 					Id:          4,
-					Link:        "",
 					Title:       "Color",
 					Description: "",
 					MediaSource: "https://wg.grechkogv.ru/assets/pet8.webp",
-					BoardId:     2,
 				},
 				{
 					Id:          5,
-					Link:        "",
 					Title:       "Shops",
 					Description: "",
 					MediaSource: "https://i.pinimg.com/564x/2f/93/56/2f9356b9346e82c14bf286c6a107bc7a.jpg",
-					BoardId:     3,
 				},
 				{
 					Id:          6,
-					Link:        "",
 					Title:       "Shops",
 					Description: "",
 					MediaSource: "https://i.pinimg.com/564x/32/ff/71/32ff717c3cd3bd3d1886c775b59f0769.jpg",
-					BoardId:     3,
 				},
 			},
 			IsError: false,
