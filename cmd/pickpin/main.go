@@ -16,9 +16,8 @@ import (
 	imagesRepo "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/repository/s3"
 	_imagesServ "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/service"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
-
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	_db "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
