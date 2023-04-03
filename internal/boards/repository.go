@@ -7,14 +7,14 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 
-type createBoardParams struct {
+type createParams struct {
 	Name        string
 	Description string
 	Privacy     string
 	UserId      int
 }
 
-type partialUpdateBoardParams struct {
+type partialUpdateParams struct {
 	Id                int
 	Name              string
 	UpdateName        bool
@@ -24,7 +24,7 @@ type partialUpdateBoardParams struct {
 	UpdatePrivacy     bool
 }
 
-type FullUpdateBoardParams struct {
+type fullUpdateParams struct {
 	Id          int
 	Name        string
 	Description string
@@ -37,12 +37,12 @@ var (
 )
 
 type Repository interface {
-	CreateBoard(params *createBoardParams) (models.Board, error)
-	GetBoards(userId int) ([]models.Board, error)
-	GetBoard(id int) (models.Board, error)
-	FullUpdateBoard(params *FullUpdateBoardParams) (models.Board, error)
-	PartialUpdateBoard(params *partialUpdateBoardParams) (models.Board, error)
-	DeleteBoard(id int) error
+	Create(params *createParams) (models.Board, error)
+	List(userId int) ([]models.Board, error)
+	Get(id int) (models.Board, error)
+	FullUpdate(params *fullUpdateParams) (models.Board, error)
+	PartialUpdate(params *partialUpdateParams) (models.Board, error)
+	Delete(id int) error
 	CheckWriteAccess(userId, boardId string) (bool, error)
 	CheckReadAccess(userId, boardId string) (bool, error)
 }
@@ -56,7 +56,7 @@ type repository struct {
 	log log.Logger
 }
 
-func (rep *repository) CreateBoard(params *createBoardParams) (models.Board, error) {
+func (rep *repository) Create(params *createParams) (models.Board, error) {
 	const insertCommand = `INSERT INTO boards (name, description, privacy, user_id) 
 				      	   VALUES ($1, $2, $3, $4)
 						   RETURNING *;`
@@ -74,7 +74,7 @@ func (rep *repository) CreateBoard(params *createBoardParams) (models.Board, err
 	return createdBoard, err
 }
 
-func (rep *repository) GetBoards(userId int) ([]models.Board, error) {
+func (rep *repository) List(userId int) ([]models.Board, error) {
 	const getBoardsCommand = `SELECT * 
 							  FROM boards
 							  WHERE user_id = $1;`
@@ -98,7 +98,7 @@ func (rep *repository) GetBoards(userId int) ([]models.Board, error) {
 	return boards, err
 }
 
-func (rep *repository) GetBoard(id int) (models.Board, error) {
+func (rep *repository) Get(id int) (models.Board, error) {
 	const getBoardCommand = `SELECT *
 							 FROM boards
 							 WHERE id = $1;`
@@ -116,7 +116,7 @@ func (rep *repository) GetBoard(id int) (models.Board, error) {
 	return board, err
 }
 
-func (rep *repository) FullUpdateBoard(params *FullUpdateBoardParams) (models.Board, error) {
+func (rep *repository) FullUpdate(params *fullUpdateParams) (models.Board, error) {
 	const fullUpdateBoard = `UPDATE boards
 								SET name = $1::VARCHAR,
     							description = $2::TEXT,
@@ -137,7 +137,7 @@ func (rep *repository) FullUpdateBoard(params *FullUpdateBoardParams) (models.Bo
 	return updatedBoard, err
 }
 
-func (rep *repository) PartialUpdateBoard(params *partialUpdateBoardParams) (models.Board, error) {
+func (rep *repository) PartialUpdate(params *partialUpdateParams) (models.Board, error) {
 	const partialUpdateBoard = `UPDATE boards
 								SET name = CASE WHEN $1::boolean THEN $2::VARCHAR ELSE name END,
     							description = CASE WHEN $3::boolean THEN $4::TEXT ELSE description END,
@@ -161,7 +161,7 @@ func (rep *repository) PartialUpdateBoard(params *partialUpdateBoardParams) (mod
 	return updatedBoard, err
 }
 
-func (rep *repository) DeleteBoard(id int) error {
+func (rep *repository) Delete(id int) error {
 	const deleteCommand = `DELETE FROM boards 
 						   WHERE id = $1;`
 

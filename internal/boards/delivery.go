@@ -42,7 +42,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 		return err
 	}
 
-	params := createBoardParams{
+	params := createParams{
 		Name:        request.Name,
 		Description: request.Description,
 		Privacy:     "secret",
@@ -52,7 +52,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 		params.Privacy = *request.Privacy
 	}
 
-	createdBoard, err := del.serv.CreateBoard(&params)
+	createdBoard, err := del.serv.Create(&params)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -77,7 +77,7 @@ func (del *delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.P
 		return err
 	}
 
-	boards, err := del.serv.GetBoards(userId)
+	boards, err := del.serv.List(userId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -103,7 +103,7 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 		return err
 	}
 
-	board, err := del.serv.GetBoard(id)
+	board, err := del.serv.Get(id)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return err
@@ -142,7 +142,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		return err
 	}
 
-	params := FullUpdateBoardParams{
+	params := fullUpdateParams{
 		Id:          id,
 		Name:        request.Name,
 		Description: request.Description,
@@ -152,7 +152,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		params.Privacy = *request.Privacy
 	}
 
-	board, err := del.serv.FullUpdateBoard(&params)
+	board, err := del.serv.FullUpdate(&params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusNotFound)
@@ -196,7 +196,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		return err
 	}
 
-	params := partialUpdateBoardParams{
+	params := partialUpdateParams{
 		Id:      id,
 		Privacy: "secret",
 	}
@@ -213,7 +213,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		params.Privacy = *request.Privacy
 	}
 
-	board, err := del.serv.PartialUpdateBoard(&params)
+	board, err := del.serv.PartialUpdate(&params)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			w.WriteHeader(http.StatusNotFound)
@@ -249,7 +249,7 @@ func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter
 		return err
 	}
 
-	err = del.serv.DeleteBoard(id)
+	err = del.serv.Delete(id)
 	switch err {
 	case ErrDeleteBoard:
 		w.WriteHeader(http.StatusInternalServerError)
