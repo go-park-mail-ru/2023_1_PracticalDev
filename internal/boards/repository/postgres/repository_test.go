@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"fmt"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
+	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"reflect"
 	"regexp"
 	"testing"
@@ -20,7 +20,7 @@ func TestCreate(t *testing.T) {
 
 	type testCase struct {
 		prepare func(f *fields)
-		params  boards.CreateParams
+		params  _boards.CreateParams
 		board   models.Board
 		err     error
 	}
@@ -39,7 +39,7 @@ func TestCreate(t *testing.T) {
 					WithArgs("n1", "d1", "secret", 12).
 					WillReturnRows(rows)
 			},
-			params: boards.CreateParams{
+			params: _boards.CreateParams{
 				Name:        "n1",
 				Description: "d1",
 				Privacy:     "secret",
@@ -59,16 +59,16 @@ func TestCreate(t *testing.T) {
 				f.mock.
 					ExpectQuery(regexp.QuoteMeta(createCmd)).
 					WithArgs("n1", "d1", "secret", 12).
-					WillReturnError(boards.ErrBadQuery)
+					WillReturnError(_boards.ErrDb)
 			},
-			params: boards.CreateParams{
+			params: _boards.CreateParams{
 				Name:        "n1",
 				Description: "d1",
 				Privacy:     "secret",
 				UserId:      12,
 			},
 			board: models.Board{},
-			err:   boards.ErrBadQuery,
+			err:   _boards.ErrDb,
 		},
 	}
 
@@ -106,78 +106,101 @@ func TestCreate(t *testing.T) {
 }
 
 func TestList(t *testing.T) {
+	type fields struct {
+		mock sqlmock.Sqlmock
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		userId  int
+		boards  []models.Board
+		err     error
+	}
+
 	const listCmd = `SELECT *
 					 FROM boards
 					 WHERE user_id = $1;`
 
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("can't create mock: %s", err)
-	}
-	defer db.Close()
-
-	logger := log.New()
-	repo := NewPostgresRepository(db, logger)
-
-	rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
-	expect := []models.Board{
-		{1, "b1", "d1", "secret", 12},
-		{2, "b2", "d2", "secret", 12},
-		{5, "b5", "d5", "public", 12},
-	}
-	for _, board := range expect {
-		rows = rows.AddRow(board.Id, board.Name, board.Description, board.Privacy, board.UserId)
-	}
-
-	// ok query
-	mock.
-		ExpectQuery(regexp.QuoteMeta(listCmd)).
-		WithArgs(12).
-		WillReturnRows(rows)
-
-	boards, err := repo.List(12)
-	if err != nil {
-		t.Errorf("unexpected err: %s", err)
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
-	if !reflect.DeepEqual(boards, expect) {
-		t.Errorf("results not match, expected %#v, \ngot %#v", expect, boards)
-		return
-	}
-
-	// query error
-	mock.
-		ExpectQuery(regexp.QuoteMeta(listCmd)).
-		WithArgs(12).
-		WillReturnError(fmt.Errorf("db_error"))
-
-	_, err = repo.List(12)
-	if err == nil {
-		t.Errorf("expected error, got nil")
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+	tests := map[string]testCase{
+		"good query": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
+				expect := []models.Board{
+					{Id: 1, Name: "b1", Description: "d1", Privacy: "secret", UserId: 12},
+					{Id: 2, Name: "b2", Description: "d2", Privacy: "secret", UserId: 12},
+					{Id: 5, Name: "b5", Description: "d5", Privacy: "public", UserId: 12},
+				}
+				for _, board := range expect {
+					rows = rows.AddRow(board.Id, board.Name, board.Description, board.Privacy, board.UserId)
+				}
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(listCmd)).
+					WithArgs(12).
+					WillReturnRows(rows)
+			},
+			userId: 12,
+			boards: []models.Board{
+				{Id: 1, Name: "b1", Description: "d1", Privacy: "secret", UserId: 12},
+				{Id: 2, Name: "b2", Description: "d2", Privacy: "secret", UserId: 12},
+				{Id: 5, Name: "b5", Description: "d5", Privacy: "public", UserId: 12},
+			},
+			err: nil,
+		},
+		"query error": {
+			prepare: func(f *fields) {
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(listCmd)).
+					WithArgs(12).
+					WillReturnError(fmt.Errorf("db error"))
+			},
+			userId: 12,
+			boards: nil,
+			err:    _boards.ErrDb,
+		},
+		"row scan error": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"id", "name"}).AddRow(1, "b1")
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(listCmd)).
+					WithArgs(12).
+					WillReturnRows(rows)
+			},
+			userId: 12,
+			boards: nil,
+			err:    _boards.ErrDb,
+		},
 	}
 
-	// row scan error
-	rows = sqlmock.NewRows([]string{"id", "name"}).AddRow(1, "b1")
-	mock.
-		ExpectQuery(regexp.QuoteMeta(listCmd)).
-		WithArgs(12).
-		WillReturnRows(rows)
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	_, err = repo.List(12)
-	if err == nil {
-		t.Errorf("expected error, got nil")
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-		return
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("can't create mock: %s", err)
+			}
+			defer db.Close()
+
+			logger := log.New()
+			repo := NewPostgresRepository(db, logger)
+
+			f := fields{mock: mock}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
+
+			boards, err := repo.List(test.userId)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if !reflect.DeepEqual(boards, test.boards) {
+				t.Errorf("\nExpected: %v\nGot: %v", test.boards, boards)
+			}
+			if err = mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("\nThere were unfulfilled expectations: %s", err)
+			}
+		})
 	}
 }
 
@@ -290,7 +313,7 @@ func TestFullUpdate(t *testing.T) {
 		WithArgs(name, description, privacy, id).
 		WillReturnRows(rows)
 
-	testParams := boards.FullUpdateParams{
+	testParams := _boards.FullUpdateParams{
 		Id:          id,
 		Name:        name,
 		Description: description,
@@ -353,7 +376,7 @@ func TestPartialUpdate(t *testing.T) {
 	rows = rows.AddRow(expect.Id, expect.Name, expect.Description, expect.Privacy,
 		expect.UserId)
 
-	params := boards.PartialUpdateParams{
+	params := _boards.PartialUpdateParams{
 		Id:                expect.Id,
 		Name:              expect.Name,
 		UpdateName:        true,

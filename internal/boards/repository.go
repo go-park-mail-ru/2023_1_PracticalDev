@@ -32,7 +32,7 @@ type FullUpdateParams struct {
 var (
 	ErrDeleteBoard   = errors.New("failed to delete board")
 	ErrBoardNotFound = errors.New("board not found")
-	ErrBadQuery      = errors.New("bad query")
+	ErrDb            = errors.New("db error")
 )
 
 type Repository interface {

@@ -2,7 +2,7 @@ package postgres
 
 import (
 	"database/sql"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
+	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
@@ -12,11 +12,11 @@ type postgresRepository struct {
 	log log.Logger
 }
 
-func NewPostgresRepository(db *sql.DB, log log.Logger) boards.Repository {
+func NewPostgresRepository(db *sql.DB, log log.Logger) _boards.Repository {
 	return &postgresRepository{db, log}
 }
 
-func (rep *postgresRepository) Create(params *boards.CreateParams) (models.Board, error) {
+func (rep *postgresRepository) Create(params *_boards.CreateParams) (models.Board, error) {
 	const insertCommand = `INSERT INTO boards (name, description, privacy, user_id) 
 				      	   VALUES ($1, $2, $3, $4)
 						   RETURNING *;`
@@ -32,7 +32,7 @@ func (rep *postgresRepository) Create(params *boards.CreateParams) (models.Board
 	err := row.Scan(&createdBoard.Id, &createdBoard.Name, &description, &createdBoard.Privacy, &createdBoard.UserId)
 	createdBoard.Description = description.String
 	if err != nil {
-		err = boards.ErrBadQuery
+		err = _boards.ErrDb
 	}
 	return createdBoard, err
 }
@@ -42,23 +42,23 @@ func (rep *postgresRepository) List(userId int) ([]models.Board, error) {
 							  FROM boards
 							  WHERE user_id = $1;`
 
-	boards := []models.Board{}
 	rows, err := rep.db.Query(getBoardsCommand, userId)
 	if err != nil {
-		return boards, err
+		return nil, _boards.ErrDb
 	}
 
+	var boards []models.Board
 	board := models.Board{}
 	var description sql.NullString
 	for rows.Next() {
 		err = rows.Scan(&board.Id, &board.Name, &description, &board.Privacy, &board.UserId)
 		if err != nil {
-			break
+			return nil, _boards.ErrDb
 		}
 		board.Description = description.String
 		boards = append(boards, board)
 	}
-	return boards, err
+	return boards, nil
 }
 
 func (rep *postgresRepository) Get(id int) (models.Board, error) {
@@ -79,7 +79,7 @@ func (rep *postgresRepository) Get(id int) (models.Board, error) {
 	return board, err
 }
 
-func (rep *postgresRepository) FullUpdate(params *boards.FullUpdateParams) (models.Board, error) {
+func (rep *postgresRepository) FullUpdate(params *_boards.FullUpdateParams) (models.Board, error) {
 	const fullUpdateBoard = `UPDATE boards
 								SET name = $1::VARCHAR,
     							description = $2::TEXT,
@@ -100,7 +100,7 @@ func (rep *postgresRepository) FullUpdate(params *boards.FullUpdateParams) (mode
 	return updatedBoard, err
 }
 
-func (rep *postgresRepository) PartialUpdate(params *boards.PartialUpdateParams) (models.Board, error) {
+func (rep *postgresRepository) PartialUpdate(params *_boards.PartialUpdateParams) (models.Board, error) {
 	const partialUpdateBoard = `UPDATE boards
 								SET name = CASE WHEN $1::boolean THEN $2::VARCHAR ELSE name END,
     							description = CASE WHEN $3::boolean THEN $4::TEXT ELSE description END,
@@ -130,11 +130,11 @@ func (rep *postgresRepository) Delete(id int) error {
 
 	res, err := rep.db.Exec(deleteCommand, id)
 	if err != nil {
-		return boards.ErrDeleteBoard
+		return _boards.ErrDeleteBoard
 	}
 	count, err := res.RowsAffected()
 	if err != nil || count < 1 {
-		return boards.ErrBoardNotFound
+		return _boards.ErrBoardNotFound
 	}
 	return nil
 }
