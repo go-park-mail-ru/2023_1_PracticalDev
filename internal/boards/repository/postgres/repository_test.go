@@ -14,64 +14,94 @@ import (
 )
 
 func TestCreate(t *testing.T) {
+	type fields struct {
+		mock sqlmock.Sqlmock
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		params  boards.CreateParams
+		board   models.Board
+		err     error
+	}
+
 	const createCmd = `INSERT INTO boards (name, description, privacy, user_id) 
 				       VALUES ($1, $2, $3, $4)
 					   RETURNING *;`
 
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("can't create mock: %s", err)
+	tests := map[string]testCase{
+		"good query": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
+				rows = rows.AddRow(1, "n1", "d1", "secret", 12)
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(createCmd)).
+					WithArgs("n1", "d1", "secret", 12).
+					WillReturnRows(rows)
+			},
+			params: boards.CreateParams{
+				Name:        "n1",
+				Description: "d1",
+				Privacy:     "secret",
+				UserId:      12,
+			},
+			board: models.Board{
+				Id:          1,
+				Name:        "n1",
+				Description: "d1",
+				Privacy:     "secret",
+				UserId:      12,
+			},
+			err: nil,
+		},
+		"query error": {
+			prepare: func(f *fields) {
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(createCmd)).
+					WithArgs("n1", "d1", "secret", 12).
+					WillReturnError(boards.ErrBadQuery)
+			},
+			params: boards.CreateParams{
+				Name:        "n1",
+				Description: "d1",
+				Privacy:     "secret",
+				UserId:      12,
+			},
+			board: models.Board{},
+			err:   boards.ErrBadQuery,
+		},
 	}
-	defer db.Close()
 
-	logger := log.New()
-	repo := NewPostgresRepository(db, logger)
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	const name = "Test Name"
-	const description = "Test Description"
-	const privacy = "secret"
-	const userId = 12
-	rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
-	rows = rows.AddRow(1, name, description, privacy, userId)
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("can't create mock: %s", err)
+			}
+			defer db.Close()
 
-	// ok query
-	mock.
-		ExpectQuery(regexp.QuoteMeta(createCmd)).
-		WithArgs(name, description, privacy, userId).
-		WillReturnRows(rows)
+			logger := log.New()
+			repo := NewPostgresRepository(db, logger)
 
-	testParams := boards.CreateParams{
-		Name:        name,
-		Description: description,
-		Privacy:     privacy,
-		UserId:      userId,
-	}
-	board, err := repo.Create(&testParams)
-	if err != nil {
-		t.Errorf("unexpected err: %s", err)
-		return
-	}
-	if board.Id != 1 {
-		t.Errorf("bad id: want %v, have %v", board.Id, 1)
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+			f := fields{mock: mock}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
 
-	// query error
-	mock.
-		ExpectQuery(regexp.QuoteMeta(createCmd)).
-		WithArgs(name, description, privacy, userId).
-		WillReturnError(fmt.Errorf("bad query"))
-
-	_, err = repo.Create(&testParams)
-	if err == nil {
-		t.Errorf("expected error, got nil")
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+			board, err := repo.Create(&test.params)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if board != test.board {
+				t.Errorf("\nExpected: %v\nGot: %v", test.board, board)
+			}
+			if err = mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("\nThere were unfulfilled expectations: %s", err)
+			}
+		})
 	}
 }
 

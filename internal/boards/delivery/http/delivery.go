@@ -60,7 +60,12 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 
 	createdBoard, err := del.serv.Create(&params)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		switch err {
+		case boards.ErrBadQuery:
+			w.WriteHeader(http.StatusInternalServerError)
+		case boards.ErrInvalidPrivacy:
+			w.WriteHeader(http.StatusBadRequest)
+		}
 		return err
 	}
 

@@ -1,6 +1,13 @@
 package boards
 
-import "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+import (
+	"errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+)
+
+var (
+	ErrInvalidPrivacy = errors.New("invalid privacy")
+)
 
 type Service interface {
 	Create(params *CreateParams) (models.Board, error)

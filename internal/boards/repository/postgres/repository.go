@@ -31,6 +31,9 @@ func (rep *postgresRepository) Create(params *boards.CreateParams) (models.Board
 	var description sql.NullString
 	err := row.Scan(&createdBoard.Id, &createdBoard.Name, &description, &createdBoard.Privacy, &createdBoard.UserId)
 	createdBoard.Description = description.String
+	if err != nil {
+		err = boards.ErrBadQuery
+	}
 	return createdBoard, err
 }
 
