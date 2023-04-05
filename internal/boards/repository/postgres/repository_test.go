@@ -483,50 +483,70 @@ func TestPartialUpdate(t *testing.T) {
 }
 
 func TestDelete(t *testing.T) {
+	type fields struct {
+		mock sqlmock.Sqlmock
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		id      int
+		err     error
+	}
+
 	const deleteCmd = `DELETE FROM boards 
 					   WHERE id = $1;`
 
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("can't create mock: %s", err)
-	}
-	defer db.Close()
-
-	logger := log.New()
-	repo := NewPostgresRepository(db, logger)
-
-	const delId = 3
-
-	rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
-	rows = rows.AddRow(delId, "Test Name", "Test Description", "secret", 12)
-
-	// ok query
-	mock.
-		ExpectExec(regexp.QuoteMeta(deleteCmd)).
-		WithArgs(delId).
-		WillReturnResult(sqlmock.NewResult(delId, 1))
-
-	err = repo.Delete(delId)
-	if err != nil {
-		t.Errorf("unexpected err: %s", err)
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+	tests := map[string]testCase{
+		"good query": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
+				rows = rows.AddRow(3, "n1", "d1", "secret", 12)
+				f.mock.
+					ExpectExec(regexp.QuoteMeta(deleteCmd)).
+					WithArgs(3).
+					WillReturnResult(sqlmock.NewResult(3, 1))
+			},
+			id:  3,
+			err: nil,
+		},
+		"query error": {
+			prepare: func(f *fields) {
+				f.mock.
+					ExpectExec(regexp.QuoteMeta(deleteCmd)).
+					WithArgs(3).
+					WillReturnError(fmt.Errorf("db error"))
+			},
+			id:  3,
+			err: _boards.ErrDb,
+		},
 	}
 
-	// query error
-	mock.
-		ExpectExec(regexp.QuoteMeta(deleteCmd)).
-		WithArgs(delId).
-		WillReturnError(fmt.Errorf("db_error"))
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	err = repo.Delete(delId)
-	if err == nil {
-		t.Errorf("expected error, got nil")
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("can't create mock: %s", err)
+			}
+			defer db.Close()
+
+			logger := log.New()
+			repo := NewPostgresRepository(db, logger)
+
+			f := fields{mock: mock}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
+
+			err = repo.Delete(test.id)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if err = mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("\nThere were unfulfilled expectations: %s", err)
+			}
+		})
 	}
 }
