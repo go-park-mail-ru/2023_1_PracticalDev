@@ -46,3 +46,7 @@ fill-test-data:
 .PHONY: deploy
 deploy:
 	docker compose -f docker-compose.yml up -d --build
+
+.PHONY: mocks
+mocks:
+	./scripts/gen_mocks.sh
