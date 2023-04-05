@@ -123,6 +123,9 @@ func (rep *postgresRepository) PartialUpdate(params *_boards.PartialUpdateParams
 	var description sql.NullString
 	err := row.Scan(&updatedBoard.Id, &updatedBoard.Name, &description, &updatedBoard.Privacy, &updatedBoard.UserId)
 	updatedBoard.Description = description.String
+	if err != nil {
+		err = _boards.ErrDb
+	}
 	return updatedBoard, err
 }
 
@@ -132,7 +135,7 @@ func (rep *postgresRepository) Delete(id int) error {
 
 	res, err := rep.db.Exec(deleteCommand, id)
 	if err != nil {
-		return _boards.ErrDeleteBoard
+		return _boards.ErrDb
 	}
 	count, err := res.RowsAffected()
 	if err != nil || count < 1 {

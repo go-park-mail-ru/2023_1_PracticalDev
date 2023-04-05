@@ -382,6 +382,17 @@ func TestFullUpdate(t *testing.T) {
 }
 
 func TestPartialUpdate(t *testing.T) {
+	type fields struct {
+		mock sqlmock.Sqlmock
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		params  _boards.PartialUpdateParams
+		board   models.Board
+		err     error
+	}
+
 	const partialUpdateCmd = `UPDATE boards
 							  SET name = CASE WHEN $1::boolean THEN $2::VARCHAR ELSE name END,
     						  description = CASE WHEN $3::boolean THEN $4::TEXT ELSE description END,
@@ -389,84 +400,85 @@ func TestPartialUpdate(t *testing.T) {
 						      WHERE id = $7
 							  RETURNING *;`
 
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("can't create mock: %s", err)
-	}
-	defer db.Close()
-
-	logger := log.New()
-	repo := NewPostgresRepository(db, logger)
-
-	expect := models.Board{
-		Id:          3,
-		Name:        "Test Name",
-		Description: "Test Description",
-		Privacy:     "secret",
-		UserId:      12,
-	}
-	rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
-	rows = rows.AddRow(expect.Id, expect.Name, expect.Description, expect.Privacy,
-		expect.UserId)
-
-	params := _boards.PartialUpdateParams{
-		Id:                expect.Id,
-		Name:              expect.Name,
-		UpdateName:        true,
-		Description:       expect.Description,
-		UpdateDescription: true,
-		Privacy:           expect.Privacy,
-		UpdatePrivacy:     true,
-	}
-
-	// ok query
-	mock.
-		ExpectQuery(regexp.QuoteMeta(partialUpdateCmd)).
-		WithArgs(
-			params.UpdateName,
-			params.Name,
-			params.UpdateDescription,
-			params.Description,
-			params.UpdatePrivacy,
-			params.Privacy,
-			params.Id,
-		).
-		WillReturnRows(rows)
-
-	board, err := repo.PartialUpdate(&params)
-	if err != nil {
-		t.Errorf("unexpected err: %s", err)
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
-	if !reflect.DeepEqual(board, expect) {
-		t.Errorf("results not match, expected %#v, \ngot %#v", expect, board)
-		return
+	tests := map[string]testCase{
+		"good query": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
+				rows = rows.AddRow(3, "upd_n1", "upd_d1", "secret", 12)
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(partialUpdateCmd)).
+					WithArgs(true, "upd_n1", true, "upd_d1", true, "secret", 3).
+					WillReturnRows(rows)
+			},
+			params: _boards.PartialUpdateParams{
+				Id:                3,
+				Name:              "upd_n1",
+				UpdateName:        true,
+				Description:       "upd_d1",
+				UpdateDescription: true,
+				Privacy:           "secret",
+				UpdatePrivacy:     true,
+			},
+			board: models.Board{
+				Id:          3,
+				Name:        "upd_n1",
+				Description: "upd_d1",
+				Privacy:     "secret",
+				UserId:      12,
+			},
+			err: nil,
+		},
+		"query error": {
+			prepare: func(f *fields) {
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(partialUpdateCmd)).
+					WithArgs(true, "upd_n1", true, "upd_d1", true, "secret", 3).
+					WillReturnError(fmt.Errorf("db error"))
+			},
+			params: _boards.PartialUpdateParams{
+				Id:                3,
+				Name:              "upd_n1",
+				UpdateName:        true,
+				Description:       "upd_d1",
+				UpdateDescription: true,
+				Privacy:           "secret",
+				UpdatePrivacy:     true,
+			},
+			board: models.Board{},
+			err:   _boards.ErrDb,
+		},
 	}
 
-	// query error
-	mock.
-		ExpectQuery(regexp.QuoteMeta(partialUpdateCmd)).
-		WithArgs(
-			params.UpdateName,
-			params.Name,
-			params.UpdateDescription,
-			params.Description,
-			params.UpdatePrivacy,
-			params.Privacy,
-			params.Id,
-		).
-		WillReturnError(fmt.Errorf("bad query"))
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	_, err = repo.PartialUpdate(&params)
-	if err == nil {
-		t.Errorf("expected error, got nil")
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("can't create mock: %s", err)
+			}
+			defer db.Close()
+
+			logger := log.New()
+			repo := NewPostgresRepository(db, logger)
+
+			f := fields{mock: mock}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
+
+			board, err := repo.PartialUpdate(&test.params)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if board != test.board {
+				t.Errorf("\nExpected: %v\nGot: %v", test.board, board)
+			}
+			if err = mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("\nThere were unfulfilled expectations: %s", err)
+			}
+		})
 	}
 }
 
