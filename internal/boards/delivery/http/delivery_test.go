@@ -14,7 +14,7 @@ import (
 	"testing"
 )
 
-func TestDeliveryGet(t *testing.T) {
+func TestGet(t *testing.T) {
 	type fields struct {
 		serv *mocks.MockService
 	}
