@@ -550,3 +550,159 @@ func TestDelete(t *testing.T) {
 		})
 	}
 }
+
+func TestCheckWriteAccess(t *testing.T) {
+	type fields struct {
+		mock sqlmock.Sqlmock
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		userId  string
+		boardId string
+		access  bool
+		err     error
+	}
+
+	const checkCommand = `SELECT EXISTS(SELECT id
+     			          				FROM boards
+              			  				WHERE id = $1 AND user_id = $2) AS access;`
+
+	tests := map[string]testCase{
+		"good query": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"access"}).AddRow(true)
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(checkCommand)).
+					WithArgs("3", "2").
+					WillReturnRows(rows)
+			},
+			userId:  "2",
+			boardId: "3",
+			access:  true,
+			err:     nil,
+		},
+		"query error": {
+			prepare: func(f *fields) {
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(checkCommand)).
+					WithArgs("3", "2").
+					WillReturnError(fmt.Errorf("db error"))
+			},
+			userId:  "2",
+			boardId: "3",
+			access:  false,
+			err:     _boards.ErrDb,
+		},
+	}
+
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("can't create mock: %s", err)
+			}
+			defer db.Close()
+
+			logger := log.New()
+			repo := NewPostgresRepository(db, logger)
+
+			f := fields{mock: mock}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
+
+			access, err := repo.CheckWriteAccess(test.userId, test.boardId)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if access != test.access {
+				t.Errorf("\nExpected: %v\nGot: %v", test.access, access)
+			}
+			if err = mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("\nThere were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func TestCheckReadAccess(t *testing.T) {
+	type fields struct {
+		mock sqlmock.Sqlmock
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		userId  string
+		boardId string
+		access  bool
+		err     error
+	}
+
+	const checkCommand = `SELECT EXISTS(SELECT
+              							FROM boards
+              							WHERE id = $1 AND (privacy = 'public' OR user_id = $2)) AS access;`
+
+	tests := map[string]testCase{
+		"good query": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"access"}).AddRow(true)
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(checkCommand)).
+					WithArgs("3", "2").
+					WillReturnRows(rows)
+			},
+			userId:  "2",
+			boardId: "3",
+			access:  true,
+			err:     nil,
+		},
+		"query error": {
+			prepare: func(f *fields) {
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(checkCommand)).
+					WithArgs("3", "2").
+					WillReturnError(fmt.Errorf("db error"))
+			},
+			userId:  "2",
+			boardId: "3",
+			access:  false,
+			err:     _boards.ErrDb,
+		},
+	}
+
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("can't create mock: %s", err)
+			}
+			defer db.Close()
+
+			logger := log.New()
+			repo := NewPostgresRepository(db, logger)
+
+			f := fields{mock: mock}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
+
+			access, err := repo.CheckReadAccess(test.userId, test.boardId)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if access != test.access {
+				t.Errorf("\nExpected: %v\nGot: %v", test.access, access)
+			}
+			if err = mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("\nThere were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}

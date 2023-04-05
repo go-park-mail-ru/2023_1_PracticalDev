@@ -147,7 +147,7 @@ func (rep *postgresRepository) Delete(id int) error {
 func (rep *postgresRepository) CheckWriteAccess(userId, boardId string) (bool, error) {
 	const checkCommand = `SELECT EXISTS(SELECT id
      			          				FROM boards
-              			  				WHERE id = $1 AND user_id = $2);`
+              			  				WHERE id = $1 AND user_id = $2) AS access;`
 
 	row := rep.db.QueryRow(checkCommand,
 		boardId,
@@ -156,17 +156,23 @@ func (rep *postgresRepository) CheckWriteAccess(userId, boardId string) (bool, e
 
 	var access bool
 	err := row.Scan(&access)
+	if err != nil {
+		err = _boards.ErrDb
+	}
 	return access, err
 }
 
 func (rep *postgresRepository) CheckReadAccess(userId, boardId string) (bool, error) {
 	const checkCommand = `SELECT EXISTS(SELECT
               							FROM boards
-              							WHERE id = $1 AND (privacy = 'public' OR user_id = $2));`
+              							WHERE id = $1 AND (privacy = 'public' OR user_id = $2)) AS access;`
 
 	row := rep.db.QueryRow(checkCommand, boardId, userId)
 
 	var access bool
 	err := row.Scan(&access)
+	if err != nil {
+		err = _boards.ErrDb
+	}
 	return access, err
 }
