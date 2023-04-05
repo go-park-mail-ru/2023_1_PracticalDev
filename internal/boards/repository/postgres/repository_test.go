@@ -287,6 +287,17 @@ func TestGet(t *testing.T) {
 }
 
 func TestFullUpdate(t *testing.T) {
+	type fields struct {
+		mock sqlmock.Sqlmock
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		params  _boards.FullUpdateParams
+		board   models.Board
+		err     error
+	}
+
 	const fullUpdateCmd = `UPDATE boards
 						   SET name = $1::VARCHAR,
 						   description = $2::TEXT,
@@ -294,63 +305,79 @@ func TestFullUpdate(t *testing.T) {
 						   WHERE id = $4
 						   RETURNING *;`
 
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("can't create mock: %s", err)
+	tests := map[string]testCase{
+		"good query": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
+				rows = rows.AddRow(3, "upd_n1", "upd_d1", "secret", 12)
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(fullUpdateCmd)).
+					WithArgs("upd_n1", "upd_d1", "secret", 3).
+					WillReturnRows(rows)
+			},
+			params: _boards.FullUpdateParams{
+				Id:          3,
+				Name:        "upd_n1",
+				Description: "upd_d1",
+				Privacy:     "secret",
+			},
+			board: models.Board{
+				Id:          3,
+				Name:        "upd_n1",
+				Description: "upd_d1",
+				Privacy:     "secret",
+				UserId:      12,
+			},
+			err: nil,
+		},
+		"query error": {
+			prepare: func(f *fields) {
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(fullUpdateCmd)).
+					WithArgs("upd_n1", "upd_d1", "secret", 3).
+					WillReturnError(fmt.Errorf("db error"))
+			},
+			params: _boards.FullUpdateParams{
+				Id:          3,
+				Name:        "upd_n1",
+				Description: "upd_d1",
+				Privacy:     "secret",
+			},
+			board: models.Board{},
+			err:   _boards.ErrDb,
+		},
 	}
-	defer db.Close()
 
-	logger := log.New()
-	repo := NewPostgresRepository(db, logger)
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	const (
-		id          = 3
-		name        = "Test Name"
-		description = "Test Description"
-		privacy     = "secret"
-		userId      = 12
-	)
-	rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
-	rows = rows.AddRow(id, name, description, privacy, userId)
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("can't create mock: %s", err)
+			}
+			defer db.Close()
 
-	// ok query
-	mock.
-		ExpectQuery(regexp.QuoteMeta(fullUpdateCmd)).
-		WithArgs(name, description, privacy, id).
-		WillReturnRows(rows)
+			logger := log.New()
+			repo := NewPostgresRepository(db, logger)
 
-	testParams := _boards.FullUpdateParams{
-		Id:          id,
-		Name:        name,
-		Description: description,
-		Privacy:     privacy,
-	}
-	board, err := repo.FullUpdate(&testParams)
-	if err != nil {
-		t.Errorf("unexpected err: %s", err)
-		return
-	}
-	if board.Id != id {
-		t.Errorf("bad id: want %v, have %v", board.Id, 1)
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
+			f := fields{mock: mock}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
 
-	// query error
-	mock.
-		ExpectQuery(regexp.QuoteMeta(fullUpdateCmd)).
-		WithArgs(name, description, privacy, id).
-		WillReturnError(fmt.Errorf("bad query"))
-
-	_, err = repo.FullUpdate(&testParams)
-	if err == nil {
-		t.Errorf("expected error, got nil")
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+			board, err := repo.FullUpdate(&test.params)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if board != test.board {
+				t.Errorf("\nExpected: %v\nGot: %v", test.board, board)
+			}
+			if err = mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("\nThere were unfulfilled expectations: %s", err)
+			}
+		})
 	}
 }
 

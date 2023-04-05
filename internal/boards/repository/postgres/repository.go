@@ -96,6 +96,9 @@ func (rep *postgresRepository) FullUpdate(params *_boards.FullUpdateParams) (mod
 	var description sql.NullString
 	err := row.Scan(&updatedBoard.Id, &updatedBoard.Name, &description, &updatedBoard.Privacy, &updatedBoard.UserId)
 	updatedBoard.Description = description.String
+	if err != nil {
+		err = _boards.ErrDb
+	}
 	return updatedBoard, err
 }
 
