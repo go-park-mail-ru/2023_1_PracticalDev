@@ -45,14 +45,8 @@ func TestCreate(t *testing.T) {
 				Privacy:     "secret",
 				UserId:      12,
 			},
-			board: models.Board{
-				Id:          1,
-				Name:        "n1",
-				Description: "d1",
-				Privacy:     "secret",
-				UserId:      12,
-			},
-			err: nil,
+			board: models.Board{Id: 1, Name: "n1", Description: "d1", Privacy: "secret", UserId: 12},
+			err:   nil,
 		},
 		"query error": {
 			prepare: func(f *fields) {
@@ -205,78 +199,90 @@ func TestList(t *testing.T) {
 }
 
 func TestGet(t *testing.T) {
+	type fields struct {
+		mock sqlmock.Sqlmock
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		id      int
+		board   models.Board
+		err     error
+	}
+
 	const getCmd = `SELECT *
 					FROM boards
 					WHERE id = $1;`
 
-	db, mock, err := sqlmock.New()
-	if err != nil {
-		t.Fatalf("can't create mock: %s", err)
-	}
-	defer db.Close()
-
-	logger := log.New()
-	repo := NewPostgresRepository(db, logger)
-
-	const name = "Test Name"
-	const description = "Test Description"
-	const privacy = "secret"
-	const userId = 12
-	rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
-	expect := []models.Board{{1, name, description, privacy, userId}}
-	for _, board := range expect {
-		rows = rows.AddRow(board.Id, board.Name, board.Description, board.Privacy, board.UserId)
-	}
-
-	// ok query
-	mock.
-		ExpectQuery(regexp.QuoteMeta(getCmd)).
-		WithArgs(1).
-		WillReturnRows(rows)
-
-	board, err := repo.Get(1)
-	if err != nil {
-		t.Errorf("unexpected err: %s", err)
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-	}
-	if !reflect.DeepEqual(board, expect[0]) {
-		t.Errorf("results not match, expected %v, \ngot %v", expect[0], board)
-		return
-	}
-
-	// query error
-	mock.
-		ExpectQuery(regexp.QuoteMeta(getCmd)).
-		WithArgs(1).
-		WillReturnError(fmt.Errorf("db_error"))
-
-	_, err = repo.Get(1)
-	if err == nil {
-		t.Errorf("expected error, got nil")
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
+	tests := map[string]testCase{
+		"good query": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
+				rows = rows.AddRow(3, "n1", "d1", "secret", 12)
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(getCmd)).
+					WithArgs(3).
+					WillReturnRows(rows)
+			},
+			id:    3,
+			board: models.Board{Id: 3, Name: "n1", Description: "d1", Privacy: "secret", UserId: 12},
+			err:   nil,
+		},
+		"query error": {
+			prepare: func(f *fields) {
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(getCmd)).
+					WithArgs(3).
+					WillReturnError(fmt.Errorf("db error"))
+			},
+			id:    3,
+			board: models.Board{},
+			err:   _boards.ErrDb,
+		},
+		"row scan error": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"id", "name"}).AddRow(1, "b1")
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(getCmd)).
+					WithArgs(1).
+					WillReturnRows(rows)
+			},
+			id:    1,
+			board: models.Board{},
+			err:   _boards.ErrDb,
+		},
 	}
 
-	// row scan error
-	rows = sqlmock.NewRows([]string{"id", "name"}).AddRow(1, name)
-	mock.
-		ExpectQuery(regexp.QuoteMeta(getCmd)).
-		WithArgs(1).
-		WillReturnRows(rows)
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
 
-	_, err = repo.Get(1)
-	if err == nil {
-		t.Errorf("expected error, got nil")
-		return
-	}
-	if err = mock.ExpectationsWereMet(); err != nil {
-		t.Errorf("there were unfulfilled expectations: %s", err)
-		return
+			db, mock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("can't create mock: %s", err)
+			}
+			defer db.Close()
+
+			logger := log.New()
+			repo := NewPostgresRepository(db, logger)
+
+			f := fields{mock: mock}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
+
+			board, err := repo.Get(test.id)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if board != test.board {
+				t.Errorf("\nExpected: %v\nGot: %v", test.board, board)
+			}
+			if err = mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("\nThere were unfulfilled expectations: %s", err)
+			}
+		})
 	}
 }
 

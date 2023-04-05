@@ -66,16 +66,15 @@ func (rep *postgresRepository) Get(id int) (models.Board, error) {
 							 FROM boards
 							 WHERE id = $1;`
 
-	board := models.Board{}
-	rows, err := rep.db.Query(getBoardCommand, id)
-	if err != nil {
-		return board, err
-	}
+	row := rep.db.QueryRow(getBoardCommand, id)
 
+	board := models.Board{}
 	var description sql.NullString
-	rows.Next()
-	err = rows.Scan(&board.Id, &board.Name, &description, &board.Privacy, &board.UserId)
+	err := row.Scan(&board.Id, &board.Name, &description, &board.Privacy, &board.UserId)
 	board.Description = description.String
+	if err != nil {
+		err = _boards.ErrDb
+	}
 	return board, err
 }
 
