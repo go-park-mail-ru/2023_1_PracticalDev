@@ -3,12 +3,17 @@ package http
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
+)
+
+var (
+	ErrInvalidBoardIdParam = errors.New("invalid board id param")
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, access middleware.AccessChecker, serv boards.Service) {
@@ -101,7 +106,7 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidBoardIdParam
 	}
 
 	board, err := del.serv.Get(id)
@@ -132,7 +137,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidBoardIdParam
 	}
 
 	var request fullUpdateRequest
@@ -186,7 +191,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidBoardIdParam
 	}
 
 	var request partialUpdateRequest
@@ -247,7 +252,7 @@ func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidBoardIdParam
 	}
 
 	err = del.serv.Delete(id)
