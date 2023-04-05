@@ -1,7 +1,8 @@
-package boards
+package postgres
 
 import (
 	"fmt"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"reflect"
 	"regexp"
 	"testing"
@@ -24,7 +25,7 @@ func TestCreate(t *testing.T) {
 	defer db.Close()
 
 	logger := log.New()
-	repo := NewRepository(db, logger)
+	repo := NewPostgresRepository(db, logger)
 
 	const name = "Test Name"
 	const description = "Test Description"
@@ -39,7 +40,7 @@ func TestCreate(t *testing.T) {
 		WithArgs(name, description, privacy, userId).
 		WillReturnRows(rows)
 
-	testParams := createParams{
+	testParams := boards.CreateParams{
 		Name:        name,
 		Description: description,
 		Privacy:     privacy,
@@ -86,7 +87,7 @@ func TestList(t *testing.T) {
 	defer db.Close()
 
 	logger := log.New()
-	repo := NewRepository(db, logger)
+	repo := NewPostgresRepository(db, logger)
 
 	rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
 	expect := []models.Board{
@@ -162,7 +163,7 @@ func TestGet(t *testing.T) {
 	defer db.Close()
 
 	logger := log.New()
-	repo := NewRepository(db, logger)
+	repo := NewPostgresRepository(db, logger)
 
 	const name = "Test Name"
 	const description = "Test Description"
@@ -241,7 +242,7 @@ func TestFullUpdate(t *testing.T) {
 	defer db.Close()
 
 	logger := log.New()
-	repo := NewRepository(db, logger)
+	repo := NewPostgresRepository(db, logger)
 
 	const (
 		id          = 3
@@ -259,7 +260,7 @@ func TestFullUpdate(t *testing.T) {
 		WithArgs(name, description, privacy, id).
 		WillReturnRows(rows)
 
-	testParams := fullUpdateParams{
+	testParams := boards.FullUpdateParams{
 		Id:          id,
 		Name:        name,
 		Description: description,
@@ -309,7 +310,7 @@ func TestPartialUpdate(t *testing.T) {
 	defer db.Close()
 
 	logger := log.New()
-	repo := NewRepository(db, logger)
+	repo := NewPostgresRepository(db, logger)
 
 	expect := models.Board{
 		Id:          3,
@@ -322,7 +323,7 @@ func TestPartialUpdate(t *testing.T) {
 	rows = rows.AddRow(expect.Id, expect.Name, expect.Description, expect.Privacy,
 		expect.UserId)
 
-	params := partialUpdateParams{
+	params := boards.PartialUpdateParams{
 		Id:                expect.Id,
 		Name:              expect.Name,
 		UpdateName:        true,
@@ -394,7 +395,7 @@ func TestDelete(t *testing.T) {
 	defer db.Close()
 
 	logger := log.New()
-	repo := NewRepository(db, logger)
+	repo := NewPostgresRepository(db, logger)
 
 	const delId = 3
 

@@ -1,8 +1,9 @@
-package boards
+package http
 
 import (
 	"database/sql"
 	"encoding/json"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/julienschmidt/httprouter"
@@ -10,7 +11,7 @@ import (
 	"strconv"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, access middleware.AccessChecker, serv Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, access middleware.AccessChecker, serv boards.Service) {
 	del := delivery{serv, logger}
 
 	mux.POST("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.create)), logger), logger))
@@ -22,7 +23,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer midd
 }
 
 type delivery struct {
-	serv Service
+	serv boards.Service
 	log  log.Logger
 }
 
@@ -42,7 +43,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 		return err
 	}
 
-	params := createParams{
+	params := boards.CreateParams{
 		Name:        request.Name,
 		Description: request.Description,
 		Privacy:     "secret",
@@ -142,7 +143,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		return err
 	}
 
-	params := fullUpdateParams{
+	params := boards.FullUpdateParams{
 		Id:          id,
 		Name:        request.Name,
 		Description: request.Description,
@@ -196,7 +197,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		return err
 	}
 
-	params := partialUpdateParams{
+	params := boards.PartialUpdateParams{
 		Id:      id,
 		Privacy: "secret",
 	}
@@ -251,9 +252,9 @@ func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter
 
 	err = del.serv.Delete(id)
 	switch err {
-	case ErrDeleteBoard:
+	case boards.ErrDeleteBoard:
 		w.WriteHeader(http.StatusInternalServerError)
-	case ErrBoardNotFound:
+	case boards.ErrBoardNotFound:
 		w.WriteHeader(http.StatusNotFound)
 	}
 	return err
