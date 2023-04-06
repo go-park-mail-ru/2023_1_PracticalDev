@@ -499,8 +499,6 @@ func TestDelete(t *testing.T) {
 	tests := map[string]testCase{
 		"good query": {
 			prepare: func(f *fields) {
-				rows := sqlmock.NewRows([]string{"id", "name", "description", "privacy", "user_id"})
-				rows = rows.AddRow(3, "n1", "d1", "secret", 12)
 				f.mock.
 					ExpectExec(regexp.QuoteMeta(deleteCmd)).
 					WithArgs(3).
