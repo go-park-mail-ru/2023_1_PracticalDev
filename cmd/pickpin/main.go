@@ -2,6 +2,11 @@ package main
 
 import (
 	"context"
+
+	_boardsDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/delivery/http"
+	_boardsRepo "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/repository/postgres"
+	_boardsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/service"
+
 	"net/http"
 	"os"
 
@@ -10,8 +15,7 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
+	_db "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/posts"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/redis"
@@ -22,7 +26,7 @@ import (
 func main() {
 	logger := log.New()
 
-	db, err := db.New(logger)
+	db, err := _db.New(logger)
 	if err != nil {
 		os.Exit(1)
 	}
@@ -37,10 +41,8 @@ func main() {
 	mux := httprouter.New()
 	mux.GlobalOPTIONS = middleware.HandlerFuncLogger(middleware.OptionsHandler, logger)
 
-	boardsRepo := boards.NewRepository(db, logger)
-
-	boardsServ := boards.NewService(boardsRepo)
-
+	boardsRepo := _boardsRepo.NewPostgresRepository(db, logger)
+	boardsServ := _boardsService.NewBoardsService(boardsRepo)
 	boardsAccessChecker := middleware.NewAccessChecker(boardsServ)
 
 	authServ := auth.NewService(auth.NewRepository(db, rdb, ctx, logger))
@@ -49,7 +51,7 @@ func main() {
 	auth.RegisterHandlers(mux, logger, authServ)
 	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
 	posts.RegisterHandlers(mux, logger, authorizer, posts.NewService(posts.NewRepository(db, logger)))
-	boards.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ)
+	_boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ)
 	ping.RegisterHandlers(mux, logger)
 
 	server := http.Server{
