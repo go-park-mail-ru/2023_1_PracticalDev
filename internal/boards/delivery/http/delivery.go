@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
+	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/julienschmidt/httprouter"
@@ -14,9 +14,10 @@ import (
 
 var (
 	ErrInvalidBoardIdParam = errors.New("invalid board id param")
+	ErrInvalidUserId       = errors.New("invalid user id")
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, access middleware.AccessChecker, serv boards.Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, access middleware.AccessChecker, serv _boards.Service) {
 	del := delivery{serv, logger}
 
 	mux.POST("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.create)), logger), logger))
@@ -28,7 +29,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer midd
 }
 
 type delivery struct {
-	serv boards.Service
+	serv _boards.Service
 	log  log.Logger
 }
 
@@ -37,7 +38,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidUserId
 	}
 
 	var request createRequest
@@ -48,7 +49,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 		return err
 	}
 
-	params := boards.CreateParams{
+	params := _boards.CreateParams{
 		Name:        request.Name,
 		Description: request.Description,
 		Privacy:     "secret",
@@ -61,9 +62,9 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 	createdBoard, err := del.serv.Create(&params)
 	if err != nil {
 		switch err {
-		case boards.ErrDb:
+		case _boards.ErrDb:
 			w.WriteHeader(http.StatusInternalServerError)
-		case boards.ErrInvalidPrivacy:
+		case _boards.ErrInvalidPrivacy:
 			w.WriteHeader(http.StatusBadRequest)
 		}
 		return err
@@ -85,7 +86,7 @@ func (del *delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.P
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidUserId
 	}
 
 	boards, err := del.serv.List(userId)
@@ -153,7 +154,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		return err
 	}
 
-	params := boards.FullUpdateParams{
+	params := _boards.FullUpdateParams{
 		Id:          id,
 		Name:        request.Name,
 		Description: request.Description,
@@ -207,7 +208,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		return err
 	}
 
-	params := boards.PartialUpdateParams{
+	params := _boards.PartialUpdateParams{
 		Id:      id,
 		Privacy: "secret",
 	}
@@ -262,9 +263,9 @@ func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter
 
 	err = del.serv.Delete(id)
 	switch err {
-	case boards.ErrDeleteBoard:
+	case _boards.ErrDb:
 		w.WriteHeader(http.StatusInternalServerError)
-	case boards.ErrBoardNotFound:
+	case _boards.ErrBoardNotFound:
 		w.WriteHeader(http.StatusNotFound)
 	}
 	return err
