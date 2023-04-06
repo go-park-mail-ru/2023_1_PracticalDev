@@ -2,13 +2,13 @@ package postgres
 
 import (
 	"fmt"
-	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"reflect"
 	"regexp"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 
+	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
