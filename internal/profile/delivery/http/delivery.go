@@ -19,10 +19,12 @@ import (
 )
 
 var (
-	ErrFileCopy      = errors.New("file copy error")
-	ErrMissingFile   = errors.New("missing file")
-	ErrParseForm     = errors.New("parse form error")
-	ErrInvalidUserId = errors.New("invalid user id")
+	ErrFileCopy        = errors.New("file copy error")
+	ErrMissingFile     = errors.New("missing file")
+	ErrParseForm       = errors.New("parse form error")
+	ErrInvalidUserId   = errors.New("invalid user id")
+	ErrProfileNotFound = errors.New("profile not found")
+	ErrService         = errors.New("service error")
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, serv profile.Service) {
@@ -48,7 +50,13 @@ func (del *delivery) getProfileByUser(w http.ResponseWriter, r *http.Request, p 
 
 	prof, err := del.serv.GetProfileByUser(userId)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
+		if err == profile.ErrProfileNotFound {
+			err = ErrProfileNotFound
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			err = ErrService
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return err
 	}
 

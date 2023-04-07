@@ -10,7 +10,7 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/mocks"
 )
 
-func TestGet(t *testing.T) {
+func TestGetProfileByUser(t *testing.T) {
 	type fields struct {
 		repo *mocks.MockRepository
 	}
