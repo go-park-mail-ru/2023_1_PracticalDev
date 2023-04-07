@@ -19,11 +19,11 @@ func NewPostgresRepository(db *sql.DB, s3Service images.Service, log log.Logger)
 }
 
 func (rep *postgresRepository) GetProfileByUser(userId int) (profile.Profile, error) {
-	const fullUpdateCmd = `SELECT username, name, profile_image, website_url 
-							FROM users 
-							WHERE id = $1;`
+	const getCmd = `SELECT username, name, profile_image, website_url 
+					FROM users 
+					WHERE id = $1;`
 
-	row := rep.db.QueryRow(fullUpdateCmd, userId)
+	row := rep.db.QueryRow(getCmd, userId)
 
 	var prof profile.Profile
 	var profileImage, websiteUrl sql.NullString
