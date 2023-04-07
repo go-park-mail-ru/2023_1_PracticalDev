@@ -1,4 +1,4 @@
-package profile
+package http
 
 // API requests
 type fullUpdateRequest struct {

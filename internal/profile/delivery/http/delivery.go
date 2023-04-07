@@ -1,15 +1,16 @@
-package profile
+package http
 
 import (
 	"encoding/json"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 	"github.com/julienschmidt/httprouter"
 	"net/http"
 	"strconv"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, serv Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, serv profile.Service) {
 	del := delivery{serv, logger}
 
 	mux.PUT("/profile", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(del.fullUpdate)), logger), logger))
@@ -17,7 +18,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer midd
 }
 
 type delivery struct {
-	serv Service
+	serv profile.Service
 	log  log.Logger
 }
 
@@ -37,7 +38,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		return err
 	}
 
-	params := fullUpdateParams{
+	params := profile.FullUpdateParams{
 		Id:           id,
 		Username:     request.Username,
 		Name:         request.Name,
@@ -84,7 +85,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		return err
 	}
 
-	params := partialUpdateParams{Id: id}
+	params := profile.PartialUpdateParams{Id: id}
 	if request.Username != nil {
 		params.UpdateUsername = true
 		params.Username = *request.Username
