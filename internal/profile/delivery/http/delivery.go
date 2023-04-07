@@ -28,6 +28,7 @@ var (
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, serv profile.Service) {
 	del := delivery{serv, logger}
 
+	mux.GET("/users/:id/profile", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(del.getProfileByUser)), logger), logger))
 	mux.PUT("/profile", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(del.fullUpdate)), logger), logger))
 	mux.PATCH("/profile", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(del.partialUpdate)), logger), logger))
 }
@@ -35,6 +36,37 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer midd
 type delivery struct {
 	serv profile.Service
 	log  log.Logger
+}
+
+func (del *delivery) getProfileByUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strUserId := p.ByName("id")
+	userId, err := strconv.Atoi(strUserId)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return ErrInvalidUserId
+	}
+
+	prof, err := del.serv.GetProfileByUser(userId)
+	if err != nil {
+		w.WriteHeader(http.StatusNotFound)
+		return err
+	}
+
+	response := getProfileResponse{
+		Username:     prof.Username,
+		Name:         prof.Name,
+		ProfileImage: prof.ProfileImage,
+		WebsiteUrl:   prof.WebsiteUrl,
+	}
+	data, err := json.Marshal(response)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return err
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	return err
 }
 
 func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {

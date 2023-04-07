@@ -30,6 +30,10 @@ func validateName(name string) error {
 	return nil
 }
 
+func (serv *profileService) GetProfileByUser(userId int) (profile.Profile, error) {
+	return serv.rep.GetProfileByUser(userId)
+}
+
 func (serv *profileService) FullUpdate(params *profile.FullUpdateParams) (profile.Profile, error) {
 	if err := validateUsername(params.Username); err != nil {
 		return profile.Profile{}, err

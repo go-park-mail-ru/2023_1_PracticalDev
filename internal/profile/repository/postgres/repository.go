@@ -18,6 +18,28 @@ func NewPostgresRepository(db *sql.DB, s3Service images.Service, log log.Logger)
 	return &postgresRepository{db, log, s3Service}
 }
 
+func (rep *postgresRepository) GetProfileByUser(userId int) (profile.Profile, error) {
+	const fullUpdateCmd = `SELECT username, name, profile_image, website_url 
+							FROM users 
+							WHERE id = $1;`
+
+	row := rep.db.QueryRow(fullUpdateCmd, userId)
+
+	var prof profile.Profile
+	var profileImage, websiteUrl sql.NullString
+	err := row.Scan(&prof.Username, &prof.Name, &profileImage, &websiteUrl)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			err = profile.ErrProfileNotFound
+		} else {
+			err = profile.ErrDb
+		}
+	}
+	prof.ProfileImage = profileImage.String
+	prof.WebsiteUrl = websiteUrl.String
+	return prof, err
+}
+
 func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (profile.Profile, error) {
 	const fullUpdateCmd = `UPDATE users
 							SET username = $1::VARCHAR,

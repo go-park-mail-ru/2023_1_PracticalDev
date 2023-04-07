@@ -34,11 +34,13 @@ type PartialUpdateParams struct {
 }
 
 var (
-	ErrDb        = errors.New("db error")
-	ErrS3Service = errors.New("s3 service error")
+	ErrDb              = errors.New("db error")
+	ErrS3Service       = errors.New("s3 service error")
+	ErrProfileNotFound = errors.New("profile not found")
 )
 
 type Repository interface {
+	GetProfileByUser(userId int) (Profile, error)
 	FullUpdate(params *FullUpdateParams) (Profile, error)
 	PartialUpdate(params *PartialUpdateParams) (Profile, error)
 }
