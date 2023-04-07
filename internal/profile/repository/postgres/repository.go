@@ -9,13 +9,13 @@ import (
 )
 
 type postgresRepository struct {
-	db        *sql.DB
-	log       log.Logger
-	s3Service images.Service
+	db      *sql.DB
+	log     log.Logger
+	imgServ images.Service
 }
 
-func NewPostgresRepository(db *sql.DB, s3Service images.Service, log log.Logger) profile.Repository {
-	return &postgresRepository{db, log, s3Service}
+func NewPostgresRepository(db *sql.DB, imgServ images.Service, log log.Logger) profile.Repository {
+	return &postgresRepository{db, log, imgServ}
 }
 
 func (rep *postgresRepository) GetProfileByUser(userId int) (profile.Profile, error) {
@@ -49,7 +49,7 @@ func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (pro
 							WHERE id = $5
 							RETURNING username, name, profile_image, website_url;`
 
-	url, err := rep.s3Service.UploadImage(&params.ProfileImage)
+	url, err := rep.imgServ.UploadImage(&params.ProfileImage)
 	if err != nil {
 		return profile.Profile{}, err
 	}
@@ -74,7 +74,7 @@ func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (pro
 }
 
 func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams) (profile.Profile, error) {
-	const partialUpdateBoard = `UPDATE users
+	const partialUpdateCmd = `UPDATE users
 								SET username = CASE WHEN $1::BOOLEAN THEN $2::VARCHAR ELSE username END,
 								name = CASE WHEN $3::BOOLEAN THEN $4::VARCHAR ELSE name END,
     							profile_image = CASE WHEN $5::BOOLEAN THEN $6::VARCHAR ELSE profile_image END,
@@ -85,13 +85,13 @@ func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams
 	var url string
 	var err error
 	if params.UpdateProfileImage {
-		url, err = rep.s3Service.UploadImage(&params.ProfileImage)
+		url, err = rep.imgServ.UploadImage(&params.ProfileImage)
 		if err != nil {
 			return profile.Profile{}, profile.ErrS3Service
 		}
 	}
 
-	row := rep.db.QueryRow(partialUpdateBoard,
+	row := rep.db.QueryRow(partialUpdateCmd,
 		params.UpdateUsername,
 		params.Username,
 		params.UpdateName,
