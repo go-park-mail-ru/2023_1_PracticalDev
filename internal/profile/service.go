@@ -2,8 +2,6 @@ package profile
 
 import (
 	"errors"
-
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 
 var (
@@ -14,6 +12,6 @@ var (
 )
 
 type Service interface {
-	FullUpdate(params *FullUpdateParams, image *models.Image) (Profile, error)
+	FullUpdate(params *FullUpdateParams) (Profile, error)
 	PartialUpdate(params *PartialUpdateParams) (Profile, error)
 }

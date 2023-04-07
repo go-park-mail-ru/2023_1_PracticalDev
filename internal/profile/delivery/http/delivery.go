@@ -19,6 +19,7 @@ import (
 )
 
 var (
+	ErrFileCopy      = errors.New("file copy error")
 	ErrMissingFile   = errors.New("missing file")
 	ErrParseForm     = errors.New("parse form error")
 	ErrInvalidUserId = errors.New("invalid user id")
@@ -57,7 +58,11 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	defer file.Close()
 
 	buf := bytes.NewBuffer(nil)
-	_, _ = io.Copy(buf, file)
+	_, err = io.Copy(buf, file)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return ErrFileCopy
+	}
 
 	image := models.Image{
 		ID:    uuid.NewString() + filepath.Ext(handler.Filename),
@@ -65,12 +70,13 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	}
 
 	params := profile.FullUpdateParams{
-		Id:         id,
-		Username:   r.FormValue("username"),
-		Name:       r.FormValue("name"),
-		WebsiteUrl: r.FormValue("website_url"),
+		Id:           id,
+		Username:     r.FormValue("username"),
+		Name:         r.FormValue("name"),
+		ProfileImage: image,
+		WebsiteUrl:   r.FormValue("website_url"),
 	}
-	prof, err := del.serv.FullUpdate(&params, &image)
+	prof, err := del.serv.FullUpdate(&params)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -98,33 +104,46 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
-	}
-
-	var request partialUpdateRequest
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-	if err = decoder.Decode(&request); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidUserId
 	}
 
 	params := profile.PartialUpdateParams{Id: id}
-	if request.Username != nil {
-		params.UpdateUsername = true
-		params.Username = *request.Username
-	}
-	if request.Name != nil {
-		params.UpdateName = true
-		params.Name = *request.Name
-	}
-	if request.ProfileImage != nil {
+
+	file, handler, err := r.FormFile("bytes")
+	if err != nil {
+		if err != http.ErrMissingFile {
+			w.WriteHeader(http.StatusBadRequest)
+			err = ErrParseForm
+			return err
+		}
+	} else {
+		buf := bytes.NewBuffer(nil)
+		_, err = io.Copy(buf, file)
+		if err != nil {
+			w.WriteHeader(http.StatusInternalServerError)
+			return ErrFileCopy
+		}
+
+		image := models.Image{
+			ID:    uuid.NewString() + filepath.Ext(handler.Filename),
+			Bytes: buf.Bytes(),
+		}
+
 		params.UpdateProfileImage = true
-		params.ProfileImage = *request.ProfileImage
+		params.ProfileImage = image
 	}
-	if request.WebsiteUrl != nil {
-		params.UpdateWebsiteUrl = true
-		params.WebsiteUrl = *request.WebsiteUrl
+
+	params.UpdateUsername = r.Form.Has("username")
+	if params.UpdateUsername {
+		params.Username = r.Form.Get("username")
+	}
+	params.UpdateName = r.Form.Has("name")
+	if params.UpdateName {
+		params.Name = r.Form.Get("name")
+	}
+	params.UpdateWebsiteUrl = r.Form.Has("website_url")
+	if params.UpdateWebsiteUrl {
+		params.WebsiteUrl = r.Form.Get("website_url")
 	}
 
 	prof, err := del.serv.PartialUpdate(&params)

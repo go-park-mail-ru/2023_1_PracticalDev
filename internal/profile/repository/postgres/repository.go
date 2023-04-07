@@ -5,7 +5,6 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 )
 
@@ -19,8 +18,7 @@ func NewPostgresRepository(db *sql.DB, s3Service images.Service, log log.Logger)
 	return &postgresRepository{db, log, s3Service}
 }
 
-func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams,
-	image *models.Image) (profile.Profile, error) {
+func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (profile.Profile, error) {
 	const fullUpdateCmd = `UPDATE users
 							SET username = $1::VARCHAR,
 							name = $2::VARCHAR,
@@ -29,7 +27,7 @@ func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams,
 							WHERE id = $5
 							RETURNING username, name, profile_image, website_url;`
 
-	url, err := rep.s3Service.UploadImage(image)
+	url, err := rep.s3Service.UploadImage(&params.ProfileImage)
 	if err != nil {
 		return profile.Profile{}, err
 	}
@@ -62,20 +60,32 @@ func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams
 								WHERE id = $9
 								RETURNING username, name, profile_image, website_url;`
 
+	var url string
+	var err error
+	if params.UpdateProfileImage {
+		url, err = rep.s3Service.UploadImage(&params.ProfileImage)
+		if err != nil {
+			return profile.Profile{}, profile.ErrS3Service
+		}
+	}
+
 	row := rep.db.QueryRow(partialUpdateBoard,
 		params.UpdateUsername,
 		params.Username,
 		params.UpdateName,
 		params.Name,
 		params.UpdateProfileImage,
-		params.ProfileImage,
+		url,
 		params.UpdateWebsiteUrl,
 		params.WebsiteUrl,
 		params.Id,
 	)
 	var prof profile.Profile
 	var profileImage, websiteUrl sql.NullString
-	err := row.Scan(&prof.Username, &prof.Name, &profileImage, &websiteUrl)
+	err = row.Scan(&prof.Username, &prof.Name, &profileImage, &websiteUrl)
+	if err != nil {
+		err = profile.ErrDb
+	}
 	prof.ProfileImage = profileImage.String
 	prof.WebsiteUrl = websiteUrl.String
 	return prof, err

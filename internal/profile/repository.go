@@ -17,7 +17,7 @@ type FullUpdateParams struct {
 	Id           int
 	Username     string
 	Name         string
-	ProfileImage string
+	ProfileImage models.Image
 	WebsiteUrl   string
 }
 
@@ -27,17 +27,18 @@ type PartialUpdateParams struct {
 	UpdateUsername     bool
 	Name               string
 	UpdateName         bool
-	ProfileImage       string
+	ProfileImage       models.Image
 	UpdateProfileImage bool
 	WebsiteUrl         string
 	UpdateWebsiteUrl   bool
 }
 
 var (
-	ErrDb = errors.New("db error")
+	ErrDb        = errors.New("db error")
+	ErrS3Service = errors.New("s3 service error")
 )
 
 type Repository interface {
-	FullUpdate(params *FullUpdateParams, image *models.Image) (Profile, error)
+	FullUpdate(params *FullUpdateParams) (Profile, error)
 	PartialUpdate(params *PartialUpdateParams) (Profile, error)
 }
