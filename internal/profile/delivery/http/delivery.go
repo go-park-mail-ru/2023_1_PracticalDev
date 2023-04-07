@@ -1,13 +1,27 @@
 package http
 
 import (
+	"bytes"
 	"encoding/json"
+	"errors"
+	"io"
+	"net/http"
+	"path/filepath"
+	"strconv"
+
+	"github.com/google/uuid"
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
-	"github.com/julienschmidt/httprouter"
-	"net/http"
-	"strconv"
+)
+
+var (
+	ErrMissingFile   = errors.New("missing file")
+	ErrParseForm     = errors.New("parse form error")
+	ErrInvalidUserId = errors.New("invalid user id")
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, serv profile.Service) {
@@ -27,26 +41,36 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidUserId
 	}
 
-	var request fullUpdateRequest
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-	if err = decoder.Decode(&request); err != nil {
+	file, handler, err := r.FormFile("bytes")
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		if err == http.ErrMissingFile {
+			err = ErrMissingFile
+		} else {
+			err = ErrParseForm
+		}
 		return err
+	}
+	defer file.Close()
+
+	buf := bytes.NewBuffer(nil)
+	_, _ = io.Copy(buf, file)
+
+	image := models.Image{
+		ID:    uuid.NewString() + filepath.Ext(handler.Filename),
+		Bytes: buf.Bytes(),
 	}
 
 	params := profile.FullUpdateParams{
-		Id:           id,
-		Username:     request.Username,
-		Name:         request.Name,
-		ProfileImage: request.ProfileImage,
-		WebsiteUrl:   request.WebsiteUrl,
+		Id:         id,
+		Username:   r.FormValue("username"),
+		Name:       r.FormValue("name"),
+		WebsiteUrl: r.FormValue("website_url"),
 	}
-
-	prof, err := del.serv.FullUpdate(&params)
+	prof, err := del.serv.FullUpdate(&params, &image)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err

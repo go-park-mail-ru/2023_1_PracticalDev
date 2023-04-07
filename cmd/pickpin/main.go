@@ -66,7 +66,7 @@ func main() {
 	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
 	pinsServ := pinsService.NewService(pinsRepo)
 
-	profileRepo := _profileRepo.NewPostgresRepository(db, logger)
+	profileRepo := _profileRepo.NewPostgresRepository(db, imagesServ, logger)
 	profileServ := _profileServ.NewProfileService(profileRepo)
 
 	auth.RegisterHandlers(mux, logger, authServ)

@@ -1,6 +1,10 @@
 package profile
 
-import "errors"
+import (
+	"errors"
+
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+)
 
 var (
 	ErrTooShortUsername = errors.New("username must be at least 4 characters")
@@ -10,6 +14,6 @@ var (
 )
 
 type Service interface {
-	FullUpdate(params *FullUpdateParams) (Profile, error)
+	FullUpdate(params *FullUpdateParams, image *models.Image) (Profile, error)
 	PartialUpdate(params *PartialUpdateParams) (Profile, error)
 }

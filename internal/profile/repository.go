@@ -1,5 +1,11 @@
 package profile
 
+import (
+	"errors"
+
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+)
+
 type Profile struct {
 	Username     string
 	Name         string
@@ -27,7 +33,11 @@ type PartialUpdateParams struct {
 	UpdateWebsiteUrl   bool
 }
 
+var (
+	ErrDb = errors.New("db error")
+)
+
 type Repository interface {
-	FullUpdate(params *FullUpdateParams) (Profile, error)
+	FullUpdate(params *FullUpdateParams, image *models.Image) (Profile, error)
 	PartialUpdate(params *PartialUpdateParams) (Profile, error)
 }
