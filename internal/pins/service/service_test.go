@@ -350,3 +350,174 @@ func TestGet(t *testing.T) {
 		})
 	}
 }
+
+func TestDelete(t *testing.T) {
+	type fields struct {
+		repo *mocks.MockRepository
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		id      int
+		err     error
+	}
+
+	tests := map[string]testCase{
+		"usual": {
+			prepare: func(f *fields) {
+				f.repo.EXPECT().Delete(3).Return(nil)
+			},
+			id:  3,
+			err: nil,
+		},
+		"pin not found": {
+			prepare: func(f *fields) {
+				f.repo.EXPECT().Delete(3).Return(_pins.ErrPinNotFound)
+			},
+			id:  3,
+			err: _pins.ErrPinNotFound,
+		},
+	}
+
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
+
+			serv := NewService(f.repo)
+
+			err := serv.Delete(test.id)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+		})
+	}
+}
+
+func TestCheckWriteAccess(t *testing.T) {
+	type fields struct {
+		repo *mocks.MockRepository
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		userId  string
+		pinId   string
+		access  bool
+		err     error
+	}
+
+	tests := map[string]testCase{
+		"access is allowed": {
+			prepare: func(f *fields) {
+				f.repo.EXPECT().CheckWriteAccess("2", "3").Return(true, nil)
+			},
+			userId: "2",
+			pinId:  "3",
+			access: true,
+			err:    nil,
+		},
+		"access is denied": {
+			prepare: func(f *fields) {
+				f.repo.EXPECT().CheckWriteAccess("2", "3").Return(false, nil)
+			},
+			userId: "2",
+			pinId:  "3",
+			access: false,
+			err:    nil,
+		},
+	}
+
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
+
+			serv := NewService(f.repo)
+
+			access, err := serv.CheckWriteAccess(test.userId, test.pinId)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if access != test.access {
+				t.Errorf("\nExpected: %v\nGot: %v", test.access, access)
+			}
+		})
+	}
+}
+
+func TestCheckReadAccess(t *testing.T) {
+	type fields struct {
+		repo *mocks.MockRepository
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		userId  string
+		pinId   string
+		access  bool
+		err     error
+	}
+
+	tests := map[string]testCase{
+		"access is allowed": {
+			prepare: func(f *fields) {
+				f.repo.EXPECT().CheckReadAccess("2", "3").Return(true, nil)
+			},
+			userId: "2",
+			pinId:  "3",
+			access: true,
+			err:    nil,
+		},
+		"access is denied": {
+			prepare: func(f *fields) {
+				f.repo.EXPECT().CheckReadAccess("2", "3").Return(false, nil)
+			},
+			userId: "2",
+			pinId:  "3",
+			access: false,
+			err:    nil,
+		},
+	}
+
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
+
+			serv := NewService(f.repo)
+
+			access, err := serv.CheckReadAccess(test.userId, test.pinId)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if access != test.access {
+				t.Errorf("\nExpected: %v\nGot: %v", test.access, access)
+			}
+		})
+	}
+}
