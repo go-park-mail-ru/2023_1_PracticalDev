@@ -40,14 +40,9 @@ func TestCreate(t *testing.T) {
 					WithArgs("t1", "ms_url", "d1", 12).
 					WillReturnRows(rows)
 			},
-			params: _pins.CreateParams{
-				Title:       "t1",
-				MediaSource: models.Image{},
-				Description: "d1",
-				Author:      12,
-			},
-			pin: models.Pin{Id: 1, Title: "t1", MediaSource: "ms_url", Description: "d1", Author: 12},
-			err: nil,
+			params: _pins.CreateParams{Title: "t1", MediaSource: models.Image{}, Description: "d1", Author: 12},
+			pin:    models.Pin{Id: 1, Title: "t1", MediaSource: "ms_url", Description: "d1", Author: 12},
+			err:    nil,
 		},
 		"query error": {
 			prepare: func(f *fields) {

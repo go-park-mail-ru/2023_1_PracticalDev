@@ -13,39 +13,39 @@ func NewService(rep pins.Repository) pins.Service {
 	return &service{rep}
 }
 
-func (serv *service) CreatePin(params *pins.CreateParams) (models.Pin, error) {
+func (serv *service) Create(params *pins.CreateParams) (models.Pin, error) {
 	return serv.rep.Create(params)
 }
 
-func (serv *service) GetPin(id int) (models.Pin, error) {
+func (serv *service) Get(id int) (models.Pin, error) {
 	return serv.rep.Get(id)
 }
 
-func (serv *service) GetPinsByUser(userId int, page, limit int) ([]models.Pin, error) {
+func (serv *service) ListByUser(userId int, page, limit int) ([]models.Pin, error) {
 	return serv.rep.ListByUser(userId, page, limit)
 }
 
-func (serv *service) GetPinsByBoard(boardId int, page, limit int) ([]models.Pin, error) {
+func (serv *service) ListByBoard(boardId int, page, limit int) ([]models.Pin, error) {
 	return serv.rep.ListByBoard(boardId, page, limit)
 }
 
-func (serv *service) GetPins(page, limit int) ([]models.Pin, error) {
+func (serv *service) List(page, limit int) ([]models.Pin, error) {
 	return serv.rep.List(page, limit)
 }
 
-func (serv *service) UpdatePin(params *models.Pin) (models.Pin, error) {
+func (serv *service) Update(params *models.Pin) (models.Pin, error) {
 	return serv.rep.Update(params)
 }
 
-func (serv *service) DeletePin(id int) error {
+func (serv *service) Delete(id int) error {
 	return serv.rep.Delete(id)
 }
 
-func (serv *service) AddPinToBoard(boardId, pinId int) error {
+func (serv *service) AddToBoard(boardId, pinId int) error {
 	return serv.rep.AddToBoard(boardId, pinId)
 }
 
-func (serv *service) RemovePinFromBoard(boardId, pinId int) error {
+func (serv *service) RemoveFromBoard(boardId, pinId int) error {
 	return serv.rep.RemoveFromBoard(boardId, pinId)
 }
 

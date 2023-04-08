@@ -66,7 +66,7 @@ func (del delivery) createPin(w http.ResponseWriter, r *http.Request, p httprout
 		Author:      userId,
 	}
 
-	createdPin, err := del.serv.CreatePin(&params)
+	createdPin, err := del.serv.Create(&params)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -92,7 +92,7 @@ func (del delivery) getPin(w http.ResponseWriter, r *http.Request, p httprouter.
 		return err
 	}
 
-	pin, err := del.serv.GetPin(id)
+	pin, err := del.serv.Get(id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -138,7 +138,7 @@ func (del delivery) getPinsByUser(w http.ResponseWriter, r *http.Request, p http
 		}
 	}
 
-	pins, err := del.serv.GetPinsByUser(userId, page, limit)
+	pins, err := del.serv.ListByUser(userId, page, limit)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return err
@@ -184,7 +184,7 @@ func (del delivery) getPinsByBoard(w http.ResponseWriter, r *http.Request, p htt
 		}
 	}
 
-	pins, err := del.serv.GetPinsByBoard(boardId, page, limit)
+	pins, err := del.serv.ListByBoard(boardId, page, limit)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return err
@@ -224,7 +224,7 @@ func (del delivery) getPins(w http.ResponseWriter, r *http.Request, p httprouter
 		}
 	}
 
-	pins, err := del.serv.GetPins(page, limit)
+	pins, err := del.serv.List(page, limit)
 	if err != nil {
 		w.WriteHeader(http.StatusNotFound)
 		return err
@@ -261,7 +261,7 @@ func (del delivery) updatePin(w http.ResponseWriter, r *http.Request, p httprout
 
 	pin.Id = id
 
-	pin, err = del.serv.UpdatePin(&pin)
+	pin, err = del.serv.Update(&pin)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
@@ -286,7 +286,7 @@ func (del delivery) deletePin(w http.ResponseWriter, r *http.Request, p httprout
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
-	err = del.serv.DeletePin(id)
+	err = del.serv.Delete(id)
 
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -315,7 +315,7 @@ func (del delivery) addPinToBoard(w http.ResponseWriter, r *http.Request, p http
 		return err
 	}
 
-	err = del.serv.AddPinToBoard(boardId, id.Id)
+	err = del.serv.AddToBoard(boardId, id.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -343,7 +343,7 @@ func (del delivery) removePinFromBoard(w http.ResponseWriter, r *http.Request, p
 		return err
 	}
 
-	err = del.serv.RemovePinFromBoard(boardId, id.Id)
+	err = del.serv.RemoveFromBoard(boardId, id.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
