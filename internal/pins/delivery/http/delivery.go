@@ -40,7 +40,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer midd
 	mux.PUT("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.fullUpdate))), logger), logger))
 	mux.DELETE("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.delete))), logger), logger))
 
-	mux.POST("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.addToBoard))), logger), logger))
+	mux.POST("/boards/:board_id/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.addToBoard))), logger), logger))
 	mux.DELETE("/boards/:board_id/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.removeFromBoard))), logger), logger))
 }
 
