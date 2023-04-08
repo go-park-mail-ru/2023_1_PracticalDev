@@ -10,7 +10,7 @@ type Service interface {
 	ListByUser(userId int, page, limit int) ([]models.Pin, error)
 	ListByBoard(boardId int, page, limit int) ([]models.Pin, error)
 	List(page, limit int) ([]models.Pin, error)
-	Update(params *models.Pin) (models.Pin, error)
+	FullUpdate(params *FullUpdateParams) (models.Pin, error)
 	Delete(id int) error
 
 	AddToBoard(boardId, pinId int) error

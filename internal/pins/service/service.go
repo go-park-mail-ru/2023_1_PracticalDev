@@ -33,8 +33,8 @@ func (serv *service) List(page, limit int) ([]models.Pin, error) {
 	return serv.rep.List(page, limit)
 }
 
-func (serv *service) Update(params *models.Pin) (models.Pin, error) {
-	return serv.rep.Update(params)
+func (serv *service) FullUpdate(params *pins.FullUpdateParams) (models.Pin, error) {
+	return serv.rep.FullUpdate(params)
 }
 
 func (serv *service) Delete(id int) error {

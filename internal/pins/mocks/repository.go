@@ -108,6 +108,21 @@ func (mr *MockRepositoryMockRecorder) Delete(id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockRepository)(nil).Delete), id)
 }
 
+// FullUpdate mocks base method.
+func (m *MockRepository) FullUpdate(params *pins.FullUpdateParams) (models.Pin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FullUpdate", params)
+	ret0, _ := ret[0].(models.Pin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FullUpdate indicates an expected call of FullUpdate.
+func (mr *MockRepositoryMockRecorder) FullUpdate(params interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FullUpdate", reflect.TypeOf((*MockRepository)(nil).FullUpdate), params)
+}
+
 // Get mocks base method.
 func (m *MockRepository) Get(id int) (models.Pin, error) {
 	m.ctrl.T.Helper()
@@ -180,19 +195,4 @@ func (m *MockRepository) RemoveFromBoard(boardId, pinId int) error {
 func (mr *MockRepositoryMockRecorder) RemoveFromBoard(boardId, pinId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFromBoard", reflect.TypeOf((*MockRepository)(nil).RemoveFromBoard), boardId, pinId)
-}
-
-// Update mocks base method.
-func (m *MockRepository) Update(params *models.Pin) (models.Pin, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", params)
-	ret0, _ := ret[0].(models.Pin)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// Update indicates an expected call of Update.
-func (mr *MockRepositoryMockRecorder) Update(params interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockRepository)(nil).Update), params)
 }

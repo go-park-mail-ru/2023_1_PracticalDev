@@ -35,7 +35,7 @@ func (m *MockService) EXPECT() *MockServiceMockRecorder {
 	return m.recorder
 }
 
-// AddPinToBoard mocks base method.
+// AddToBoard mocks base method.
 func (m *MockService) AddToBoard(boardId, pinId int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "AddToBoard", boardId, pinId)
@@ -43,8 +43,8 @@ func (m *MockService) AddToBoard(boardId, pinId int) error {
 	return ret0
 }
 
-// AddPinToBoard indicates an expected call of AddPinToBoard.
-func (mr *MockServiceMockRecorder) AddPinToBoard(boardId, pinId interface{}) *gomock.Call {
+// AddToBoard indicates an expected call of AddToBoard.
+func (mr *MockServiceMockRecorder) AddToBoard(boardId, pinId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddToBoard", reflect.TypeOf((*MockService)(nil).AddToBoard), boardId, pinId)
 }
@@ -79,7 +79,7 @@ func (mr *MockServiceMockRecorder) CheckWriteAccess(userId, pinId interface{}) *
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "CheckWriteAccess", reflect.TypeOf((*MockService)(nil).CheckWriteAccess), userId, pinId)
 }
 
-// CreatePin mocks base method.
+// Create mocks base method.
 func (m *MockService) Create(params *pins.CreateParams) (models.Pin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Create", params)
@@ -88,13 +88,13 @@ func (m *MockService) Create(params *pins.CreateParams) (models.Pin, error) {
 	return ret0, ret1
 }
 
-// CreatePin indicates an expected call of CreatePin.
-func (mr *MockServiceMockRecorder) CreatePin(params interface{}) *gomock.Call {
+// Create indicates an expected call of Create.
+func (mr *MockServiceMockRecorder) Create(params interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Create", reflect.TypeOf((*MockService)(nil).Create), params)
 }
 
-// DeletePin mocks base method.
+// Delete mocks base method.
 func (m *MockService) Delete(id int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Delete", id)
@@ -102,13 +102,28 @@ func (m *MockService) Delete(id int) error {
 	return ret0
 }
 
-// DeletePin indicates an expected call of DeletePin.
-func (mr *MockServiceMockRecorder) DeletePin(id interface{}) *gomock.Call {
+// Delete indicates an expected call of Delete.
+func (mr *MockServiceMockRecorder) Delete(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Delete", reflect.TypeOf((*MockService)(nil).Delete), id)
 }
 
-// GetPin mocks base method.
+// FullUpdate mocks base method.
+func (m *MockService) FullUpdate(params *pins.FullUpdateParams) (models.Pin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "FullUpdate", params)
+	ret0, _ := ret[0].(models.Pin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// FullUpdate indicates an expected call of FullUpdate.
+func (mr *MockServiceMockRecorder) FullUpdate(params interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "FullUpdate", reflect.TypeOf((*MockService)(nil).FullUpdate), params)
+}
+
+// Get mocks base method.
 func (m *MockService) Get(id int) (models.Pin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", id)
@@ -117,13 +132,13 @@ func (m *MockService) Get(id int) (models.Pin, error) {
 	return ret0, ret1
 }
 
-// GetPin indicates an expected call of GetPin.
-func (mr *MockServiceMockRecorder) GetPin(id interface{}) *gomock.Call {
+// Get indicates an expected call of Get.
+func (mr *MockServiceMockRecorder) Get(id interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockService)(nil).Get), id)
 }
 
-// GetPins mocks base method.
+// List mocks base method.
 func (m *MockService) List(page, limit int) ([]models.Pin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", page, limit)
@@ -132,13 +147,13 @@ func (m *MockService) List(page, limit int) ([]models.Pin, error) {
 	return ret0, ret1
 }
 
-// GetPins indicates an expected call of GetPins.
-func (mr *MockServiceMockRecorder) GetPins(page, limit interface{}) *gomock.Call {
+// List indicates an expected call of List.
+func (mr *MockServiceMockRecorder) List(page, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockService)(nil).List), page, limit)
 }
 
-// GetPinsByBoard mocks base method.
+// ListByBoard mocks base method.
 func (m *MockService) ListByBoard(boardId, page, limit int) ([]models.Pin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListByBoard", boardId, page, limit)
@@ -147,13 +162,13 @@ func (m *MockService) ListByBoard(boardId, page, limit int) ([]models.Pin, error
 	return ret0, ret1
 }
 
-// GetPinsByBoard indicates an expected call of GetPinsByBoard.
-func (mr *MockServiceMockRecorder) GetPinsByBoard(boardId, page, limit interface{}) *gomock.Call {
+// ListByBoard indicates an expected call of ListByBoard.
+func (mr *MockServiceMockRecorder) ListByBoard(boardId, page, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByBoard", reflect.TypeOf((*MockService)(nil).ListByBoard), boardId, page, limit)
 }
 
-// GetPinsByUser mocks base method.
+// ListByUser mocks base method.
 func (m *MockService) ListByUser(userId, page, limit int) ([]models.Pin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListByUser", userId, page, limit)
@@ -162,13 +177,13 @@ func (m *MockService) ListByUser(userId, page, limit int) ([]models.Pin, error) 
 	return ret0, ret1
 }
 
-// GetPinsByUser indicates an expected call of GetPinsByUser.
-func (mr *MockServiceMockRecorder) GetPinsByUser(userId, page, limit interface{}) *gomock.Call {
+// ListByUser indicates an expected call of ListByUser.
+func (mr *MockServiceMockRecorder) ListByUser(userId, page, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByUser", reflect.TypeOf((*MockService)(nil).ListByUser), userId, page, limit)
 }
 
-// RemovePinFromBoard mocks base method.
+// RemoveFromBoard mocks base method.
 func (m *MockService) RemoveFromBoard(boardId, pinId int) error {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "RemoveFromBoard", boardId, pinId)
@@ -176,23 +191,8 @@ func (m *MockService) RemoveFromBoard(boardId, pinId int) error {
 	return ret0
 }
 
-// RemovePinFromBoard indicates an expected call of RemovePinFromBoard.
-func (mr *MockServiceMockRecorder) RemovePinFromBoard(boardId, pinId interface{}) *gomock.Call {
+// RemoveFromBoard indicates an expected call of RemoveFromBoard.
+func (mr *MockServiceMockRecorder) RemoveFromBoard(boardId, pinId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFromBoard", reflect.TypeOf((*MockService)(nil).RemoveFromBoard), boardId, pinId)
-}
-
-// UpdatePin mocks base method.
-func (m *MockService) Update(params *models.Pin) (models.Pin, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Update", params)
-	ret0, _ := ret[0].(models.Pin)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// UpdatePin indicates an expected call of UpdatePin.
-func (mr *MockServiceMockRecorder) UpdatePin(params interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Update", reflect.TypeOf((*MockService)(nil).Update), params)
 }

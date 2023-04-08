@@ -3,8 +3,10 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"io"
 	"net/http"
+	"path/filepath"
 	"strconv"
 
 	"github.com/google/uuid"
@@ -16,19 +18,30 @@ import (
 	_pins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 )
 
+var (
+	ErrFileCopy       = errors.New("file copy error")
+	ErrMissingFile    = errors.New("missing file")
+	ErrParseForm      = errors.New("parse form error")
+	ErrInvalidPinId   = errors.New("invalid pin id")
+	ErrInvalidBoardId = errors.New("invalid board id")
+	ErrInvalidUserId  = errors.New("invalid user id")
+	ErrPinNotFound    = errors.New("pin not found")
+	ErrService        = errors.New("service error")
+)
+
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, access middleware.AccessChecker, serv _pins.Service) {
 	del := delivery{serv, logger}
 
-	mux.POST("/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.createPin)), logger), logger))
-	mux.GET("/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getPins)), logger), logger))
-	mux.GET("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getPin)), logger), logger))
-	mux.GET("/users/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getPinsByUser)), logger), logger))
-	mux.GET("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getPinsByBoard)), logger), logger))
-	mux.PUT("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.updatePin))), logger), logger))
-	mux.DELETE("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.deletePin))), logger), logger))
+	mux.POST("/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.create)), logger), logger))
+	mux.GET("/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.list)), logger), logger))
+	mux.GET("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.get)), logger), logger))
+	mux.GET("/users/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.listByUser)), logger), logger))
+	mux.GET("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.listByBoard)), logger), logger))
+	mux.PUT("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.fullUpdate))), logger), logger))
+	mux.DELETE("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.delete))), logger), logger))
 
-	mux.POST("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.addPinToBoard))), logger), logger))
-	mux.DELETE("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.removePinFromBoard))), logger), logger))
+	mux.POST("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.addToBoard))), logger), logger))
+	mux.DELETE("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.removeFromBoard))), logger), logger))
 }
 
 type delivery struct {
@@ -36,12 +49,12 @@ type delivery struct {
 	log  log.Logger
 }
 
-func (del delivery) createPin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidUserId
 	}
 
 	file, _, err := r.FormFile("bytes")
@@ -65,14 +78,20 @@ func (del delivery) createPin(w http.ResponseWriter, r *http.Request, p httprout
 		MediaSource: image,
 		Author:      userId,
 	}
-
-	createdPin, err := del.serv.Create(&params)
+	pin, err := del.serv.Create(&params)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
-	data, err := json.Marshal(createdPin)
+	response := createResponse{
+		Id:          pin.Id,
+		Title:       pin.Title,
+		Description: pin.Description,
+		MediaSource: pin.MediaSource,
+		Author:      pin.Author,
+	}
+	data, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -83,22 +102,34 @@ func (del delivery) createPin(w http.ResponseWriter, r *http.Request, p httprout
 	return err
 }
 
-func (del delivery) getPin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
-
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidPinId
 	}
 
 	pin, err := del.serv.Get(id)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		if err == _pins.ErrPinNotFound {
+			err = ErrPinNotFound
+			w.WriteHeader(http.StatusNotFound)
+		} else {
+			err = ErrService
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return err
 	}
 
-	data, err := json.Marshal(pin)
+	response := getResponse{
+		Id:          pin.Id,
+		Title:       pin.Title,
+		Description: pin.Description,
+		MediaSource: pin.MediaSource,
+		Author:      pin.Author,
+	}
+	data, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err
@@ -109,12 +140,12 @@ func (del delivery) getPin(w http.ResponseWriter, r *http.Request, p httprouter.
 	return err
 }
 
-func (del delivery) getPinsByUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del delivery) listByUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strUserId := p.ByName("id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidPinId
 	}
 
 	queryValues := r.URL.Query()
@@ -144,7 +175,8 @@ func (del delivery) getPinsByUser(w http.ResponseWriter, r *http.Request, p http
 		return err
 	}
 
-	data, err := json.Marshal(pins)
+	response := listResponse{Pins: pins}
+	data, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
@@ -155,12 +187,12 @@ func (del delivery) getPinsByUser(w http.ResponseWriter, r *http.Request, p http
 	return err
 }
 
-func (del delivery) getPinsByBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del delivery) listByBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strBoardId := p.ByName("id")
 	boardId, err := strconv.Atoi(strBoardId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidPinId
 	}
 
 	queryValues := r.URL.Query()
@@ -190,7 +222,8 @@ func (del delivery) getPinsByBoard(w http.ResponseWriter, r *http.Request, p htt
 		return err
 	}
 
-	data, err := json.Marshal(pins)
+	response := listResponse{Pins: pins}
+	data, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
@@ -201,7 +234,7 @@ func (del delivery) getPinsByBoard(w http.ResponseWriter, r *http.Request, p htt
 	return err
 }
 
-func (del delivery) getPins(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	var err error
 	queryValues := r.URL.Query()
 	page := 1
@@ -230,7 +263,8 @@ func (del delivery) getPins(w http.ResponseWriter, r *http.Request, p httprouter
 		return err
 	}
 
-	data, err := json.Marshal(pins)
+	response := listResponse{Pins: pins}
+	data, err := json.Marshal(response)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
@@ -241,35 +275,60 @@ func (del delivery) getPins(w http.ResponseWriter, r *http.Request, p httprouter
 	return err
 }
 
-func (del delivery) updatePin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
-
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidPinId
 	}
 
-	pin := models.Pin{}
-
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-	if err := decoder.Decode(&pin); err != nil {
+	file, handler, err := r.FormFile("bytes")
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
+		if err == http.ErrMissingFile {
+			err = ErrMissingFile
+		} else {
+			err = ErrParseForm
+		}
 		return err
 	}
+	defer file.Close()
 
-	pin.Id = id
+	buf := bytes.NewBuffer(nil)
+	_, err = io.Copy(buf, file)
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		return ErrFileCopy
+	}
 
-	pin, err = del.serv.Update(&pin)
+	image := models.Image{
+		ID:    uuid.NewString() + filepath.Ext(handler.Filename),
+		Bytes: buf.Bytes(),
+	}
+
+	params := _pins.FullUpdateParams{
+		Id:          id,
+		Title:       r.FormValue("title"),
+		Description: r.FormValue("description"),
+		MediaSource: image,
+	}
+	pin, err := del.serv.FullUpdate(&params)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
 
-	data, err := json.Marshal(pin)
+	response := fullUpdateResponse{
+		Id:          pin.Id,
+		Title:       pin.Title,
+		Description: pin.Description,
+		MediaSource: pin.MediaSource,
+		Author:      pin.Author,
+	}
+	data, err := json.Marshal(response)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
+		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
@@ -278,72 +337,67 @@ func (del delivery) updatePin(w http.ResponseWriter, r *http.Request, p httprout
 	return err
 }
 
-func (del delivery) deletePin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
-
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidPinId
 	}
+
 	err = del.serv.Delete(id)
+	switch err {
+	case _pins.ErrDb:
+		w.WriteHeader(http.StatusInternalServerError)
+		err = ErrService
+	case _pins.ErrPinNotFound:
+		w.WriteHeader(http.StatusNotFound)
+		err = ErrPinNotFound
+	}
+	return err
+}
 
+func (del delivery) addToBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strBoardId := p.ByName("id")
+	boardId, err := strconv.Atoi(strBoardId)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return ErrInvalidBoardId
+	}
+
+	var request addToBoardRequest
+	decoder := json.NewDecoder(r.Body)
+	defer r.Body.Close()
+	if err = decoder.Decode(&request); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return ErrInvalidPinId
+	}
+
+	err = del.serv.AddToBoard(boardId, request.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
-		return err
+		return ErrService
 	}
 	return nil
 }
 
-func (del delivery) addPinToBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del delivery) removeFromBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strBoardId := p.ByName("id")
-
 	boardId, err := strconv.Atoi(strBoardId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return ErrInvalidPinId
 	}
 
-	var id struct {
-		Id int `json:"id"`
-	}
-
+	var request removeFromBoardRequest
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	if err := decoder.Decode(&id); err != nil {
+	if err := decoder.Decode(&request); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return err
 	}
 
-	err = del.serv.AddToBoard(boardId, id.Id)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return err
-	}
-	return nil
-}
-
-func (del delivery) removePinFromBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strBoardId := p.ByName("id")
-
-	boardId, err := strconv.Atoi(strBoardId)
-	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return err
-	}
-
-	var id struct {
-		Id int `json:"id"`
-	}
-
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-	if err := decoder.Decode(&id); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return err
-	}
-
-	err = del.serv.RemoveFromBoard(boardId, id.Id)
+	err = del.serv.RemoveFromBoard(boardId, request.Id)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err

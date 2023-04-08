@@ -28,8 +28,9 @@ const listCmd = `SELECT id, title, description, media_source, author_id
 
 const fullUpdateCmd = `UPDATE pins
 						SET title = $1::VARCHAR,
-						description = $2::TEXT
-						WHERE id = $3
+						description = $2::TEXT,
+						media_source = $3::TEXT
+						WHERE id = $4
 						RETURNING id, title, description, media_source, author_id;`
 
 const deleteCmd = `DELETE FROM pins 

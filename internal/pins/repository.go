@@ -12,6 +12,13 @@ type CreateParams struct {
 	Author      int
 }
 
+type FullUpdateParams struct {
+	Id          int
+	Title       string
+	Description string
+	MediaSource models.Image
+}
+
 var (
 	ErrDb          = errors.New("db error")
 	ErrPinNotFound = errors.New("pin not found")
@@ -23,7 +30,7 @@ type Repository interface {
 	ListByUser(userId int, page, limit int) ([]models.Pin, error)
 	ListByBoard(boardId int, page, limit int) ([]models.Pin, error)
 	List(page, limit int) ([]models.Pin, error)
-	Update(params *models.Pin) (models.Pin, error)
+	FullUpdate(params *FullUpdateParams) (models.Pin, error)
 	Delete(id int) error
 
 	AddToBoard(boardId, pinId int) error

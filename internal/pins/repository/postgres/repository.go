@@ -13,13 +13,13 @@ func NewRepository(db *sql.DB, s3Service images.Service, log log.Logger) _pins.R
 }
 
 type repository struct {
-	db        *sql.DB
-	log       log.Logger
-	s3Service images.Service
+	db      *sql.DB
+	log     log.Logger
+	imgServ images.Service
 }
 
 func (repo *repository) Create(params *_pins.CreateParams) (models.Pin, error) {
-	url, err := repo.s3Service.UploadImage(&params.MediaSource)
+	url, err := repo.imgServ.UploadImage(&params.MediaSource)
 	if err != nil {
 		return models.Pin{}, err
 	}
@@ -124,17 +124,25 @@ func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 	return pins, nil
 }
 
-func (repo *repository) Update(params *models.Pin) (models.Pin, error) {
+func (repo *repository) FullUpdate(params *_pins.FullUpdateParams) (models.Pin, error) {
+	url, err := repo.imgServ.UploadImage(&params.MediaSource)
+	if err != nil {
+		return models.Pin{}, err
+	}
+
 	row := repo.db.QueryRow(fullUpdateCmd,
 		params.Title,
 		params.Description,
+		url,
 		params.Id,
 	)
+
 	retrievedPin := models.Pin{}
 	var title, description, mediaSource sql.NullString
-
-	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
-
+	err = row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+	if err != nil {
+		err = _pins.ErrDb
+	}
 	retrievedPin.Title = title.String
 	retrievedPin.Description = description.String
 	retrievedPin.MediaSource = mediaSource.String
