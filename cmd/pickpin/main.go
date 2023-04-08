@@ -62,7 +62,7 @@ func main() {
 
 	authServ := auth.NewService(auth.NewRepository(db, rdb, ctx, logger))
 	authorizer := middleware.NewAuthorizer(authServ)
-	
+
 	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
 	pinsServ := pinsService.NewService(pinsRepo)
 
