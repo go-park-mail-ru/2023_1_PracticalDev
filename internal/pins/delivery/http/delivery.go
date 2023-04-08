@@ -41,7 +41,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer midd
 	mux.DELETE("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.delete))), logger), logger))
 
 	mux.POST("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.addToBoard))), logger), logger))
-	mux.DELETE("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.removeFromBoard))), logger), logger))
+	mux.DELETE("/boards/:board_id/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.removeFromBoard))), logger), logger))
 }
 
 type delivery struct {
@@ -358,22 +358,21 @@ func (del delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.
 }
 
 func (del delivery) addToBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strBoardId := p.ByName("id")
-	boardId, err := strconv.Atoi(strBoardId)
+	strId := p.ByName("board_id")
+	boardId, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return ErrInvalidBoardId
 	}
 
-	var request addToBoardRequest
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-	if err = decoder.Decode(&request); err != nil {
+	strId = p.ByName("id")
+	pinId, err := strconv.Atoi(strId)
+	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return ErrInvalidPinId
 	}
 
-	err = del.serv.AddToBoard(boardId, request.Id)
+	err = del.serv.AddToBoard(boardId, pinId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return ErrService
@@ -382,22 +381,21 @@ func (del delivery) addToBoard(w http.ResponseWriter, r *http.Request, p httprou
 }
 
 func (del delivery) removeFromBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strBoardId := p.ByName("id")
-	boardId, err := strconv.Atoi(strBoardId)
+	strId := p.ByName("board_id")
+	boardId, err := strconv.Atoi(strId)
+	if err != nil {
+		w.WriteHeader(http.StatusBadRequest)
+		return ErrInvalidBoardId
+	}
+
+	strId = p.ByName("id")
+	pinId, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		return ErrInvalidPinId
 	}
 
-	var request removeFromBoardRequest
-	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-	if err := decoder.Decode(&request); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return err
-	}
-
-	err = del.serv.RemoveFromBoard(boardId, request.Id)
+	err = del.serv.RemoveFromBoard(boardId, pinId)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err

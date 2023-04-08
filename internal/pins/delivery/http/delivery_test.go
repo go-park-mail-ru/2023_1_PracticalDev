@@ -665,22 +665,28 @@ func TestAddToBoard(t *testing.T) {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().AddToBoard(3, 2).Return(nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			request:    `{"id":2}`,
+			params: []httprouter.Param{
+				{Key: "board_id", Value: "3"},
+				{Key: "id", Value: "2"},
+			},
 			statusCode: http.StatusOK,
 			err:        nil,
 		},
 		"invalid board id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
-			request:    `{"id":2}`,
+			prepare: func(f *fields) {},
+			params: []httprouter.Param{
+				{Key: "board_id", Value: "a"},
+				{Key: "id", Value: "3"},
+			},
 			statusCode: http.StatusBadRequest,
 			err:        ErrInvalidBoardId,
 		},
 		"invalid pin id": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			request:    `{"id":"a"}`,
+			prepare: func(f *fields) {},
+			params: []httprouter.Param{
+				{Key: "board_id", Value: "3"},
+				{Key: "id", Value: "a"},
+			},
 			statusCode: http.StatusBadRequest,
 			err:        ErrInvalidPinId,
 		},
@@ -688,8 +694,10 @@ func TestAddToBoard(t *testing.T) {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().AddToBoard(3, 2).Return(pins.ErrDb)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			request:    `{"id":2}`,
+			params: []httprouter.Param{
+				{Key: "board_id", Value: "3"},
+				{Key: "id", Value: "2"},
+			},
 			statusCode: http.StatusInternalServerError,
 			err:        ErrService,
 		},
@@ -714,7 +722,7 @@ func TestAddToBoard(t *testing.T) {
 				log:  logger,
 			}
 
-			req := httptest.NewRequest(http.MethodPost, "/boards/3/pins", strings.NewReader(test.request))
+			req := httptest.NewRequest(http.MethodPost, "/boards/3/pins/2", strings.NewReader(test.request))
 			rec := httptest.NewRecorder()
 			err := del.addToBoard(rec, req, test.params)
 			if err != test.err {
