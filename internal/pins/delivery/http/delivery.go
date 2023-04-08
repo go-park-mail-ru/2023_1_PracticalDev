@@ -1,4 +1,4 @@
-package pins
+package http
 
 import (
 	"bytes"
@@ -7,14 +7,16 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/google/uuid"
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	"github.com/google/uuid"
-	"github.com/julienschmidt/httprouter"
+	_pins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, access middleware.AccessChecker, serv Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, access middleware.AccessChecker, serv _pins.Service) {
 	del := delivery{serv, logger}
 
 	mux.POST("/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.createPin)), logger), logger))
@@ -24,12 +26,13 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer midd
 	mux.GET("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getPinsByBoard)), logger), logger))
 	mux.PUT("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.updatePin))), logger), logger))
 	mux.DELETE("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.deletePin))), logger), logger))
+
 	mux.POST("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.addPinToBoard))), logger), logger))
 	mux.DELETE("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.removePinFromBoard))), logger), logger))
 }
 
 type delivery struct {
-	serv Service
+	serv _pins.Service
 	log  log.Logger
 }
 
