@@ -13,7 +13,8 @@ type CreateParams struct {
 }
 
 var (
-	ErrDb = errors.New("db error")
+	ErrDb          = errors.New("db error")
+	ErrPinNotFound = errors.New("pin not found")
 )
 
 type Repository interface {
