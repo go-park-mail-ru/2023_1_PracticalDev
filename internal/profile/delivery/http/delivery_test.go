@@ -1,9 +1,8 @@
 package http
 
 import (
-	"bytes"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
 	"io"
-	"mime/multipart"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -16,37 +15,6 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/mocks"
 )
-
-type file struct {
-	Name  string
-	Bytes []byte
-}
-
-func createMultipartFormBody(values map[string]string,
-	files map[string]file) (body *bytes.Buffer, contentType string, err error) {
-	body = new(bytes.Buffer)
-	mw := multipart.NewWriter(body)
-	defer mw.Close()
-
-	for key, value := range files {
-		w, err := mw.CreateFormFile(key, value.Name)
-		if err != nil {
-			return nil, "", err
-		}
-		if _, err = w.Write(value.Bytes); err != nil {
-			return nil, "", err
-		}
-	}
-
-	for key, value := range values {
-		err = mw.WriteField(key, value)
-		if err != nil {
-			return nil, "", err
-		}
-	}
-
-	return body, mw.FormDataContentType(), nil
-}
 
 func TestGetProfileByUser(t *testing.T) {
 	type fields struct {
@@ -148,13 +116,38 @@ func TestFullUpdate(t *testing.T) {
 		prepare    func(f *fields)
 		params     httprouter.Params
 		formValues map[string]string
-		formFiles  map[string]file
+		formFiles  map[string]utils.File
 		response   string
 		statusCode int
 		err        error
 	}
 
 	tests := map[string]testCase{
+		"usual": {
+			prepare: func(f *fields) {
+				f.serv.EXPECT().FullUpdate(gomock.Any()).Return(profile.Profile{
+					Username:     "username1",
+					Name:         "n1",
+					ProfileImage: "pi_url",
+					WebsiteUrl:   "wu1",
+				}, nil)
+			},
+			params: []httprouter.Param{{Key: "user-id", Value: "3"}},
+			formValues: map[string]string{
+				"username":    "username1",
+				"name":        "n1",
+				"website_url": "wu1",
+			},
+			formFiles: map[string]utils.File{
+				"bytes": {
+					Name:  "test.jpg",
+					Bytes: make([]byte, 3),
+				},
+			},
+			response:   `{"username":"username1","name":"n1","profile_image":"pi_url","website_url":"wu1"}`,
+			statusCode: http.StatusOK,
+			err:        nil,
+		},
 		"missing file": {
 			prepare: func(f *fields) {},
 			params:  []httprouter.Param{{Key: "user-id", Value: "3"}},
@@ -163,7 +156,7 @@ func TestFullUpdate(t *testing.T) {
 				"name":        "n1",
 				"website_url": "wu1",
 			},
-			formFiles:  map[string]file{},
+			formFiles:  map[string]utils.File{},
 			response:   ``,
 			statusCode: http.StatusBadRequest,
 			err:        ErrMissingFile,
@@ -176,7 +169,7 @@ func TestFullUpdate(t *testing.T) {
 				"name":        "n1",
 				"website_url": "wu1",
 			},
-			formFiles: map[string]file{
+			formFiles: map[string]utils.File{
 				"bytes": {
 					Name:  "avatar1.jpg",
 					Bytes: make([]byte, 3),
@@ -207,7 +200,7 @@ func TestFullUpdate(t *testing.T) {
 				log:  logger,
 			}
 
-			reqBody, contentType, err := createMultipartFormBody(test.formValues, test.formFiles)
+			reqBody, contentType, err := utils.CreateMultipartFormBody(test.formValues, test.formFiles)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -238,18 +231,43 @@ func TestPartialUpdate(t *testing.T) {
 		prepare    func(f *fields)
 		params     httprouter.Params
 		formValues map[string]string
-		formFiles  map[string]file
+		formFiles  map[string]utils.File
 		response   string
 		statusCode int
 		err        error
 	}
 
 	tests := map[string]testCase{
+		"usual": {
+			prepare: func(f *fields) {
+				f.serv.EXPECT().PartialUpdate(gomock.Any()).Return(profile.Profile{
+					Username:     "username1",
+					Name:         "n1",
+					ProfileImage: "pi_url",
+					WebsiteUrl:   "wu1",
+				}, nil)
+			},
+			params: []httprouter.Param{{Key: "user-id", Value: "3"}},
+			formValues: map[string]string{
+				"username":    "username1",
+				"name":        "n1",
+				"website_url": "wu1",
+			},
+			formFiles: map[string]utils.File{
+				"bytes": {
+					Name:  "avatar1.jpg",
+					Bytes: make([]byte, 3),
+				},
+			},
+			response:   `{"username":"username1","name":"n1","profile_image":"pi_url","website_url":"wu1"}`,
+			statusCode: http.StatusOK,
+			err:        nil,
+		},
 		"invalid user id param": {
 			prepare:    func(f *fields) {},
 			params:     []httprouter.Param{{Key: "user-id", Value: "a"}},
 			formValues: map[string]string{"username": "username1"},
-			formFiles:  map[string]file{},
+			formFiles:  map[string]utils.File{},
 			response:   ``,
 			statusCode: http.StatusBadRequest,
 			err:        ErrInvalidUserId,
@@ -275,7 +293,7 @@ func TestPartialUpdate(t *testing.T) {
 				log:  logger,
 			}
 
-			reqBody, contentType, err := createMultipartFormBody(test.formValues, test.formFiles)
+			reqBody, contentType, err := utils.CreateMultipartFormBody(test.formValues, test.formFiles)
 			if err != nil {
 				t.Fatal(err)
 			}
