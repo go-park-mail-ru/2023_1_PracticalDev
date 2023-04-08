@@ -2,15 +2,6 @@ package http
 
 import "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 
-// API requests
-type addToBoardRequest struct {
-	Id int `json:"id"`
-}
-
-type removeFromBoardRequest struct {
-	Id int `json:"id"`
-}
-
 // API responses
 type createResponse struct {
 	Id          int    `json:"id"`
