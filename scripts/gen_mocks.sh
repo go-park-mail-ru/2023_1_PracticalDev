@@ -3,6 +3,10 @@
 interface_files=(
   internal/boards/service.go
   internal/boards/repository.go
+  internal/pins/service.go
+  internal/pins/repository.go
+  internal/images/service.go
+  internal/images/repository.go
 )
 
 echo "Generating mocks..."

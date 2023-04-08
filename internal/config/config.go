@@ -13,6 +13,7 @@ var envVars = map[string]string{
 	"REDIS_PASSWORD":    "pickpinpswd",
 	"REDIS_HOST":        "redis",
 	"REDIS_PORT":        "6379",
+	"BUCKET_NAME":       "pickpin",
 }
 
 func init() {

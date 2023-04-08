@@ -47,6 +47,8 @@ services:
       - db-network
       - redis-network
       - api-network
+    volumes:
+      - ./.aws/credentials:/root/.aws/credentials
     deploy:
       restart_policy:
         condition: on-failure
@@ -68,7 +70,7 @@ services:
   frontend:
     build: 
       context: https://github.com/frontend-park-mail-ru/2023_1_PracticalDev.git#main
-      dockerfile: prod/Dockerfile.prod
+      dockerfile: Dockerfile.prod
     container_name: frontend
     command: npm run server
     ports:

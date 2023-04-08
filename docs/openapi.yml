@@ -15,9 +15,12 @@ servers:
     description: Internal test server, powered by Express.js
 
 tags:
+  - name: Pins
   - name: Users
   - name: Posts
   - name: Auth
+  - name: Boards
+  - name: BoardPins
 
 paths:
   /users/{user_id}:
@@ -208,6 +211,231 @@ paths:
       security:
         - cookieAuth: [ ]
 
+  /pins:
+    post:
+      tags:
+        - Pins
+      summary: Create a new pin
+      description: Create a new pin
+      requestBody:
+        description: Multipart form with values and image file
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/CreatePin"
+      responses:
+        "200":
+          description: A JSON object of created pin.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pin"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+    get:
+      tags:
+        - Pins
+      summary: Returns all pins that the user has access to
+      description: Returns all pins that the user has access to
+      responses:
+        "200":
+          description: A JSON with pins array
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pins"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
+  /users/{user_id}/pins:
+    parameters:
+      - schema:
+          type: integer
+        name: user_id
+        in: path
+        required: true
+    get:
+      tags:
+        - Pins
+      summary: Returns all pins of user
+      description: Returns all pins of user
+      responses:
+        "200":
+          description: A JSON with pins array
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pins"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
+  /pins/{id}:
+    parameters:
+      - schema:
+          type: integer
+        name: id
+        in: path
+        required: true
+    get:
+      tags:
+        - Pins
+      summary: Returns pin by id
+      description: Returns pin by id
+      responses:
+        "200":
+          description: A JSON object of pin.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pin"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+    put:
+      tags:
+        - Pins
+      summary: Full update of pin
+      description: Full update of pin
+      requestBody:
+        description: Multipart form with values and image file
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/FullUpdatePin"
+      responses:
+        "200":
+          description: A JSON object of updated board.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pin"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "403":
+          $ref: "#/components/responses/ErrForbidden"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+    delete:
+      tags:
+        - Pins
+      summary: Delete pin
+      description: Delete pin
+      responses:
+        "200":
+          description: Pin deleted successfully.
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "403":
+          $ref: "#/components/responses/ErrForbidden"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
+  /boards/{board_id}/pins:
+    parameters:
+      - schema:
+          type: integer
+        name: board_id
+        in: path
+        required: true
+    get:
+      tags:
+        - BoardPins
+      summary: Returns all pins of board
+      description: Returns all pins of board
+      responses:
+        "200":
+          description: A JSON with pins array
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Pins"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
+  /boards/{board_id}/pins/{id}:
+    parameters:
+      - schema:
+          type: integer
+        name: board_id
+        in: path
+        required: true
+      - schema:
+          type: integer
+        name: id
+        in: path
+        required: true
+    post:
+      tags:
+        - BoardPins
+      summary: Add pin with "id" to board with "board_id"
+      description: Add pin with "id" to board with "board_id"
+      responses:
+        "200":
+          description: Pin added to board successfully.
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+    delete:
+      tags:
+        - BoardPins
+      summary: Delete pin with "id" from board with "board_id"
+      description: Add pin with "id" from board with "board_id"
+      responses:
+        "200":
+          description: Pin deleted from board successfully.
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
   /auth/signup:
     post:
       summary: Creates new user and returnes authentication cookie.
@@ -343,10 +571,10 @@ components:
       type: string
       minLength: 4
       maxLength: 100
-      example: http://pickpin.ru
+      example: https://pickpin.ru
     MediaSource:
       type: string
-      example: picture.jpg
+      example: https://s3.pickpin.ru/uploaded_picture.jpg
     User:
       type: object
       properties:
@@ -457,8 +685,45 @@ components:
           type: string
         media_source:
           $ref: "#/components/schemas/MediaSource"
-        board_id:
+        author_id:
           type: integer
+    Pins:
+      type: object
+      properties:
+        pins:
+          type: array
+          items:
+            $ref: "#/components/schemas/Pin"
+    CreatePin:
+      type: object
+      required:
+        - title
+        - description
+        - bytes
+      properties:
+        title:
+          type: string
+          description: Title
+        description:
+          type: string
+          description: Description
+        bytes:
+          type: string
+          format: binary
+          description: Image file
+    FullUpdatePin:
+      type: object
+      properties:
+        title:
+          type: string
+          description: Title
+        description:
+          type: string
+          description: Description
+        bytes:
+          type: string
+          format: binary
+          description: Image file
     Error:
       type: object
       properties:
@@ -503,6 +768,12 @@ components:
             $ref: "#/components/schemas/Error"
     ErrForbidden:
       description: Forbidden
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrInternalServerError:
+      description: Internal Server Error
       content:
         application/problem+json:
           schema:
