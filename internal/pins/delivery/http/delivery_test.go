@@ -302,7 +302,7 @@ func TestListByBoard(t *testing.T) {
 			params: []httprouter.Param{
 				{Key: "page", Value: "1"},
 				{Key: "limit", Value: "30"},
-				{Key: "id", Value: "12"},
+				{Key: "board_id", Value: "12"},
 			},
 			response:   `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","author_id":10},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","author_id":3}]}`,
 			statusCode: http.StatusOK,
@@ -315,7 +315,7 @@ func TestListByBoard(t *testing.T) {
 			params: []httprouter.Param{
 				{Key: "page", Value: "1"},
 				{Key: "limit", Value: "30"},
-				{Key: "id", Value: "12"},
+				{Key: "board_id", Value: "12"},
 			},
 			response:   `{"pins":[]}`,
 			statusCode: http.StatusOK,

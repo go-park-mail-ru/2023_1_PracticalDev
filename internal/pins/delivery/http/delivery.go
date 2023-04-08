@@ -36,7 +36,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer midd
 	mux.GET("/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.list)), logger), logger))
 	mux.GET("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.get)), logger), logger))
 	mux.GET("/users/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.listByUser)), logger), logger))
-	mux.GET("/boards/:id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.listByBoard)), logger), logger))
+	mux.GET("/boards/:board_id/pins", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.listByBoard)), logger), logger))
 	mux.PUT("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.fullUpdate))), logger), logger))
 	mux.DELETE("/pins/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(access.WriteChecker(del.delete))), logger), logger))
 
@@ -188,7 +188,7 @@ func (del delivery) listByUser(w http.ResponseWriter, r *http.Request, p httprou
 }
 
 func (del delivery) listByBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strBoardId := p.ByName("id")
+	strBoardId := p.ByName("board_id")
 	boardId, err := strconv.Atoi(strBoardId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

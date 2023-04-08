@@ -24,10 +24,10 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer midd
 
 	mux.POST("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.create)), logger), logger))
 	mux.GET("/boards", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.list)), logger), logger))
-	mux.GET("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.ReadChecker(del.get))), logger), logger))
-	mux.PUT("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.fullUpdate))), logger), logger))
-	mux.PATCH("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.partialUpdate))), logger), logger))
-	mux.DELETE("/boards/:id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.delete))), logger), logger))
+	mux.GET("/boards/:board_id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.ReadChecker(del.get))), logger), logger))
+	mux.PUT("/boards/:board_id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.fullUpdate))), logger), logger))
+	mux.PATCH("/boards/:board_id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.partialUpdate))), logger), logger))
+	mux.DELETE("/boards/:board_id", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(access.WriteChecker(del.delete))), logger), logger))
 }
 
 type delivery struct {
@@ -110,7 +110,7 @@ func (del *delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.P
 }
 
 func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strId := p.ByName("id")
+	strId := p.ByName("board_id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -141,7 +141,7 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 }
 
 func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strId := p.ByName("id")
+	strId := p.ByName("board_id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -195,7 +195,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 }
 
 func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strId := p.ByName("id")
+	strId := p.ByName("board_id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -256,7 +256,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 }
 
 func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strId := p.ByName("id")
+	strId := p.ByName("board_id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)

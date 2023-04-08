@@ -215,14 +215,14 @@ func TestGet(t *testing.T) {
 					UserId:      1,
 				}, nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
+			params:     []httprouter.Param{{Key: "board_id", Value: "3"}},
 			response:   `{"id":3,"name":"n3","description":"d3","privacy":"secret","user_id":1}`,
 			statusCode: http.StatusOK,
 			err:        nil,
 		},
 		"invalid board id param": {
 			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
+			params:     []httprouter.Param{{Key: "board_id", Value: "a"}},
 			response:   ``,
 			statusCode: http.StatusBadRequest,
 			err:        ErrInvalidBoardIdParam,
@@ -238,7 +238,7 @@ func TestGet(t *testing.T) {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Get(3).Return(models.Board{}, boards.ErrBoardNotFound)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
+			params:     []httprouter.Param{{Key: "board_id", Value: "3"}},
 			response:   ``,
 			statusCode: http.StatusNotFound,
 			err:        boards.ErrBoardNotFound,
@@ -312,7 +312,7 @@ func TestFullUpdate(t *testing.T) {
 					Privacy:     "secret",
 					UserId:      3}, nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "1"}},
+			params:     []httprouter.Param{{Key: "board_id", Value: "1"}},
 			request:    `{"name":"b1","description":"d1","privacy":"secret"}`,
 			response:   `{"id":1,"name":"b1","description":"d1","privacy":"secret","user_id":3}`,
 			statusCode: http.StatusOK,
@@ -320,7 +320,7 @@ func TestFullUpdate(t *testing.T) {
 		},
 		"invalid board id param": {
 			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
+			params:     []httprouter.Param{{Key: "board_id", Value: "a"}},
 			response:   ``,
 			statusCode: http.StatusBadRequest,
 			err:        ErrInvalidBoardIdParam,
@@ -402,7 +402,7 @@ func TestPartialUpdate(t *testing.T) {
 					Privacy:     "secret",
 					UserId:      3}, nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "1"}},
+			params:     []httprouter.Param{{Key: "board_id", Value: "1"}},
 			request:    `{"name":"b1","description":"d1","privacy":"secret"}`,
 			response:   `{"id":1,"name":"b1","description":"d1","privacy":"secret","user_id":3}`,
 			statusCode: http.StatusOK,
@@ -410,7 +410,7 @@ func TestPartialUpdate(t *testing.T) {
 		},
 		"invalid board id param": {
 			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
+			params:     []httprouter.Param{{Key: "board_id", Value: "a"}},
 			response:   ``,
 			statusCode: http.StatusBadRequest,
 			err:        ErrInvalidBoardIdParam,
@@ -477,13 +477,13 @@ func TestDelete(t *testing.T) {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Delete(3).Return(nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
+			params:     []httprouter.Param{{Key: "board_id", Value: "3"}},
 			statusCode: http.StatusOK,
 			err:        nil,
 		},
 		"invalid board id param": {
 			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
+			params:     []httprouter.Param{{Key: "board_id", Value: "a"}},
 			statusCode: http.StatusBadRequest,
 			err:        ErrInvalidBoardIdParam,
 		},
@@ -497,7 +497,7 @@ func TestDelete(t *testing.T) {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Delete(3).Return(boards.ErrBoardNotFound)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
+			params:     []httprouter.Param{{Key: "board_id", Value: "3"}},
 			statusCode: http.StatusNotFound,
 			err:        boards.ErrBoardNotFound,
 		},
