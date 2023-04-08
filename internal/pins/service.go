@@ -5,7 +5,7 @@ import (
 )
 
 type Service interface {
-	CreatePin(params *models.Pin, image *models.Image) (models.Pin, error)
+	CreatePin(params *CreateParams) (models.Pin, error)
 	GetPin(id int) (models.Pin, error)
 	GetPinsByUser(userId int, page, limit int) ([]models.Pin, error)
 	GetPinsByBoard(boardId int, page, limit int) ([]models.Pin, error)

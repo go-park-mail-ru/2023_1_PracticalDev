@@ -59,13 +59,14 @@ func (del delivery) createPin(w http.ResponseWriter, r *http.Request, p httprout
 	}
 	del.log.Debug(r.FormValue("title"))
 
-	params := models.Pin{
+	params := _pins.CreateParams{
 		Title:       r.FormValue("title"),
 		Description: r.FormValue("description"),
+		MediaSource: image,
 		Author:      userId,
 	}
 
-	createdPin, err := del.serv.CreatePin(&params, &image)
+	createdPin, err := del.serv.CreatePin(&params)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return err

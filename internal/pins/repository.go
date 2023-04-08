@@ -17,16 +17,16 @@ var (
 )
 
 type Repository interface {
-	CreatePin(params *CreateParams) (models.Pin, error)
-	GetPin(id int) (models.Pin, error)
-	GetPinsByUser(userId int, page, limit int) ([]models.Pin, error)
-	GetPinsByBoard(boardId int, page, limit int) ([]models.Pin, error)
-	GetPins(page, limit int) ([]models.Pin, error)
-	UpdatePin(params *models.Pin) (models.Pin, error)
-	DeletePin(id int) error
+	Create(params *CreateParams) (models.Pin, error)
+	Get(id int) (models.Pin, error)
+	ListByUser(userId int, page, limit int) ([]models.Pin, error)
+	ListByBoard(boardId int, page, limit int) ([]models.Pin, error)
+	List(page, limit int) ([]models.Pin, error)
+	Update(params *models.Pin) (models.Pin, error)
+	Delete(id int) error
 
-	AddPinToBoard(boardId, pinId int) error
-	RemovePinFromBoard(boardId, pinId int) error
+	AddToBoard(boardId, pinId int) error
+	RemoveFromBoard(boardId, pinId int) error
 
 	CheckWriteAccess(userId, pinId string) (bool, error)
 	CheckReadAccess(userId, pinId string) (bool, error)

@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"database/sql"
-
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
@@ -19,7 +18,7 @@ type repository struct {
 	s3Service images.Service
 }
 
-func (repo *repository) CreatePin(params *_pins.CreateParams) (models.Pin, error) {
+func (repo *repository) Create(params *_pins.CreateParams) (models.Pin, error) {
 	url, err := repo.s3Service.UploadImage(&params.MediaSource)
 	if err != nil {
 		return models.Pin{}, err
@@ -44,90 +43,88 @@ func (repo *repository) CreatePin(params *_pins.CreateParams) (models.Pin, error
 	return retrievedPin, err
 }
 
-func (repo *repository) GetPin(id int) (models.Pin, error) {
+func (repo *repository) Get(id int) (models.Pin, error) {
 	row := repo.db.QueryRow(getCmd, id)
 
 	retrievedPin := models.Pin{}
 	var title, description, mediaSource sql.NullString
-
 	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
-
+	if err != nil {
+		err = _pins.ErrDb
+	}
 	retrievedPin.Title = title.String
 	retrievedPin.Description = description.String
 	retrievedPin.MediaSource = mediaSource.String
 	return retrievedPin, err
 }
 
-func (repo *repository) GetPinsByUser(userId int, page, limit int) ([]models.Pin, error) {
+func (repo *repository) ListByUser(userId int, page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listByUserCmd, userId, limit, (page-1)*limit)
-
 	if err != nil {
-		return []models.Pin{}, err
+		return nil, _pins.ErrDb
 	}
 
-	pins := []models.Pin{}
+	var pins []models.Pin
+	retrievedPin := models.Pin{}
+	var title, description, mediaSource sql.NullString
 	for rows.Next() {
-
-		retrievedPin := models.Pin{}
-		var title, description, mediaSource sql.NullString
-
 		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
-
+		if err != nil {
+			return nil, _pins.ErrDb
+		}
 		retrievedPin.Title = title.String
 		retrievedPin.Description = description.String
 		retrievedPin.MediaSource = mediaSource.String
 		pins = append(pins, retrievedPin)
 	}
-	return pins, err
+	return pins, nil
 }
 
-func (repo *repository) GetPinsByBoard(boardId int, page, limit int) ([]models.Pin, error) {
+func (repo *repository) ListByBoard(boardId int, page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listByBoardCmd, boardId, limit, (page-1)*limit)
-
 	if err != nil {
-		return []models.Pin{}, err
+		return nil, _pins.ErrDb
 	}
 
-	pins := []models.Pin{}
+	var pins []models.Pin
+	retrievedPin := models.Pin{}
+	var title, description, mediaSource sql.NullString
 	for rows.Next() {
-
-		retrievedPin := models.Pin{}
-		var title, description, mediaSource sql.NullString
-
 		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
-
+		if err != nil {
+			return nil, _pins.ErrDb
+		}
 		retrievedPin.Title = title.String
 		retrievedPin.Description = description.String
 		retrievedPin.MediaSource = mediaSource.String
 		pins = append(pins, retrievedPin)
 	}
-	return pins, err
+	return pins, nil
 }
 
-func (repo *repository) GetPins(page, limit int) ([]models.Pin, error) {
-
+func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listCmd, limit, (page-1)*limit)
-
 	if err != nil {
-		return []models.Pin{}, err
+		return nil, _pins.ErrDb
 	}
 
-	pins := []models.Pin{}
+	var pins []models.Pin
+	retrievedPin := models.Pin{}
+	var title, description, mediaSource sql.NullString
 	for rows.Next() {
-		retrievedPin := models.Pin{}
-		var title, description, mediaSource sql.NullString
-
 		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
-
+		if err != nil {
+			return nil, _pins.ErrDb
+		}
 		retrievedPin.Title = title.String
 		retrievedPin.Description = description.String
 		retrievedPin.MediaSource = mediaSource.String
 		pins = append(pins, retrievedPin)
 	}
-	return pins, err
+	return pins, nil
 }
 
-func (repo *repository) UpdatePin(params *models.Pin) (models.Pin, error) {
+func (repo *repository) Update(params *models.Pin) (models.Pin, error) {
 	row := repo.db.QueryRow(fullUpdateCmd,
 		params.Title,
 		params.Description,
@@ -144,7 +141,7 @@ func (repo *repository) UpdatePin(params *models.Pin) (models.Pin, error) {
 	return retrievedPin, err
 }
 
-func (repo *repository) DeletePin(id int) error {
+func (repo *repository) Delete(id int) error {
 	res, err := repo.db.Exec(deleteCmd, id)
 	if err != nil {
 		return err
@@ -156,7 +153,7 @@ func (repo *repository) DeletePin(id int) error {
 	return nil
 }
 
-func (repo *repository) AddPinToBoard(boardId, pinId int) error {
+func (repo *repository) AddToBoard(boardId, pinId int) error {
 	res, err := repo.db.Exec(addToBoardCmd, pinId, boardId)
 	if err != nil {
 		return err
@@ -168,7 +165,7 @@ func (repo *repository) AddPinToBoard(boardId, pinId int) error {
 	return nil
 }
 
-func (repo *repository) RemovePinFromBoard(boardId, pinId int) error {
+func (repo *repository) RemoveFromBoard(boardId, pinId int) error {
 	res, err := repo.db.Exec(deleteFromBoardCmd, pinId, boardId)
 	if err != nil {
 		return err
