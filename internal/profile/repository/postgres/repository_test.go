@@ -120,14 +120,6 @@ func TestFullUpdate(t *testing.T) {
 		err     error
 	}
 
-	const fullUpdateCmd = `UPDATE users
-							SET username = $1::VARCHAR,
-							name = $2::VARCHAR,
-							profile_image = $3::VARCHAR,
-							website_url = $4::VARCHAR
-							WHERE id = $5
-							RETURNING username, name, profile_image, website_url;`
-
 	tests := map[string]testCase{
 		"good query": {
 			prepare: func(f *fields) {
@@ -221,14 +213,6 @@ func TestPartialUpdate(t *testing.T) {
 		profile profile.Profile
 		err     error
 	}
-
-	const partialUpdateCmd = `UPDATE users
-								SET username = CASE WHEN $1::BOOLEAN THEN $2::VARCHAR ELSE username END,
-								name = CASE WHEN $3::BOOLEAN THEN $4::VARCHAR ELSE name END,
-    							profile_image = CASE WHEN $5::BOOLEAN THEN $6::VARCHAR ELSE profile_image END,
-    							website_url = CASE WHEN $7::BOOLEAN THEN $8::VARCHAR ELSE website_url END
-								WHERE id = $9
-								RETURNING username, name, profile_image, website_url;`
 
 	tests := map[string]testCase{
 		"good query": {
