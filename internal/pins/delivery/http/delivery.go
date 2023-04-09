@@ -104,7 +104,7 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	pin, err := del.serv.Get(id)
 	if err != nil {
 		if errors.Is(err, _pins.ErrPinNotFound) {
-			return mw.ErrBoardNotFound
+			return mw.ErrPinNotFound
 		} else {
 			return mw.ErrService
 		}
@@ -326,7 +326,7 @@ func (del delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.
 	err = del.serv.Delete(id)
 	if err != nil {
 		if errors.Is(err, _pins.ErrPinNotFound) {
-			return mw.ErrBoardNotFound
+			return mw.ErrPinNotFound
 		} else {
 			return mw.ErrService
 		}

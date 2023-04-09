@@ -130,7 +130,7 @@ func TestFullUpdate(t *testing.T) {
 				WebsiteUrl:   "wu1",
 			},
 			profile: profile.Profile{},
-			err:     profile.ErrTooShortUsername,
+			err:     profile.ErrBadParams{Err: profile.ErrTooShortUsername},
 		},
 		"too long username": {
 			prepare: func(f *fields) {},
@@ -142,7 +142,7 @@ func TestFullUpdate(t *testing.T) {
 				WebsiteUrl:   "wu1",
 			},
 			profile: profile.Profile{},
-			err:     profile.ErrTooLongUsername,
+			err:     profile.ErrBadParams{Err: profile.ErrTooLongUsername},
 		},
 	}
 

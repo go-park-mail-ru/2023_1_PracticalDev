@@ -10,7 +10,7 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
+	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
@@ -33,7 +33,7 @@ func TestCreate(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Create(&boards.CreateParams{
+				f.serv.EXPECT().Create(&_boards.CreateParams{
 					Name:        "b1",
 					Description: "d1",
 					Privacy:     "secret",
@@ -218,11 +218,11 @@ func TestGet(t *testing.T) {
 		},
 		"board not found": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Get(3).Return(models.Board{}, boards.ErrBoardNotFound)
+				f.serv.EXPECT().Get(3).Return(models.Board{}, _boards.ErrBoardNotFound)
 			},
 			params:   []httprouter.Param{{Key: "board_id", Value: "3"}},
 			response: ``,
-			err:      boards.ErrBoardNotFound,
+			err:      mw.ErrBoardNotFound,
 		},
 	}
 
@@ -275,7 +275,7 @@ func TestFullUpdate(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().FullUpdate(&boards.FullUpdateParams{
+				f.serv.EXPECT().FullUpdate(&_boards.FullUpdateParams{
 					Id:          1,
 					Name:        "b1",
 					Description: "d1",
@@ -355,7 +355,7 @@ func TestPartialUpdate(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().PartialUpdate(&boards.PartialUpdateParams{
+				f.serv.EXPECT().PartialUpdate(&_boards.PartialUpdateParams{
 					Id:                1,
 					Name:              "b1",
 					UpdateName:        true,
@@ -453,10 +453,10 @@ func TestDelete(t *testing.T) {
 		},
 		"board not found": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Delete(3).Return(boards.ErrBoardNotFound)
+				f.serv.EXPECT().Delete(3).Return(_boards.ErrBoardNotFound)
 			},
 			params: []httprouter.Param{{Key: "board_id", Value: "3"}},
-			err:    boards.ErrBoardNotFound,
+			err:    mw.ErrBoardNotFound,
 		},
 	}
 
