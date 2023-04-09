@@ -34,9 +34,10 @@ type PartialUpdateParams struct {
 }
 
 var (
-	ErrDb              = errors.New("db error")
-	ErrS3Service       = errors.New("s3 service error")
-	ErrProfileNotFound = errors.New("profile not found")
+	ErrDb                    = errors.New("db error")
+	ErrS3Service             = errors.New("s3 service error")
+	ErrProfileNotFound       = errors.New("profile not found")
+	ErrUsernameAlreadyExists = errors.New("user with such username already exists")
 )
 
 type Repository interface {

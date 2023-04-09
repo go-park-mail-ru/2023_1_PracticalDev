@@ -3,6 +3,8 @@ package postgres
 import (
 	"database/sql"
 
+	"github.com/lib/pq"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
@@ -40,15 +42,17 @@ func (rep *postgresRepository) GetProfileByUser(userId int) (profile.Profile, er
 	return prof, err
 }
 
-func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (profile.Profile, error) {
-	const fullUpdateCmd = `UPDATE users
-							SET username = $1::VARCHAR,
-							name = $2::VARCHAR,
-							profile_image = $3::VARCHAR,
-							website_url = $4::VARCHAR
-							WHERE id = $5
-							RETURNING username, name, profile_image, website_url;`
+const usernameUniqueConstraint = "users_username_key"
 
+const fullUpdateCmd = `UPDATE users
+						SET username = $1::VARCHAR,
+						name = $2::VARCHAR,
+						profile_image = $3::VARCHAR,
+						website_url = $4::VARCHAR
+						WHERE id = $5
+						RETURNING username, name, profile_image, website_url;`
+
+func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (profile.Profile, error) {
 	url, err := rep.imgServ.UploadImage(&params.ProfileImage)
 	if err != nil {
 		return profile.Profile{}, err
@@ -66,15 +70,18 @@ func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (pro
 	var profileImage, websiteUrl sql.NullString
 	err = row.Scan(&prof.Username, &prof.Name, &profileImage, &websiteUrl)
 	if err != nil {
-		err = profile.ErrDb
+		if err.(*pq.Error).Constraint == usernameUniqueConstraint {
+			err = profile.ErrUsernameAlreadyExists
+		} else {
+			err = profile.ErrDb
+		}
 	}
 	prof.ProfileImage = profileImage.String
 	prof.WebsiteUrl = websiteUrl.String
 	return prof, err
 }
 
-func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams) (profile.Profile, error) {
-	const partialUpdateCmd = `UPDATE users
+const partialUpdateCmd = `UPDATE users
 								SET username = CASE WHEN $1::BOOLEAN THEN $2::VARCHAR ELSE username END,
 								name = CASE WHEN $3::BOOLEAN THEN $4::VARCHAR ELSE name END,
     							profile_image = CASE WHEN $5::BOOLEAN THEN $6::VARCHAR ELSE profile_image END,
@@ -82,6 +89,7 @@ func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams
 								WHERE id = $9
 								RETURNING username, name, profile_image, website_url;`
 
+func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams) (profile.Profile, error) {
 	var url string
 	var err error
 	if params.UpdateProfileImage {
@@ -106,7 +114,11 @@ func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams
 	var profileImage, websiteUrl sql.NullString
 	err = row.Scan(&prof.Username, &prof.Name, &profileImage, &websiteUrl)
 	if err != nil {
-		err = profile.ErrDb
+		if err.(*pq.Error).Constraint == usernameUniqueConstraint {
+			err = profile.ErrUsernameAlreadyExists
+		} else {
+			err = profile.ErrDb
+		}
 	}
 	prof.ProfileImage = profileImage.String
 	prof.WebsiteUrl = websiteUrl.String

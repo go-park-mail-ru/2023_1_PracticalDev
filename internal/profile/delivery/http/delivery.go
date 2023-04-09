@@ -118,7 +118,15 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	}
 	prof, err := del.serv.FullUpdate(&params)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		if err == profile.ErrUsernameAlreadyExists ||
+			err == profile.ErrTooLongUsername ||
+			err == profile.ErrTooShortUsername ||
+			err == profile.ErrTooLongName ||
+			err == profile.ErrEmptyName {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return err
 	}
 
@@ -188,7 +196,15 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 
 	prof, err := del.serv.PartialUpdate(&params)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		if err == profile.ErrUsernameAlreadyExists ||
+			err == profile.ErrTooLongUsername ||
+			err == profile.ErrTooShortUsername ||
+			err == profile.ErrTooLongName ||
+			err == profile.ErrEmptyName {
+			w.WriteHeader(http.StatusBadRequest)
+		} else {
+			w.WriteHeader(http.StatusInternalServerError)
+		}
 		return err
 	}
 
