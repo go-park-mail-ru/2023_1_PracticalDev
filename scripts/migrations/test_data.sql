@@ -1,8 +1,10 @@
 INSERT INTO users(username, hashed_password, name, email, account_type)
-VALUES ('geogreck', '$2a$10$A4Ab/cuy/oLNvm4VxGoO/ezKL.fiew5e.eKTkUOWIVxoBh8XFO4lS', 'George', 'geogreck@vk.com', 'personal'),
+VALUES ('geogreck', '$2a$10$A4Ab/cuy/oLNvm4VxGoO/ezKL.fiew5e.eKTkUOWIVxoBh8XFO4lS', 'George', 'geogreck@vk.com',
+        'personal'),
        ('kirill', '$2a$10$A4Ab/cuy/oLNvm4VxGoO/ezKL.fiew5e.eKTkUOWIVxoBh8XFO4lS', 'Kirill', 'figma@vk.com', 'personal'),
        ('slava', '$2a$10$A4Ab/cuy/oLNvm4VxGoO/ezKL.fiew5e.eKTkUOWIVxoBh8XFO4lS', 'Slava', 'iu7@vk.com', 'personal'),
-       ('evgenii', '$2a$10$A4Ab/cuy/oLNvm4VxGoO/ezKL.fiew5e.eKTkUOWIVxoBh8XFO4lS', 'evgenii', 'test@vk.com', 'personal');
+       ('evgenii', '$2a$10$A4Ab/cuy/oLNvm4VxGoO/ezKL.fiew5e.eKTkUOWIVxoBh8XFO4lS', 'evgenii', 'test@vk.com',
+        'personal');
 
 INSERT INTO boards(name, privacy, user_id)
 VALUES ('Notes', 'public', 1),
@@ -31,3 +33,10 @@ VALUES ('Why?', 1, 2),
        ('Normal', 2, 1),
        ('Ok', 2, 2),
        ('OK', 2, 3);
+
+INSERT INTO pin_likes(pin_id, author_id)
+VALUES (1, 2),
+       (1, 3),
+       (2, 1),
+       (2, 2),
+       (2, 3);
