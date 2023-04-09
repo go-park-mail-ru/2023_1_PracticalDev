@@ -64,6 +64,21 @@ func (mr *MockRepositoryMockRecorder) GetProfileByUser(userId interface{}) *gomo
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "GetProfileByUser", reflect.TypeOf((*MockRepository)(nil).GetProfileByUser), userId)
 }
 
+// IsUsernameAvailable mocks base method.
+func (m *MockRepository) IsUsernameAvailable(username string, userId int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsUsernameAvailable", username, userId)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsUsernameAvailable indicates an expected call of IsUsernameAvailable.
+func (mr *MockRepositoryMockRecorder) IsUsernameAvailable(username, userId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsUsernameAvailable", reflect.TypeOf((*MockRepository)(nil).IsUsernameAvailable), username, userId)
+}
+
 // PartialUpdate mocks base method.
 func (m *MockRepository) PartialUpdate(params *profile.PartialUpdateParams) (profile.Profile, error) {
 	m.ctrl.T.Helper()

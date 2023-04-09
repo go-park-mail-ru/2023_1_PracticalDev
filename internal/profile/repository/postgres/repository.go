@@ -3,8 +3,6 @@ package postgres
 import (
 	"database/sql"
 
-	"github.com/lib/pq"
-
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
@@ -42,8 +40,6 @@ func (rep *postgresRepository) GetProfileByUser(userId int) (profile.Profile, er
 	return prof, err
 }
 
-const usernameUniqueConstraint = "users_username_key"
-
 const fullUpdateCmd = `UPDATE users
 						SET username = $1::VARCHAR,
 						name = $2::VARCHAR,
@@ -70,11 +66,7 @@ func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (pro
 	var profileImage, websiteUrl sql.NullString
 	err = row.Scan(&prof.Username, &prof.Name, &profileImage, &websiteUrl)
 	if err != nil {
-		if err.(*pq.Error).Constraint == usernameUniqueConstraint {
-			err = profile.ErrUsernameAlreadyExists
-		} else {
-			err = profile.ErrDb
-		}
+		err = profile.ErrDb
 	}
 	prof.ProfileImage = profileImage.String
 	prof.WebsiteUrl = websiteUrl.String
@@ -114,11 +106,7 @@ func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams
 	var profileImage, websiteUrl sql.NullString
 	err = row.Scan(&prof.Username, &prof.Name, &profileImage, &websiteUrl)
 	if err != nil {
-		if err.(*pq.Error).Constraint == usernameUniqueConstraint {
-			err = profile.ErrUsernameAlreadyExists
-		} else {
-			err = profile.ErrDb
-		}
+		err = profile.ErrDb
 	}
 	prof.ProfileImage = profileImage.String
 	prof.WebsiteUrl = websiteUrl.String
