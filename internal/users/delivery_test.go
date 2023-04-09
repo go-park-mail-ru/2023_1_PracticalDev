@@ -6,50 +6,43 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/stretchr/testify/assert"
 	"io/ioutil"
-	"net/http"
 	"net/http/httptest"
 	"os"
 	"testing"
 )
 
 type testCase struct {
-	Id         string
-	Response   string
-	StatusCode int
-	isError    bool
+	Id       string
+	Response string
+	isError  bool
 }
 
 func TestDeliveryGetUser(t *testing.T) {
 	cases := []testCase{
 		{
-			Id:         "1",
-			Response:   `{"id":1,"username":"geogreck","email":"geogreck@vk.com","name":"George","profile_image":"","website_url":"","account_type":"personal"}`,
-			StatusCode: http.StatusOK,
-			isError:    false,
+			Id:       "1",
+			Response: `{"id":1,"username":"geogreck","email":"geogreck@vk.com","name":"George","profile_image":"","website_url":"","account_type":"personal"}`,
+			isError:  false,
 		},
 		{
-			Id:         "2",
-			Response:   `{"id":2,"username":"kirill","email":"figma@vk.com","name":"Kirill","profile_image":"","website_url":"","account_type":"personal"}`,
-			StatusCode: http.StatusOK,
-			isError:    false,
+			Id:       "2",
+			Response: `{"id":2,"username":"kirill","email":"figma@vk.com","name":"Kirill","profile_image":"","website_url":"","account_type":"personal"}`,
+			isError:  false,
 		},
 		{
-			Id:         "0",
-			Response:   "",
-			StatusCode: http.StatusNotFound,
-			isError:    true,
+			Id:       "0",
+			Response: "",
+			isError:  true,
 		},
 		{
-			Id:         "100",
-			Response:   "",
-			StatusCode: http.StatusNotFound,
-			isError:    true,
+			Id:       "100",
+			Response: "",
+			isError:  true,
 		},
 		{
-			Id:         "f",
-			Response:   "",
-			StatusCode: http.StatusBadRequest,
-			isError:    true,
+			Id:       "f",
+			Response: "",
+			isError:  true,
 		},
 	}
 
@@ -70,7 +63,6 @@ func TestDeliveryGetUser(t *testing.T) {
 
 		isError := err != nil
 		assert.Equal(t, isError, item.isError)
-		assert.Equal(t, w.Code, item.StatusCode)
 
 		resp := w.Result()
 		body, _ := ioutil.ReadAll(resp.Body)

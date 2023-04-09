@@ -3,7 +3,7 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"errors"
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -13,26 +13,17 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 )
 
-var (
-	ErrFileCopy        = errors.New("file copy error")
-	ErrMissingFile     = errors.New("missing file")
-	ErrParseForm       = errors.New("parse form error")
-	ErrInvalidUserId   = errors.New("invalid user id")
-	ErrProfileNotFound = errors.New("profile not found")
-	ErrService         = errors.New("service error")
-)
-
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, serv profile.Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv profile.Service) {
 	del := delivery{serv, logger}
 
-	mux.GET("/users/:id/profile", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(del.getProfileByUser)), logger), logger))
-	mux.PUT("/profile", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(del.fullUpdate)), logger), logger))
-	mux.PATCH("/profile", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(del.partialUpdate)), logger), logger))
+	mux.GET("/users/:id/profile", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.getProfileByUser)), logger), logger))
+	mux.PUT("/profile", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.fullUpdate)), logger), logger))
+	mux.PATCH("/profile", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.partialUpdate)), logger), logger))
 }
 
 type delivery struct {
@@ -44,20 +35,16 @@ func (del *delivery) getProfileByUser(w http.ResponseWriter, r *http.Request, p 
 	strUserId := p.ByName("id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrInvalidUserId
+		return mw.ErrInvalidUserIdParam
 	}
 
 	prof, err := del.serv.GetProfileByUser(userId)
 	if err != nil {
-		if err == profile.ErrProfileNotFound {
-			err = ErrProfileNotFound
-			w.WriteHeader(http.StatusNotFound)
+		if errors.Is(err, profile.ErrProfileNotFound) {
+			return mw.ErrProfileNotFound
 		} else {
-			err = ErrService
-			w.WriteHeader(http.StatusInternalServerError)
+			return mw.ErrService
 		}
-		return err
 	}
 
 	response := getProfileResponse{
@@ -68,8 +55,7 @@ func (del *delivery) getProfileByUser(w http.ResponseWriter, r *http.Request, p 
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return err
+		return mw.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -81,27 +67,23 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	strId := p.ByName("user-id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrInvalidUserId
+		return mw.ErrInvalidUserIdParam
 	}
 
 	file, handler, err := r.FormFile("bytes")
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		if err == http.ErrMissingFile {
-			err = ErrMissingFile
+		if errors.Is(err, http.ErrMissingFile) {
+			return mw.ErrMissingFile
 		} else {
-			err = ErrParseForm
+			return mw.ErrParseForm
 		}
-		return err
 	}
 	defer file.Close()
 
 	buf := bytes.NewBuffer(nil)
 	_, err = io.Copy(buf, file)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return ErrFileCopy
+		return mw.ErrFileCopy
 	}
 
 	image := models.Image{
@@ -118,16 +100,12 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	}
 	prof, err := del.serv.FullUpdate(&params)
 	if err != nil {
-		if err == profile.ErrUsernameAlreadyExists ||
-			err == profile.ErrTooLongUsername ||
-			err == profile.ErrTooShortUsername ||
-			err == profile.ErrTooLongName ||
-			err == profile.ErrEmptyName {
-			w.WriteHeader(http.StatusBadRequest)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
+		switch err.(type) {
+		case profile.ErrBadParams:
+			return mw.ErrBadParams
+		default:
+			return mw.ErrService
 		}
-		return err
 	}
 
 	response := fullUpdateResponse{
@@ -138,8 +116,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return err
+		return mw.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -151,8 +128,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	strId := p.ByName("user-id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrInvalidUserId
+		return mw.ErrInvalidUserIdParam
 	}
 
 	params := profile.PartialUpdateParams{Id: id}
@@ -160,16 +136,13 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	file, handler, err := r.FormFile("bytes")
 	if err != nil {
 		if err != http.ErrMissingFile {
-			w.WriteHeader(http.StatusBadRequest)
-			err = ErrParseForm
-			return err
+			return mw.ErrParseForm
 		}
 	} else {
 		buf := bytes.NewBuffer(nil)
 		_, err = io.Copy(buf, file)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return ErrFileCopy
+			return mw.ErrFileCopy
 		}
 
 		image := models.Image{
@@ -196,16 +169,12 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 
 	prof, err := del.serv.PartialUpdate(&params)
 	if err != nil {
-		if err == profile.ErrUsernameAlreadyExists ||
-			err == profile.ErrTooLongUsername ||
-			err == profile.ErrTooShortUsername ||
-			err == profile.ErrTooLongName ||
-			err == profile.ErrEmptyName {
-			w.WriteHeader(http.StatusBadRequest)
-		} else {
-			w.WriteHeader(http.StatusInternalServerError)
+		switch err.(type) {
+		case profile.ErrBadParams:
+			return mw.ErrBadParams
+		default:
+			return mw.ErrService
 		}
-		return err
 	}
 
 	response := partialUpdateResponse{
@@ -216,8 +185,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return err
+		return mw.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")

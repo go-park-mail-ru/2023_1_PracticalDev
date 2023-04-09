@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -46,18 +47,18 @@ var existingUsers []api.LoginParams = []api.LoginParams{
 }
 
 type AuthenticateTestCase struct {
-	req          api.LoginParams
-	expectedCode int
+	req api.LoginParams
+	err error
 }
 
 type RegisterTestCase struct {
-	req          api.RegisterParams
-	expectedCode int
+	req api.RegisterParams
+	err error
 }
 
 type LogoutTestCase struct {
-	cookie       *http.Cookie
-	expectedCode int
+	cookie *http.Cookie
+	err    error
 }
 
 func TestMain(m *testing.M) {
@@ -80,34 +81,34 @@ func TestMain(m *testing.M) {
 func TestAuthenticate(t *testing.T) {
 	tests := []AuthenticateTestCase{
 		{
-			req:          existingUsers[0],
-			expectedCode: http.StatusOK,
+			req: existingUsers[0],
+			err: nil,
 		},
 		{
-			req:          existingUsers[1],
-			expectedCode: http.StatusOK,
+			req: existingUsers[1],
+			err: nil,
 		},
 		{
-			req:          existingUsers[2],
-			expectedCode: http.StatusOK,
+			req: existingUsers[2],
+			err: nil,
 		},
 		{
-			req:          existingUsers[3],
-			expectedCode: http.StatusOK,
+			req: existingUsers[3],
+			err: nil,
 		},
 		{
 			req: api.LoginParams{
 				Email:    "123@vk.com",
 				Password: "12345678",
 			},
-			expectedCode: http.StatusNotFound,
+			err: mw.ErrUserNotFound,
 		},
 		{
 			req: api.LoginParams{
 				Email:    "iu7@vk.com",
 				Password: "12345678910",
 			},
-			expectedCode: http.StatusNotFound,
+			err: mw.ErrUserNotFound,
 		},
 	}
 
@@ -119,11 +120,10 @@ func TestAuthenticate(t *testing.T) {
 		req := httptest.NewRequest("POST", url, body)
 		w := httptest.NewRecorder()
 
-		err := del.Authenticate(w, req, nil)
+		err = del.Authenticate(w, req, nil)
 
-		if w.Result().StatusCode != test.expectedCode {
-			t.Errorf("[%d] wrong StatusCode: \ngot %d, \nexpected %d, \nerr %d",
-				testNum, w.Code, test.expectedCode, err)
+		if err != test.err {
+			t.Errorf("[%d] \nexpected %d, \nerr %d", testNum, test.err, err)
 		}
 	}
 }
@@ -137,7 +137,7 @@ func TestRegister(t *testing.T) {
 				Name:     "test",
 				Password: "12345",
 			},
-			expectedCode: http.StatusOK,
+			err: nil,
 		},
 		{
 			req: api.RegisterParams{
@@ -146,7 +146,7 @@ func TestRegister(t *testing.T) {
 				Name:     "test",
 				Password: "12345",
 			},
-			expectedCode: http.StatusOK,
+			err: nil,
 		},
 		{
 			req: api.RegisterParams{
@@ -155,7 +155,7 @@ func TestRegister(t *testing.T) {
 				Name:     "test",
 				Password: "12345",
 			},
-			expectedCode: http.StatusBadRequest,
+			err: mw.ErrBadRequest,
 		},
 	}
 
@@ -167,10 +167,9 @@ func TestRegister(t *testing.T) {
 		req := httptest.NewRequest("POST", url, body)
 		w := httptest.NewRecorder()
 
-		err := del.Register(w, req, nil)
-		if w.Result().StatusCode != test.expectedCode {
-			t.Errorf("[%d] wrong StatusCode: \ngot %d, \nexpected %d, \nerr %d",
-				testNum, w.Code, test.expectedCode, err)
+		err = del.Register(w, req, nil)
+		if err != test.err {
+			t.Errorf("[%d] \nexpected %d, \nerr %d", testNum, test.err, err)
 		}
 	}
 }
@@ -182,18 +181,18 @@ func TestLogout(t *testing.T) {
 				Name:  "JSESSIONID",
 				Value: "123456789",
 			},
-			expectedCode: http.StatusBadRequest,
+			err: mw.ErrBadRequest,
 		},
 		{
 			cookie: &http.Cookie{
 				Name:  "JSESSIONID",
 				Value: "1$23456789",
 			},
-			expectedCode: http.StatusUnauthorized,
+			err: mw.ErrUnauthorized,
 		},
 		{
-			cookie:       &http.Cookie{},
-			expectedCode: http.StatusNotFound,
+			cookie: &http.Cookie{},
+			err:    mw.ErrUserNotFound,
 		},
 	}
 
@@ -206,14 +205,14 @@ func TestLogout(t *testing.T) {
 		req := httptest.NewRequest("POST", url, body)
 		w := httptest.NewRecorder()
 
-		err := del.Authenticate(w, req, nil)
+		err = del.Authenticate(w, req, nil)
 		if err != nil {
 			t.Errorf("Unexpected error: %d", err)
 			break
 		}
 		cookie := w.Result().Cookies()[0]
 
-		tests = append(tests, LogoutTestCase{cookie, http.StatusNoContent})
+		tests = append(tests, LogoutTestCase{cookie, nil})
 
 	}
 
@@ -224,10 +223,9 @@ func TestLogout(t *testing.T) {
 		req.AddCookie(test.cookie)
 		w := httptest.NewRecorder()
 
-		err := del.Logout(w, req, nil)
-		if w.Result().StatusCode != test.expectedCode {
-			t.Errorf("[%d] wrong StatusCode: \ngot %d, \nexpected %d, \nerr %d",
-				testNum, w.Code, test.expectedCode, err)
+		err = del.Logout(w, req, nil)
+		if err != test.err {
+			t.Errorf("[%d] \nexpected %d, \nerr %d", testNum, test.err, err)
 		}
 	}
 }

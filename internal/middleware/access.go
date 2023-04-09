@@ -26,12 +26,10 @@ func (accessChecker *AccessChecker) WriteChecker(handler router.Handler) router.
 
 		access, err := accessChecker.serv.CheckWriteAccess(userId, objectId)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return err
+			return ErrService
 		}
 		if !access {
-			w.WriteHeader(http.StatusForbidden)
-			return nil
+			return ErrForbidden
 		}
 
 		return handler(w, r, p)
@@ -45,12 +43,10 @@ func (accessChecker *AccessChecker) ReadChecker(handler router.Handler) router.H
 
 		access, err := accessChecker.serv.CheckReadAccess(userId, objectId)
 		if err != nil {
-			w.WriteHeader(http.StatusInternalServerError)
-			return err
+			return ErrService
 		}
 		if !access {
-			w.WriteHeader(http.StatusForbidden)
-			return nil
+			return ErrForbidden
 		}
 
 		return handler(w, r, p)

@@ -12,6 +12,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/mocks"
 )
@@ -22,11 +23,10 @@ func TestGetProfileByUser(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		response   string
-		statusCode int
-		err        error
+		prepare  func(f *fields)
+		params   httprouter.Params
+		response string
+		err      error
 	}
 
 	tests := map[string]testCase{
@@ -39,35 +39,31 @@ func TestGetProfileByUser(t *testing.T) {
 					WebsiteUrl:   "wu1",
 				}, nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			response:   `{"username":"un1","name":"n1","profile_image":"pi1","website_url":"wu1"}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			params:   []httprouter.Param{{Key: "id", Value: "3"}},
+			response: `{"username":"un1","name":"n1","profile_image":"pi1","website_url":"wu1"}`,
+			err:      nil,
 		},
 		"invalid user id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidUserId,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{{Key: "id", Value: "a"}},
+			response: ``,
+			err:      mw.ErrInvalidUserIdParam,
 		},
 		"profile not found": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().GetProfileByUser(3).Return(profile.Profile{}, profile.ErrProfileNotFound)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			response:   ``,
-			statusCode: http.StatusNotFound,
-			err:        ErrProfileNotFound,
+			params:   []httprouter.Param{{Key: "id", Value: "3"}},
+			response: ``,
+			err:      mw.ErrProfileNotFound,
 		},
 		"service error": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().GetProfileByUser(3).Return(profile.Profile{}, profile.ErrDb)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			response:   ``,
-			statusCode: http.StatusInternalServerError,
-			err:        ErrService,
+			params:   []httprouter.Param{{Key: "id", Value: "3"}},
+			response: ``,
+			err:      mw.ErrService,
 		},
 	}
 
@@ -96,9 +92,6 @@ func TestGetProfileByUser(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 			body, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(body), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(body))
@@ -118,7 +111,6 @@ func TestFullUpdate(t *testing.T) {
 		formValues map[string]string
 		formFiles  map[string]utils.File
 		response   string
-		statusCode int
 		err        error
 	}
 
@@ -144,9 +136,8 @@ func TestFullUpdate(t *testing.T) {
 					Bytes: make([]byte, 3),
 				},
 			},
-			response:   `{"username":"username1","name":"n1","profile_image":"pi_url","website_url":"wu1"}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			response: `{"username":"username1","name":"n1","profile_image":"pi_url","website_url":"wu1"}`,
+			err:      nil,
 		},
 		"missing file": {
 			prepare: func(f *fields) {},
@@ -156,10 +147,9 @@ func TestFullUpdate(t *testing.T) {
 				"name":        "n1",
 				"website_url": "wu1",
 			},
-			formFiles:  map[string]utils.File{},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrMissingFile,
+			formFiles: map[string]utils.File{},
+			response:  ``,
+			err:       mw.ErrMissingFile,
 		},
 		"invalid user id param": {
 			prepare: func(f *fields) {},
@@ -175,9 +165,8 @@ func TestFullUpdate(t *testing.T) {
 					Bytes: make([]byte, 3),
 				},
 			},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidUserId,
+			response: ``,
+			err:      mw.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -211,9 +200,6 @@ func TestFullUpdate(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 			respBody, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(respBody), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(respBody))
@@ -233,7 +219,6 @@ func TestPartialUpdate(t *testing.T) {
 		formValues map[string]string
 		formFiles  map[string]utils.File
 		response   string
-		statusCode int
 		err        error
 	}
 
@@ -259,9 +244,8 @@ func TestPartialUpdate(t *testing.T) {
 					Bytes: make([]byte, 3),
 				},
 			},
-			response:   `{"username":"username1","name":"n1","profile_image":"pi_url","website_url":"wu1"}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			response: `{"username":"username1","name":"n1","profile_image":"pi_url","website_url":"wu1"}`,
+			err:      nil,
 		},
 		"invalid user id param": {
 			prepare:    func(f *fields) {},
@@ -269,8 +253,7 @@ func TestPartialUpdate(t *testing.T) {
 			formValues: map[string]string{"username": "username1"},
 			formFiles:  map[string]utils.File{},
 			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidUserId,
+			err:        mw.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -303,9 +286,6 @@ func TestPartialUpdate(t *testing.T) {
 			err = del.partialUpdate(rec, req, test.params)
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
-			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
 			}
 			respBody, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(respBody), "\n") != test.response {

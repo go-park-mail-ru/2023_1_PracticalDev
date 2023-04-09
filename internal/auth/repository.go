@@ -4,7 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
-	"errors"
+	"github.com/pkg/errors"
 	"strconv"
 	"time"
 

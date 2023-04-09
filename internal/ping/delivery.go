@@ -21,8 +21,6 @@ type delivery struct {
 }
 
 func (del *delivery) Ping(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	w.WriteHeader(http.StatusOK)
-
 	w.Header().Set("Content-Type", "text/plain")
 	_, err := w.Write([]byte("Pong"))
 	return err

@@ -1,7 +1,8 @@
 package profile
 
 import (
-	"errors"
+	"fmt"
+	"github.com/pkg/errors"
 )
 
 var (
@@ -10,6 +11,14 @@ var (
 	ErrEmptyName        = errors.New("name must not be empty")
 	ErrTooLongName      = errors.New("name must be no more than 60 characters")
 )
+
+type ErrBadParams struct {
+	Err error
+}
+
+func (e ErrBadParams) Error() string {
+	return fmt.Sprintf("profile service: bad params: %s", e.Err)
+}
 
 type Service interface {
 	GetProfileByUser(userId int) (Profile, error)

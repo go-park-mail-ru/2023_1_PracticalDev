@@ -13,6 +13,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
 )
@@ -28,7 +29,6 @@ func TestCreate(t *testing.T) {
 		formValues map[string]string
 		formFiles  map[string]utils.File
 		response   string
-		statusCode int
 		err        error
 	}
 
@@ -54,9 +54,8 @@ func TestCreate(t *testing.T) {
 					Bytes: make([]byte, 3),
 				},
 			},
-			response:   `{"id":1,"title":"t1","description":"d1","media_source":"ms_url","author_id":3}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			response: `{"id":1,"title":"t1","description":"d1","media_source":"ms_url","author_id":3}`,
+			err:      nil,
 		},
 		"invalid user id param": {
 			prepare: func(f *fields) {},
@@ -71,9 +70,8 @@ func TestCreate(t *testing.T) {
 					Bytes: make([]byte, 3),
 				},
 			},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidUserId,
+			response: ``,
+			err:      mw.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -107,9 +105,6 @@ func TestCreate(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 			respBody, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(respBody), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(respBody))
@@ -124,11 +119,10 @@ func TestList(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		response   string
-		statusCode int
-		err        error
+		prepare  func(f *fields)
+		params   httprouter.Params
+		response string
+		err      error
 	}
 
 	tests := map[string]testCase{
@@ -144,18 +138,16 @@ func TestList(t *testing.T) {
 				{Key: "page", Value: "1"},
 				{Key: "limit", Value: "30"},
 			},
-			response:   `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","author_id":3},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","author_id":10}]}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","author_id":3},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","author_id":10}]}`,
+			err:      nil,
 		},
 		"no pins": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().List(1, 30).Return([]models.Pin{}, nil)
 			},
-			params:     []httprouter.Param{{Key: "user-id", Value: "3"}},
-			response:   `{"pins":[]}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			params:   []httprouter.Param{{Key: "user-id", Value: "3"}},
+			response: `{"pins":[]}`,
+			err:      nil,
 		},
 	}
 
@@ -184,9 +176,6 @@ func TestList(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 			body, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(body), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(body))
@@ -201,11 +190,10 @@ func TestListByUser(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		response   string
-		statusCode int
-		err        error
+		prepare  func(f *fields)
+		params   httprouter.Params
+		response string
+		err      error
 	}
 
 	tests := map[string]testCase{
@@ -222,9 +210,8 @@ func TestListByUser(t *testing.T) {
 				{Key: "limit", Value: "30"},
 				{Key: "id", Value: "12"},
 			},
-			response:   `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","author_id":12},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","author_id":12}]}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","author_id":12},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","author_id":12}]}`,
+			err:      nil,
 		},
 		"no pins": {
 			prepare: func(f *fields) {
@@ -235,9 +222,8 @@ func TestListByUser(t *testing.T) {
 				{Key: "limit", Value: "30"},
 				{Key: "id", Value: "12"},
 			},
-			response:   `{"pins":[]}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			response: `{"pins":[]}`,
+			err:      nil,
 		},
 	}
 
@@ -266,9 +252,6 @@ func TestListByUser(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 			body, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(body), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(body))
@@ -283,11 +266,10 @@ func TestListByBoard(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		response   string
-		statusCode int
-		err        error
+		prepare  func(f *fields)
+		params   httprouter.Params
+		response string
+		err      error
 	}
 
 	tests := map[string]testCase{
@@ -304,9 +286,8 @@ func TestListByBoard(t *testing.T) {
 				{Key: "limit", Value: "30"},
 				{Key: "board_id", Value: "12"},
 			},
-			response:   `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","author_id":10},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","author_id":3}]}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","author_id":10},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","author_id":3}]}`,
+			err:      nil,
 		},
 		"no pins": {
 			prepare: func(f *fields) {
@@ -317,9 +298,8 @@ func TestListByBoard(t *testing.T) {
 				{Key: "limit", Value: "30"},
 				{Key: "board_id", Value: "12"},
 			},
-			response:   `{"pins":[]}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			response: `{"pins":[]}`,
+			err:      nil,
 		},
 	}
 
@@ -348,9 +328,6 @@ func TestListByBoard(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 			body, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(body), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(body))
@@ -365,11 +342,10 @@ func TestGet(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		response   string
-		statusCode int
-		err        error
+		prepare  func(f *fields)
+		params   httprouter.Params
+		response string
+		err      error
 	}
 
 	tests := map[string]testCase{
@@ -383,35 +359,31 @@ func TestGet(t *testing.T) {
 					Author:      12,
 				}, nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			response:   `{"id":3,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			params:   []httprouter.Param{{Key: "id", Value: "3"}},
+			response: `{"id":3,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12}`,
+			err:      nil,
 		},
 		"invalid pin id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidPinId,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{{Key: "id", Value: "a"}},
+			response: ``,
+			err:      mw.ErrInvalidPinIdParam,
 		},
 		"pin not found": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Get(3).Return(models.Pin{}, pins.ErrPinNotFound)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			response:   ``,
-			statusCode: http.StatusNotFound,
-			err:        ErrPinNotFound,
+			params:   []httprouter.Param{{Key: "id", Value: "3"}},
+			response: ``,
+			err:      mw.ErrPinNotFound,
 		},
 		"service error": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Get(3).Return(models.Pin{}, pins.ErrDb)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			response:   ``,
-			statusCode: http.StatusInternalServerError,
-			err:        ErrService,
+			params:   []httprouter.Param{{Key: "id", Value: "3"}},
+			response: ``,
+			err:      mw.ErrService,
 		},
 	}
 
@@ -440,9 +412,6 @@ func TestGet(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 			body, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(body), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(body))
@@ -462,7 +431,6 @@ func TestFullUpdate(t *testing.T) {
 		formValues map[string]string
 		formFiles  map[string]utils.File
 		response   string
-		statusCode int
 		err        error
 	}
 
@@ -488,9 +456,8 @@ func TestFullUpdate(t *testing.T) {
 					Bytes: make([]byte, 3),
 				},
 			},
-			response:   `{"id":3,"title":"t1","description":"d1","media_source":"ms_url","author_id":12}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			response: `{"id":3,"title":"t1","description":"d1","media_source":"ms_url","author_id":12}`,
+			err:      nil,
 		},
 		"missing file": {
 			prepare: func(f *fields) {},
@@ -499,10 +466,9 @@ func TestFullUpdate(t *testing.T) {
 				"title":       "t1",
 				"description": "d1",
 			},
-			formFiles:  map[string]utils.File{},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrMissingFile,
+			formFiles: map[string]utils.File{},
+			response:  ``,
+			err:       mw.ErrMissingFile,
 		},
 		"invalid user id param": {
 			prepare: func(f *fields) {},
@@ -517,9 +483,8 @@ func TestFullUpdate(t *testing.T) {
 					Bytes: make([]byte, 3),
 				},
 			},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidPinId,
+			response: ``,
+			err:      mw.ErrInvalidPinIdParam,
 		},
 	}
 
@@ -553,9 +518,6 @@ func TestFullUpdate(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 			respBody, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(respBody), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(respBody))
@@ -570,10 +532,9 @@ func TestDelete(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		statusCode int
-		err        error
+		prepare func(f *fields)
+		params  httprouter.Params
+		err     error
 	}
 
 	tests := map[string]testCase{
@@ -581,37 +542,32 @@ func TestDelete(t *testing.T) {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Delete(3).Return(nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			statusCode: http.StatusOK,
-			err:        nil,
+			params: []httprouter.Param{{Key: "id", Value: "3"}},
+			err:    nil,
 		},
 		"invalid pin id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidPinId,
+			prepare: func(f *fields) {},
+			params:  []httprouter.Param{{Key: "id", Value: "a"}},
+			err:     mw.ErrInvalidPinIdParam,
 		},
 		"missing pin id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{},
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidPinId,
+			prepare: func(f *fields) {},
+			params:  []httprouter.Param{},
+			err:     mw.ErrInvalidPinIdParam,
 		},
 		"pin not found": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Delete(3).Return(pins.ErrPinNotFound)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			statusCode: http.StatusNotFound,
-			err:        ErrPinNotFound,
+			params: []httprouter.Param{{Key: "id", Value: "3"}},
+			err:    mw.ErrPinNotFound,
 		},
 		"service error": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Delete(3).Return(pins.ErrDb)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			statusCode: http.StatusInternalServerError,
-			err:        ErrService,
+			params: []httprouter.Param{{Key: "id", Value: "3"}},
+			err:    mw.ErrService,
 		},
 	}
 
@@ -640,9 +596,6 @@ func TestDelete(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 		})
 	}
 }
@@ -653,11 +606,10 @@ func TestAddToBoard(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		request    string
-		statusCode int
-		err        error
+		prepare func(f *fields)
+		params  httprouter.Params
+		request string
+		err     error
 	}
 
 	tests := map[string]testCase{
@@ -669,8 +621,7 @@ func TestAddToBoard(t *testing.T) {
 				{Key: "board_id", Value: "3"},
 				{Key: "id", Value: "2"},
 			},
-			statusCode: http.StatusOK,
-			err:        nil,
+			err: nil,
 		},
 		"invalid board id param": {
 			prepare: func(f *fields) {},
@@ -678,8 +629,7 @@ func TestAddToBoard(t *testing.T) {
 				{Key: "board_id", Value: "a"},
 				{Key: "id", Value: "3"},
 			},
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidBoardId,
+			err: mw.ErrInvalidBoardIdParam,
 		},
 		"invalid pin id": {
 			prepare: func(f *fields) {},
@@ -687,8 +637,7 @@ func TestAddToBoard(t *testing.T) {
 				{Key: "board_id", Value: "3"},
 				{Key: "id", Value: "a"},
 			},
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidPinId,
+			err: mw.ErrInvalidPinIdParam,
 		},
 		"service error": {
 			prepare: func(f *fields) {
@@ -698,8 +647,7 @@ func TestAddToBoard(t *testing.T) {
 				{Key: "board_id", Value: "3"},
 				{Key: "id", Value: "2"},
 			},
-			statusCode: http.StatusInternalServerError,
-			err:        ErrService,
+			err: mw.ErrService,
 		},
 	}
 
@@ -727,9 +675,6 @@ func TestAddToBoard(t *testing.T) {
 			err := del.addToBoard(rec, req, test.params)
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
-			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
 			}
 		})
 	}

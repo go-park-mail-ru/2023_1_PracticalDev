@@ -36,17 +36,17 @@ func (serv *profileService) GetProfileByUser(userId int) (profile.Profile, error
 
 func (serv *profileService) FullUpdate(params *profile.FullUpdateParams) (profile.Profile, error) {
 	if err := validateUsername(params.Username); err != nil {
-		return profile.Profile{}, err
+		return profile.Profile{}, profile.ErrBadParams{Err: err}
 	} else if err = validateName(params.Name); err != nil {
-		return profile.Profile{}, err
+		return profile.Profile{}, profile.ErrBadParams{Err: err}
 	}
 
 	available, err := serv.rep.IsUsernameAvailable(params.Username, params.Id)
 	if err != nil {
-		return profile.Profile{}, err
+		return profile.Profile{}, profile.ErrBadParams{Err: err}
 	}
 	if !available {
-		return profile.Profile{}, profile.ErrUsernameAlreadyExists
+		return profile.Profile{}, profile.ErrBadParams{Err: profile.ErrUsernameAlreadyExists}
 	}
 
 	return serv.rep.FullUpdate(params)
@@ -55,20 +55,21 @@ func (serv *profileService) FullUpdate(params *profile.FullUpdateParams) (profil
 func (serv *profileService) PartialUpdate(params *profile.PartialUpdateParams) (profile.Profile, error) {
 	if params.UpdateUsername {
 		if err := validateUsername(params.Username); err != nil {
-			return profile.Profile{}, err
+			return profile.Profile{}, profile.ErrBadParams{Err: err}
 		}
 
 		available, err := serv.rep.IsUsernameAvailable(params.Username, params.Id)
 		if err != nil {
-			return profile.Profile{}, err
+			return profile.Profile{}, profile.ErrBadParams{Err: err}
 		}
 		if !available {
-			return profile.Profile{}, profile.ErrUsernameAlreadyExists
+			return profile.Profile{}, profile.ErrBadParams{Err: profile.ErrUsernameAlreadyExists}
 		}
 	} else if params.UpdateName {
 		if err := validateName(params.Name); err != nil {
-			return profile.Profile{}, err
+			return profile.Profile{}, profile.ErrBadParams{Err: err}
 		}
 	}
+
 	return serv.rep.PartialUpdate(params)
 }
