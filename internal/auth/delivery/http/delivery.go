@@ -1,7 +1,8 @@
-package auth
+package http
 
 import (
 	"encoding/json"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	"github.com/pkg/errors"
 	"net/http"
 	"strings"
@@ -13,7 +14,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv auth.Service) {
 	del := delivery{serv, logger}
 	mux.POST("/auth/login", mw.HandleLogger(mw.ErrorHandler(del.Authenticate, logger), logger))
 	mux.DELETE("/auth/logout", mw.HandleLogger(mw.ErrorHandler(del.Logout, logger), logger))
@@ -22,7 +23,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv Service) {
 }
 
 type delivery struct {
-	serv Service
+	serv auth.Service
 	log  log.Logger
 }
 
@@ -35,11 +36,11 @@ func parseSessionCookie(c *http.Cookie) (string, string, error) {
 	return tmp[0], c.Value, nil
 }
 
-func createSessionCookie(s SessionParams) *http.Cookie {
+func createSessionCookie(s auth.SessionParams) *http.Cookie {
 	return &http.Cookie{
 		Name:     "JSESSIONID",
-		Value:    s.token,
-		Expires:  time.Now().Add(s.livingTime),
+		Value:    s.Token,
+		Expires:  time.Now().Add(s.LivingTime),
 		HttpOnly: true,
 		Path:     "/",
 	}
@@ -48,16 +49,14 @@ func createSessionCookie(s SessionParams) *http.Cookie {
 func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-
 	data := api.LoginParams{}
-
 	if err := decoder.Decode(&data); err != nil {
 		return mw.ErrBadRequest
 	}
 
 	user, session, err := del.serv.Authenticate(data.Email, data.Password)
 	if err != nil {
-		if errors.Is(err, WrongPasswordOrLoginError) {
+		if errors.Is(err, auth.WrongPasswordOrLoginError) {
 			return mw.ErrUserNotFound
 		} else {
 			del.log.Error(err)
@@ -66,14 +65,11 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 	}
 
 	sessionCookie := createSessionCookie(session)
-
 	http.SetCookie(w, sessionCookie)
 	encoder := json.NewEncoder(w)
-
 	if err := encoder.Encode(user); err != nil {
 		return mw.ErrCreateResponse
 	}
-
 	return nil
 }
 
@@ -142,11 +138,11 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 	user, sessionParams, err := del.serv.Register(&params)
 	if err != nil {
 		switch {
-		case errors.Is(err, UserAlreadyExistsError):
+		case errors.Is(err, auth.UserAlreadyExistsError):
 			return mw.ErrUserAlreadyExists
-		case errors.Is(err, UserCreationError):
+		case errors.Is(err, auth.UserCreationError):
 			return mw.ErrService
-		case errors.Is(err, DBConnectionError):
+		case errors.Is(err, auth.DBConnectionError):
 			return mw.ErrService
 		}
 	}

@@ -1,9 +1,10 @@
-package auth
+package http
 
 import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"net/http"
 	"net/http/httptest"
@@ -73,7 +74,7 @@ func TestMain(m *testing.M) {
 		os.Exit(1)
 	}
 
-	del = delivery{NewService(NewRepository(database, rdb, ctx, logger)), logger}
+	del = delivery{auth.NewService(auth.NewRepository(database, rdb, ctx, logger)), logger}
 
 	os.Exit(m.Run())
 }

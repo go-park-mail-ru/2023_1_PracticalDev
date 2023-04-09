@@ -5,31 +5,35 @@ import (
 	"net/http"
 	"os"
 
+	"github.com/julienschmidt/httprouter"
+
+	authDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/delivery/http"
+	authRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/repository/postgres"
+	authService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/service"
+
 	pinsDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/delivery/http"
 	pinsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/repository/postgres"
 	pinsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/service"
 
-	_boardsDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/delivery/http"
-	_boardsRepo "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/repository/postgres"
-	_boardsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/service"
+	boardsDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/delivery/http"
+	boardsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/repository/postgres"
+	boardsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/service"
 
-	imagesRepo "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/repository/s3"
-	_imagesServ "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/service"
+	imagesRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/repository/s3"
+	imagesService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/service"
 
 	profileDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/delivery/http"
-	_profileRepo "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/repository/postgres"
-	_profileServ "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/service"
+	profileRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/repository/postgres"
+	profileService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/service"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	_db "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/redis"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users"
-	"github.com/julienschmidt/httprouter"
 )
 
 func main() {
@@ -40,11 +44,11 @@ func main() {
 		os.Exit(1)
 	}
 
-	bucket, err := imagesRepo.NewS3Repository(logger)
+	bucket, err := imagesRepository.NewS3Repository(logger)
 	if err != nil {
 		os.Exit(1)
 	}
-	imagesServ := _imagesServ.NewS3Service(bucket)
+	imagesServ := imagesService.NewS3Service(bucket)
 
 	ctx := context.Background()
 	rdb, err := redis.NewRedisClient(logger, ctx)
@@ -56,23 +60,24 @@ func main() {
 	mux := httprouter.New()
 	mux.GlobalOPTIONS = middleware.HandlerFuncLogger(middleware.OptionsHandler, logger)
 
-	boardsRepo := _boardsRepo.NewPostgresRepository(db, logger)
-	boardsServ := _boardsService.NewBoardsService(boardsRepo)
+	boardsRepo := boardsRepository.NewPostgresRepository(db, logger)
+	boardsServ := boardsService.NewBoardsService(boardsRepo)
 	boardsAccessChecker := middleware.NewAccessChecker(boardsServ)
 
-	authServ := auth.NewService(auth.NewRepository(db, rdb, ctx, logger))
+	authRepo := authRepository.NewRepository(db, rdb, ctx, logger)
+	authServ := authService.NewService(authRepo)
 	authorizer := middleware.NewAuthorizer(authServ)
 
 	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
 	pinsServ := pinsService.NewService(pinsRepo)
 
-	profileRepo := _profileRepo.NewPostgresRepository(db, imagesServ, logger)
-	profileServ := _profileServ.NewProfileService(profileRepo)
+	profileRepo := profileRepository.NewPostgresRepository(db, imagesServ, logger)
+	profileServ := profileService.NewProfileService(profileRepo)
 
-	auth.RegisterHandlers(mux, logger, authServ)
+	authDelivery.RegisterHandlers(mux, logger, authServ)
 	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
 	profileDelivery.RegisterHandlers(mux, logger, authorizer, profileServ)
-	_boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ)
+	boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ)
 	ping.RegisterHandlers(mux, logger)
 	pinsDelivery.RegisterHandlers(mux, logger, authorizer, middleware.NewAccessChecker(pinsServ), pinsServ)
 
