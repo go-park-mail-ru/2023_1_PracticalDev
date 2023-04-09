@@ -348,7 +348,10 @@ func (del delivery) addToBoard(w http.ResponseWriter, r *http.Request, p httprou
 	}
 
 	err = del.serv.AddToBoard(boardId, pinId)
-	return mw.ErrService
+	if err != nil {
+		return mw.ErrService
+	}
+	return nil
 }
 
 func (del delivery) removeFromBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
