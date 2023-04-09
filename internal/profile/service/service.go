@@ -40,6 +40,15 @@ func (serv *profileService) FullUpdate(params *profile.FullUpdateParams) (profil
 	} else if err = validateName(params.Name); err != nil {
 		return profile.Profile{}, err
 	}
+
+	available, err := serv.rep.IsUsernameAvailable(params.Username, params.Id)
+	if err != nil {
+		return profile.Profile{}, err
+	}
+	if !available {
+		return profile.Profile{}, profile.ErrUsernameAlreadyExists
+	}
+
 	return serv.rep.FullUpdate(params)
 }
 
@@ -47,6 +56,14 @@ func (serv *profileService) PartialUpdate(params *profile.PartialUpdateParams) (
 	if params.UpdateUsername {
 		if err := validateUsername(params.Username); err != nil {
 			return profile.Profile{}, err
+		}
+
+		available, err := serv.rep.IsUsernameAvailable(params.Username, params.Id)
+		if err != nil {
+			return profile.Profile{}, err
+		}
+		if !available {
+			return profile.Profile{}, profile.ErrUsernameAlreadyExists
 		}
 	} else if params.UpdateName {
 		if err := validateName(params.Name); err != nil {

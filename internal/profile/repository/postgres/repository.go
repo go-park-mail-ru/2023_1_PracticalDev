@@ -82,12 +82,12 @@ func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (pro
 }
 
 const partialUpdateCmd = `UPDATE users
-								SET username = CASE WHEN $1::BOOLEAN THEN $2::VARCHAR ELSE username END,
-								name = CASE WHEN $3::BOOLEAN THEN $4::VARCHAR ELSE name END,
-    							profile_image = CASE WHEN $5::BOOLEAN THEN $6::VARCHAR ELSE profile_image END,
-    							website_url = CASE WHEN $7::BOOLEAN THEN $8::VARCHAR ELSE website_url END
-								WHERE id = $9
-								RETURNING username, name, profile_image, website_url;`
+							SET username = CASE WHEN $1::BOOLEAN THEN $2::VARCHAR ELSE username END,
+							name = CASE WHEN $3::BOOLEAN THEN $4::VARCHAR ELSE name END,
+							profile_image = CASE WHEN $5::BOOLEAN THEN $6::VARCHAR ELSE profile_image END,
+							website_url = CASE WHEN $7::BOOLEAN THEN $8::VARCHAR ELSE website_url END
+							WHERE id = $9
+							RETURNING username, name, profile_image, website_url;`
 
 func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams) (profile.Profile, error) {
 	var url string
@@ -123,4 +123,19 @@ func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams
 	prof.ProfileImage = profileImage.String
 	prof.WebsiteUrl = websiteUrl.String
 	return prof, err
+}
+
+const isUsernameAvailableCmd = `SELECT NOT EXISTS(SELECT id
+												FROM users
+												WHERE username = $1 AND id <> $2) AS available;`
+
+func (rep *postgresRepository) IsUsernameAvailable(username string, userId int) (bool, error) {
+	row := rep.db.QueryRow(isUsernameAvailableCmd, username, userId)
+
+	var available bool
+	err := row.Scan(&available)
+	if err != nil {
+		err = profile.ErrDb
+	}
+	return available, err
 }

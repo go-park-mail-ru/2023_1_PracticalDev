@@ -44,4 +44,6 @@ type Repository interface {
 	GetProfileByUser(userId int) (Profile, error)
 	FullUpdate(params *FullUpdateParams) (Profile, error)
 	PartialUpdate(params *PartialUpdateParams) (Profile, error)
+
+	IsUsernameAvailable(username string, userId int) (bool, error)
 }
