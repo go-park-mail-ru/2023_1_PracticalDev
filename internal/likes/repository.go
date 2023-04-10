@@ -2,13 +2,14 @@ package likes
 
 import (
 	"errors"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 
 var (
-	ErrDb           = errors.New("db error")
-	ErrPinNotFound  = errors.New("pin not found")
-	ErrUserNotFound = errors.New("user not found")
+	ErrDb                = errors.New("db error")
+	ErrLikeNotFound      = errors.New("like not found")
+	ErrLikeAlreadyExists = errors.New("like already exists")
 )
 
 type Repository interface {

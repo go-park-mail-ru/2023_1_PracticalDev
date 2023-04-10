@@ -70,6 +70,7 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 	if err := encoder.Encode(user); err != nil {
 		return mw.ErrCreateResponse
 	}
+	w.Header().Set("Content-Type", "application/json")
 	return nil
 }
 
