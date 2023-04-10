@@ -1,6 +1,8 @@
 #!/bin/bash
 
 interface_files=(
+  internal/auth/service.go
+  internal/auth/repository.go
   internal/boards/service.go
   internal/boards/repository.go
   internal/pins/service.go

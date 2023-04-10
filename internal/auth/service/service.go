@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
+	hasherPkg "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/hasher"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models/api"
 	"github.com/google/uuid"
@@ -17,8 +18,8 @@ type service struct {
 	rep auth.Repository
 }
 
-func (serv *service) Authenticate(email, hashedPassword string) (models.User, auth.SessionParams, error) {
-	user, err := serv.rep.Authenticate(email, hashedPassword)
+func (serv *service) Authenticate(email, password string) (models.User, auth.SessionParams, error) {
+	user, err := serv.rep.Authenticate(email, password)
 	session := auth.SessionParams{}
 	if err != nil {
 		return user, session, err
@@ -52,7 +53,7 @@ func (serv *service) DeleteSession(userId, sessionId string) error {
 }
 
 func (serv *service) Register(user *api.RegisterParams) (models.User, auth.SessionParams, error) {
-	hasher := hasher.NewHasher()
+	hasher := hasherPkg.NewHasher()
 	hash, _ := hasher.GetHashedPassword(user.Password)
 
 	tmp := models.User{

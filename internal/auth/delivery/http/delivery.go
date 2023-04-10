@@ -110,6 +110,10 @@ func (del *delivery) Logout(w http.ResponseWriter, r *http.Request, p httprouter
 		return mw.ErrBadRequest
 	}
 
+	if err = del.serv.DeleteSession(userId, sessionId); err != nil {
+		return mw.ErrUnauthorized
+	}
+
 	newCookie := &http.Cookie{
 		Name:     "JSESSIONID",
 		Value:    "",
@@ -117,11 +121,6 @@ func (del *delivery) Logout(w http.ResponseWriter, r *http.Request, p httprouter
 		MaxAge:   -1,
 		HttpOnly: true,
 	}
-
-	if err = del.serv.DeleteSession(userId, sessionId); err != nil {
-		return mw.ErrUnauthorized
-	}
-
 	http.SetCookie(w, newCookie)
 	return mw.ErrNoContent
 }

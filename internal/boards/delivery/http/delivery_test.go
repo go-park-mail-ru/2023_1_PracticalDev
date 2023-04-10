@@ -78,10 +78,7 @@ func TestCreate(t *testing.T) {
 			}
 
 			logger := log.New()
-			del := delivery{
-				serv: f.serv,
-				log:  logger,
-			}
+			del := delivery{serv: f.serv, log: logger}
 
 			req := httptest.NewRequest(http.MethodPost, "/boards", strings.NewReader(test.request))
 			rec := httptest.NewRecorder()

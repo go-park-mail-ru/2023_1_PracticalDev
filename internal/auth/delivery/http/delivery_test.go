@@ -1,31 +1,26 @@
 package http
 
 import (
-	"context"
-	"database/sql"
 	"encoding/json"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
-	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"net/http"
 	"net/http/httptest"
-	"os"
 	"strings"
 	"testing"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
+	"github.com/golang/mock/gomock"
+
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
+	authMocks "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/mocks"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models/api"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/redis"
-	goRedis "github.com/redis/go-redis/v9"
 )
 
 var (
-	database *sql.DB
-	ctx      context.Context
-	rdb      *goRedis.Client
-	logger   log.Logger
-	del      delivery
-	err      error
+	logger log.Logger
+	err    error
 )
 
 var existingUsers []api.LoginParams = []api.LoginParams{
@@ -47,84 +42,80 @@ var existingUsers []api.LoginParams = []api.LoginParams{
 	},
 }
 
+type fields struct {
+	serv *authMocks.MockService
+}
+
 type AuthenticateTestCase struct {
-	req api.LoginParams
-	err error
+	prepare func(f *fields)
+	req     api.LoginParams
+	err     error
 }
 
 type RegisterTestCase struct {
-	req api.RegisterParams
-	err error
+	prepare func(f *fields)
+	req     api.RegisterParams
+	err     error
 }
 
 type LogoutTestCase struct {
-	cookie *http.Cookie
-	err    error
-}
-
-func TestMain(m *testing.M) {
-	logger = log.New()
-	ctx = context.Background()
-
-	if database, err = db.New(logger); err != nil {
-		os.Exit(1)
-	}
-
-	if rdb, err = redis.NewRedisClient(logger, ctx); err != nil {
-		os.Exit(1)
-	}
-
-	del = delivery{auth.NewService(auth.NewRepository(database, rdb, ctx, logger)), logger}
-
-	os.Exit(m.Run())
+	prepare func(f *fields)
+	cookie  *http.Cookie
+	err     error
 }
 
 func TestAuthenticate(t *testing.T) {
 	tests := []AuthenticateTestCase{
 		{
+			prepare: func(f *fields) {
+				f.serv.EXPECT().Authenticate(existingUsers[0].Email, existingUsers[0].Password).
+					Return(models.User{
+						Id:             2,
+						Username:       "vitya",
+						Email:          existingUsers[0].Email,
+						HashedPassword: "hashed_pswd",
+						Name:           "Vitya",
+						ProfileImage:   "img.png",
+						WebsiteUrl:     "www.vk.ru",
+						AccountType:    "personal",
+					}, auth.SessionParams{}, nil)
+			},
 			req: existingUsers[0],
 			err: nil,
 		},
 		{
-			req: existingUsers[1],
-			err: nil,
-		},
-		{
-			req: existingUsers[2],
-			err: nil,
-		},
-		{
-			req: existingUsers[3],
-			err: nil,
-		},
-		{
+			prepare: func(f *fields) {
+				f.serv.EXPECT().Authenticate("123@vk.com", "12345678").
+					Return(models.User{}, auth.SessionParams{}, auth.WrongPasswordOrLoginError)
+			},
 			req: api.LoginParams{
 				Email:    "123@vk.com",
 				Password: "12345678",
 			},
 			err: mw.ErrUserNotFound,
 		},
-		{
-			req: api.LoginParams{
-				Email:    "iu7@vk.com",
-				Password: "12345678910",
-			},
-			err: mw.ErrUserNotFound,
-		},
 	}
 
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	for testNum, test := range tests {
+		f := fields{serv: authMocks.NewMockService(ctrl)}
+		if test.prepare != nil {
+			test.prepare(&f)
+		}
+
+		del := delivery{f.serv, logger}
+
 		url := "http://127.0.0.1/api/auth/login"
 		tmp, _ := json.Marshal(test.req)
 		body := strings.NewReader(string(tmp))
 
-		req := httptest.NewRequest("POST", url, body)
+		req := httptest.NewRequest(http.MethodPost, url, body)
 		w := httptest.NewRecorder()
-
 		err = del.Authenticate(w, req, nil)
-
 		if err != test.err {
-			t.Errorf("[%d] \nexpected %d, \nerr %d", testNum, test.err, err)
+			t.Errorf("\n[%d] \nExpected: %s\nGot: %s", testNum, test.err, err)
 		}
 	}
 }
@@ -132,6 +123,23 @@ func TestAuthenticate(t *testing.T) {
 func TestRegister(t *testing.T) {
 	tests := []RegisterTestCase{
 		{
+			prepare: func(f *fields) {
+				f.serv.EXPECT().Register(&api.RegisterParams{
+					Username: "test1",
+					Email:    "test1@test.ru",
+					Name:     "test",
+					Password: "12345",
+				}).Return(models.User{
+					Id:             2,
+					Username:       "test1",
+					Email:          "test1@test.ru",
+					HashedPassword: "hashed_pswd",
+					Name:           "test",
+					ProfileImage:   "",
+					WebsiteUrl:     "",
+					AccountType:    "personal",
+				}, auth.SessionParams{}, nil)
+			},
 			req: api.RegisterParams{
 				Username: "test1",
 				Email:    "test1@test.ru",
@@ -141,36 +149,105 @@ func TestRegister(t *testing.T) {
 			err: nil,
 		},
 		{
-			req: api.RegisterParams{
-				Username: "test2",
-				Email:    "test2@test.ru",
-				Name:     "test",
-				Password: "12345",
+			prepare: func(f *fields) {
+				f.serv.EXPECT().Register(&api.RegisterParams{
+					Username: "test3",
+					Email:    "test1@test.ru",
+					Name:     "test",
+					Password: "12345",
+				}).Return(models.User{
+					Id:             2,
+					Username:       "test3",
+					Email:          "test1@test.ru",
+					HashedPassword: "hashed_pswd",
+					Name:           "test",
+					ProfileImage:   "",
+					WebsiteUrl:     "",
+					AccountType:    "personal",
+				}, auth.SessionParams{}, auth.UserAlreadyExistsError)
 			},
-			err: nil,
-		},
-		{
 			req: api.RegisterParams{
 				Username: "test3",
 				Email:    "test1@test.ru",
 				Name:     "test",
 				Password: "12345",
 			},
-			err: mw.ErrBadRequest,
+			err: mw.ErrUserAlreadyExists,
+		},
+		{
+			prepare: func(f *fields) {
+				f.serv.EXPECT().Register(&api.RegisterParams{
+					Username: "test3",
+					Email:    "test1@test.ru",
+					Name:     "test",
+					Password: "12345",
+				}).Return(models.User{
+					Id:             2,
+					Username:       "test3",
+					Email:          "test1@test.ru",
+					HashedPassword: "hashed_pswd",
+					Name:           "test",
+					ProfileImage:   "",
+					WebsiteUrl:     "",
+					AccountType:    "personal",
+				}, auth.SessionParams{}, auth.DBConnectionError)
+			},
+			req: api.RegisterParams{
+				Username: "test3",
+				Email:    "test1@test.ru",
+				Name:     "test",
+				Password: "12345",
+			},
+			err: mw.ErrService,
+		},
+		{
+			prepare: func(f *fields) {
+				f.serv.EXPECT().Register(&api.RegisterParams{
+					Username: "test3",
+					Email:    "test1@test.ru",
+					Name:     "test",
+					Password: "12345",
+				}).Return(models.User{
+					Id:             2,
+					Username:       "test3",
+					Email:          "test1@test.ru",
+					HashedPassword: "hashed_pswd",
+					Name:           "test",
+					ProfileImage:   "",
+					WebsiteUrl:     "",
+					AccountType:    "personal",
+				}, auth.SessionParams{}, auth.UserCreationError)
+			},
+			req: api.RegisterParams{
+				Username: "test3",
+				Email:    "test1@test.ru",
+				Name:     "test",
+				Password: "12345",
+			},
+			err: mw.ErrService,
 		},
 	}
 
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
+
 	for testNum, test := range tests {
+		f := fields{serv: authMocks.NewMockService(ctrl)}
+		if test.prepare != nil {
+			test.prepare(&f)
+		}
+
+		del := delivery{f.serv, logger}
+
 		url := "http://127.0.0.1/api/auth/signup"
 		tmp, _ := json.Marshal(test.req)
 		body := strings.NewReader(string(tmp))
 
-		req := httptest.NewRequest("POST", url, body)
+		req := httptest.NewRequest(http.MethodPost, url, body)
 		w := httptest.NewRecorder()
-
 		err = del.Register(w, req, nil)
 		if err != test.err {
-			t.Errorf("[%d] \nexpected %d, \nerr %d", testNum, test.err, err)
+			t.Errorf("\n[%d] \nExpected: %s\nGot: %s", testNum, test.err, err)
 		}
 	}
 }
@@ -178,6 +255,7 @@ func TestRegister(t *testing.T) {
 func TestLogout(t *testing.T) {
 	tests := []LogoutTestCase{
 		{
+			prepare: func(f *fields) {},
 			cookie: &http.Cookie{
 				Name:  "JSESSIONID",
 				Value: "123456789",
@@ -185,6 +263,9 @@ func TestLogout(t *testing.T) {
 			err: mw.ErrBadRequest,
 		},
 		{
+			prepare: func(f *fields) {
+				f.serv.EXPECT().DeleteSession("1", "1$23456789").Return(auth.WrongPasswordOrLoginError)
+			},
 			cookie: &http.Cookie{
 				Name:  "JSESSIONID",
 				Value: "1$23456789",
@@ -192,41 +273,30 @@ func TestLogout(t *testing.T) {
 			err: mw.ErrUnauthorized,
 		},
 		{
-			cookie: &http.Cookie{},
-			err:    mw.ErrUserNotFound,
+			prepare: func(f *fields) {},
+			cookie:  &http.Cookie{},
+			err:     mw.ErrUserNotFound,
 		},
 	}
 
-	for _, user := range existingUsers {
-
-		url := "http://127.0.0.1/api/auth/login"
-		tmp, _ := json.Marshal(user)
-		body := strings.NewReader(string(tmp))
-
-		req := httptest.NewRequest("POST", url, body)
-		w := httptest.NewRecorder()
-
-		err = del.Authenticate(w, req, nil)
-		if err != nil {
-			t.Errorf("Unexpected error: %d", err)
-			break
-		}
-		cookie := w.Result().Cookies()[0]
-
-		tests = append(tests, LogoutTestCase{cookie, nil})
-
-	}
+	ctrl := gomock.NewController(t)
+	defer ctrl.Finish()
 
 	for testNum, test := range tests {
-		url := "http://127.0.0.1/api/auth/signup"
+		f := fields{serv: authMocks.NewMockService(ctrl)}
+		if test.prepare != nil {
+			test.prepare(&f)
+		}
 
-		req := httptest.NewRequest("DELETE", url, nil)
+		del := delivery{f.serv, logger}
+
+		const url = "http://127.0.0.1/api/auth/logout"
+		req := httptest.NewRequest(http.MethodDelete, url, nil)
 		req.AddCookie(test.cookie)
 		w := httptest.NewRecorder()
-
 		err = del.Logout(w, req, nil)
 		if err != test.err {
-			t.Errorf("[%d] \nexpected %d, \nerr %d", testNum, test.err, err)
+			t.Errorf("\n[%d] \nExpected: %s\nGot: %s", testNum, test.err, err)
 		}
 	}
 }

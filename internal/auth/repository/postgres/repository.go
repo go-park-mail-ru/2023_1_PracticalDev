@@ -29,7 +29,6 @@ func NewRepository(db *sql.DB, rdb *redis.Client, ctx context.Context, log log.L
 func scanUser(user *models.User, row *sql.Row) error {
 	var profileImage, websiteUrl sql.NullString
 	err := row.Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword, &user.Name, &profileImage, &websiteUrl, &user.AccountType)
-
 	user.WebsiteUrl = websiteUrl.String
 	user.ProfileImage = profileImage.String
 	return err
@@ -43,14 +42,14 @@ func (rep *repository) Authenticate(email, password string) (models.User, error)
 
 	err := scanUser(&user, row)
 	if err != nil {
-		if err.Error() == "sql: no rows in result set" {
+		if err == sql.ErrNoRows {
 			return models.User{}, auth.WrongPasswordOrLoginError
 		} else {
 			return models.User{}, auth.DBConnectionError
 		}
 	}
 
-	if err := hasher.CompareHashAndPassword(user.HashedPassword, password); err != nil {
+	if err = hasher.CompareHashAndPassword(user.HashedPassword, password); err != nil {
 		return models.User{}, auth.WrongPasswordOrLoginError
 	}
 

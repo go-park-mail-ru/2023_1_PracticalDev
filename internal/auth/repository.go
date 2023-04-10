@@ -15,7 +15,7 @@ var (
 )
 
 type Repository interface {
-	Authenticate(email, hashedPassword string) (models.User, error)
+	Authenticate(email, password string) (models.User, error)
 	SetSession(id string, session *models.Session, expiration time.Duration) error
 	CheckAuth(userId, sessionId string) (models.User, error)
 	Register(user *models.User) error
