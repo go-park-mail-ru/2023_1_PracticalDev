@@ -17,6 +17,7 @@ servers:
 tags:
   - name: Pins
   - name: Users
+  - name: Profile
   - name: Posts
   - name: Auth
   - name: Boards
@@ -44,6 +45,92 @@ paths:
       security:
         - cookieAuth: [ ]
 
+  /users/{id}/profile:
+    parameters:
+      - schema:
+          type: integer
+        name: id
+        in: path
+        required: true
+    get:
+      tags:
+        - Profile
+      summary: Get profile by user id
+      description: Get profile by user id
+      responses:
+        "200": # status code
+          description: A JSON of profile
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/FullUpdateProfile"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrResponseNoSuchUser"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
+  /profile:
+    put:
+      tags:
+        - Profile
+      summary: Full update of profile
+      description: Full update of profile
+      requestBody:
+        description: Multipart form with values and avatar file
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/FullUpdateProfile"
+      responses:
+        "200":
+          description: A JSON object of updated profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+    patch:
+      tags:
+        - Profile
+      summary: Partial update of profile
+      description: Partial update of profile
+      requestBody:
+        description: Multipart form with values and avatar file
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              $ref: "#/components/schemas/PartialUpdateProfile"
+      responses:
+        "200":
+          description: A JSON object of updated board.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Profile"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
   /posts:
     parameters:
       - schema:
@@ -66,10 +153,8 @@ paths:
               schema:
                 $ref: "#/components/schemas/Pin"
         "400":
-          description: Bad request.
           $ref: "#/components/responses/ErrResponseBadRequest"
         "401":
-          description: Not authorized.
           $ref: "#/components/responses/ErrUnauthorized"
       tags:
         - Posts
@@ -461,7 +546,6 @@ paths:
             Successfully created user.
             Log in to get SESSION cookie. 
         "400":
-          description: Bad request.
           $ref: "#/components/responses/ErrResponseBadRequest"
 
   /auth/login:
@@ -496,13 +580,10 @@ paths:
                 type: string
                 example: JSESSIONID=abcde12345; Path=/; HttpOnly
         "400":
-          description: Bad request.
           $ref: "#/components/responses/ErrResponseBadRequest"
         "401":
-          description: Not authorized.
           $ref: "#/components/responses/ErrUnauthorized"
         "404":
-          description: User not found
           $ref: "#/components/responses/ErrResponseNoSuchUser"
   /auth/logout:
     delete:
@@ -515,13 +596,10 @@ paths:
         "204":
           description: Successfully logged out.
         "400":
-          description: Bad request.
           $ref: "#/components/responses/ErrResponseBadRequest"
         "401":
-          description: Not authorized.
           $ref: "#/components/responses/ErrUnauthorized"
         "404":
-          description: Cookie not found
           $ref: "#/components/responses/ErrResponseNoSuchCookie"
   /auth:
     post:
@@ -541,13 +619,10 @@ paths:
                 type: string
                 example: JSESSIONID=abcde12345; Path=/; HttpOnly
         "400":
-          description: Bad request.
           $ref: "#/components/responses/ErrResponseBadRequest"
         "401":
-          description: Not authorized.
           $ref: "#/components/responses/ErrUnauthorized"
         "404":
-          description: Cookie not found
           $ref: "#/components/responses/ErrResponseNoSuchCookie"
 
 components:
@@ -567,6 +642,11 @@ components:
       minLength: 4
       maxLength: 40
       example: geogreck
+    Name:
+      type: string
+      minLength: 1
+      maxLength: 60
+      example: Geogre
     Link:
       type: string
       minLength: 4
@@ -584,6 +664,17 @@ components:
           $ref: "#/components/schemas/Email"
         username:
           $ref: "#/components/schemas/Username"
+    Profile:
+      type: object
+      properties:
+        username:
+          $ref: "#/components/schemas/Username"
+        name:
+          $ref: "#/components/schemas/Name"
+        profile_image:
+          type: string
+        website_url:
+          type: string
     Board:
       type: object
       properties:
@@ -672,6 +763,35 @@ components:
           type: array
           items:
             $ref: "#/components/schemas/Board"
+    FullUpdateProfile:
+      type: object
+      required:
+        - username
+        - name
+        - website_url
+        - bytes
+      properties:
+        username:
+          $ref: "#/components/schemas/Username"
+        name:
+          $ref: "#/components/schemas/Name"
+        website_url:
+          type: string
+        bytes:
+          type: string
+          format: binary
+    PartialUpdateProfile:
+      type: object
+      properties:
+        username:
+          $ref: "#/components/schemas/Username"
+        name:
+          $ref: "#/components/schemas/Name"
+        website_url:
+          type: string
+        bytes:
+          type: string
+          format: binary
     Pin:
       type: object
       properties:

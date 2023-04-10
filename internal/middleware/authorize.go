@@ -22,22 +22,19 @@ func NewAuthorizer(serv AuthService) func(h router.Handler) router.Handler {
 		return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 			sessionCookie, err := r.Cookie("JSESSIONID")
 			if err != nil {
-				w.WriteHeader(http.StatusUnauthorized)
-				return err
+				return ErrUnauthorized
 			}
 
 			tmp := strings.Split(sessionCookie.Value, "$")
 
 			if len(tmp) != 2 {
-				w.WriteHeader(http.StatusUnauthorized)
-				return http.ErrNoCookie
+				return ErrUnauthorized
 			}
 
 			userId := tmp[0]
 
 			if _, err = serv.CheckAuth(userId, sessionCookie.Value); err != nil {
-				w.WriteHeader(http.StatusUnauthorized)
-				return err
+				return ErrUnauthorized
 			}
 
 			p = append(p, httprouter.Param{Key: "user-id", Value: userId})

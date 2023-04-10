@@ -1,8 +1,8 @@
 package pins
 
 import (
-	"errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	"github.com/pkg/errors"
 )
 
 type CreateParams struct {

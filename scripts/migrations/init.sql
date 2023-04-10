@@ -4,7 +4,7 @@ CREATE TYPE privacy AS ENUM ('public', 'secret');
 CREATE TABLE IF NOT EXISTS users
 (
     id              serial       NOT NULL PRIMARY KEY,
-    username        text         NOT NULL,
+    username        text         NOT NULL UNIQUE,
     email           text         NOT NULL,
     hashed_password bytea        NOT NULL,
     name            varchar(256) NOT NULL,
@@ -35,9 +35,9 @@ CREATE TABLE IF NOT EXISTS pins
 
 CREATE TABLE IF NOT EXISTS boards_pins
 (
-    id          serial       NOT NULL PRIMARY KEY,
-    board_id     int       NOT NULL,
-    pin_id     int       NOT NULL
+    id       serial NOT NULL PRIMARY KEY,
+    board_id int    NOT NULL,
+    pin_id   int    NOT NULL
 );
 
 CREATE TABLE IF NOT EXISTS comments
@@ -66,12 +66,12 @@ ALTER TABLE ONLY boards_pins
 
 ALTER TABLE ONLY boards_pins
     DROP CONSTRAINT fk_board_pins_id,
-    ADD  CONSTRAINT fk_board_pins_id
-    FOREIGN KEY (pin_id) REFERENCES pins (id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_board_pins_id
+        FOREIGN KEY (pin_id) REFERENCES pins (id) ON DELETE CASCADE;
 
 ALTER TABLE ONLY boards_pins
-    ADD  CONSTRAINT unique_id
-    UNIQUE (board_id, pin_id);
+    ADD CONSTRAINT unique_id
+        UNIQUE (board_id, pin_id);
 
 ALTER TABLE ONLY pins
     ADD CONSTRAINT fk_pins_author_id
@@ -90,5 +90,5 @@ ALTER TABLE ONLY comments
 
 ALTER TABLE ONLY comments
     DROP CONSTRAINT fk_pins_pin_id,
-    ADD  CONSTRAINT fk_pins_pin_id
-    FOREIGN KEY (pin_id) REFERENCES pins (id) ON DELETE CASCADE;
+    ADD CONSTRAINT fk_pins_pin_id
+        FOREIGN KEY (pin_id) REFERENCES pins (id) ON DELETE CASCADE;

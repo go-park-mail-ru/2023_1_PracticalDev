@@ -10,9 +10,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
+	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 
@@ -22,18 +23,17 @@ func TestCreate(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		request    string
-		response   string
-		statusCode int
-		err        error
+		prepare  func(f *fields)
+		params   httprouter.Params
+		request  string
+		response string
+		err      error
 	}
 
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Create(&boards.CreateParams{
+				f.serv.EXPECT().Create(&_boards.CreateParams{
 					Name:        "b1",
 					Description: "d1",
 					Privacy:     "secret",
@@ -45,25 +45,22 @@ func TestCreate(t *testing.T) {
 					Privacy:     "secret",
 					UserId:      3}, nil)
 			},
-			params:     []httprouter.Param{{Key: "user-id", Value: "3"}},
-			request:    `{"name":"b1","description":"d1","privacy":"secret"}`,
-			response:   `{"id":1,"name":"b1","description":"d1","privacy":"secret","user_id":3}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			params:   []httprouter.Param{{Key: "user-id", Value: "3"}},
+			request:  `{"name":"b1","description":"d1","privacy":"secret"}`,
+			response: `{"id":1,"name":"b1","description":"d1","privacy":"secret","user_id":3}`,
+			err:      nil,
 		},
 		"invalid user id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "user-id", Value: "a"}},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidUserId,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{{Key: "user-id", Value: "a"}},
+			response: ``,
+			err:      mw.ErrInvalidUserIdParam,
 		},
 		"missing user id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidUserId,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{},
+			response: ``,
+			err:      mw.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -81,19 +78,13 @@ func TestCreate(t *testing.T) {
 			}
 
 			logger := log.New()
-			del := delivery{
-				serv: f.serv,
-				log:  logger,
-			}
+			del := delivery{serv: f.serv, log: logger}
 
 			req := httptest.NewRequest(http.MethodPost, "/boards", strings.NewReader(test.request))
 			rec := httptest.NewRecorder()
 			err := del.create(rec, req, test.params)
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
-			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
 			}
 			body, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(body), "\n") != test.response {
@@ -109,11 +100,10 @@ func TestList(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		response   string
-		statusCode int
-		err        error
+		prepare  func(f *fields)
+		params   httprouter.Params
+		response string
+		err      error
 	}
 
 	tests := map[string]testCase{
@@ -125,33 +115,29 @@ func TestList(t *testing.T) {
 					{Id: 5, Name: "b5", Description: "d5", Privacy: "public", UserId: 3},
 				}, nil)
 			},
-			params:     []httprouter.Param{{Key: "user-id", Value: "3"}},
-			response:   `{"boards":[{"id":1,"name":"b1","description":"d1","privacy":"secret","user_id":3},{"id":2,"name":"b2","description":"d2","privacy":"secret","user_id":3},{"id":5,"name":"b5","description":"d5","privacy":"public","user_id":3}]}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			params:   []httprouter.Param{{Key: "user-id", Value: "3"}},
+			response: `{"boards":[{"id":1,"name":"b1","description":"d1","privacy":"secret","user_id":3},{"id":2,"name":"b2","description":"d2","privacy":"secret","user_id":3},{"id":5,"name":"b5","description":"d5","privacy":"public","user_id":3}]}`,
+			err:      nil,
 		},
 		"no boards": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().List(3).Return([]models.Board{}, nil)
 			},
-			params:     []httprouter.Param{{Key: "user-id", Value: "3"}},
-			response:   `{"boards":[]}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			params:   []httprouter.Param{{Key: "user-id", Value: "3"}},
+			response: `{"boards":[]}`,
+			err:      nil,
 		},
 		"invalid user id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "user-id", Value: "a"}},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidUserId,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{{Key: "user-id", Value: "a"}},
+			response: ``,
+			err:      mw.ErrInvalidUserIdParam,
 		},
 		"missing user id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidUserId,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{},
+			response: ``,
+			err:      mw.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -180,9 +166,6 @@ func TestList(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 			body, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(body), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(body))
@@ -197,11 +180,10 @@ func TestGet(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		response   string
-		statusCode int
-		err        error
+		prepare  func(f *fields)
+		params   httprouter.Params
+		response string
+		err      error
 	}
 
 	tests := map[string]testCase{
@@ -215,33 +197,29 @@ func TestGet(t *testing.T) {
 					UserId:      1,
 				}, nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			response:   `{"id":3,"name":"n3","description":"d3","privacy":"secret","user_id":1}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			params:   []httprouter.Param{{Key: "board_id", Value: "3"}},
+			response: `{"id":3,"name":"n3","description":"d3","privacy":"secret","user_id":1}`,
+			err:      nil,
 		},
 		"invalid board id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidBoardIdParam,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{{Key: "board_id", Value: "a"}},
+			response: ``,
+			err:      mw.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidBoardIdParam,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{},
+			response: ``,
+			err:      mw.ErrInvalidBoardIdParam,
 		},
 		"board not found": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Get(3).Return(models.Board{}, boards.ErrBoardNotFound)
+				f.serv.EXPECT().Get(3).Return(models.Board{}, _boards.ErrBoardNotFound)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			response:   ``,
-			statusCode: http.StatusNotFound,
-			err:        boards.ErrBoardNotFound,
+			params:   []httprouter.Param{{Key: "board_id", Value: "3"}},
+			response: ``,
+			err:      mw.ErrBoardNotFound,
 		},
 	}
 
@@ -270,11 +248,6 @@ func TestGet(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
-
 			body, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(body), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(body))
@@ -289,18 +262,17 @@ func TestFullUpdate(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		request    string
-		response   string
-		statusCode int
-		err        error
+		prepare  func(f *fields)
+		params   httprouter.Params
+		request  string
+		response string
+		err      error
 	}
 
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().FullUpdate(&boards.FullUpdateParams{
+				f.serv.EXPECT().FullUpdate(&_boards.FullUpdateParams{
 					Id:          1,
 					Name:        "b1",
 					Description: "d1",
@@ -312,25 +284,22 @@ func TestFullUpdate(t *testing.T) {
 					Privacy:     "secret",
 					UserId:      3}, nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "1"}},
-			request:    `{"name":"b1","description":"d1","privacy":"secret"}`,
-			response:   `{"id":1,"name":"b1","description":"d1","privacy":"secret","user_id":3}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			params:   []httprouter.Param{{Key: "board_id", Value: "1"}},
+			request:  `{"name":"b1","description":"d1","privacy":"secret"}`,
+			response: `{"id":1,"name":"b1","description":"d1","privacy":"secret","user_id":3}`,
+			err:      nil,
 		},
 		"invalid board id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidBoardIdParam,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{{Key: "board_id", Value: "a"}},
+			response: ``,
+			err:      mw.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidBoardIdParam,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{},
+			response: ``,
+			err:      mw.ErrInvalidBoardIdParam,
 		},
 	}
 
@@ -359,9 +328,6 @@ func TestFullUpdate(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 			body, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(body), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(body))
@@ -376,18 +342,17 @@ func TestPartialUpdate(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		request    string
-		response   string
-		statusCode int
-		err        error
+		prepare  func(f *fields)
+		params   httprouter.Params
+		request  string
+		response string
+		err      error
 	}
 
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().PartialUpdate(&boards.PartialUpdateParams{
+				f.serv.EXPECT().PartialUpdate(&_boards.PartialUpdateParams{
 					Id:                1,
 					Name:              "b1",
 					UpdateName:        true,
@@ -402,25 +367,22 @@ func TestPartialUpdate(t *testing.T) {
 					Privacy:     "secret",
 					UserId:      3}, nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "1"}},
-			request:    `{"name":"b1","description":"d1","privacy":"secret"}`,
-			response:   `{"id":1,"name":"b1","description":"d1","privacy":"secret","user_id":3}`,
-			statusCode: http.StatusOK,
-			err:        nil,
+			params:   []httprouter.Param{{Key: "board_id", Value: "1"}},
+			request:  `{"name":"b1","description":"d1","privacy":"secret"}`,
+			response: `{"id":1,"name":"b1","description":"d1","privacy":"secret","user_id":3}`,
+			err:      nil,
 		},
 		"invalid board id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidBoardIdParam,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{{Key: "board_id", Value: "a"}},
+			response: ``,
+			err:      mw.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{},
-			response:   ``,
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidBoardIdParam,
+			prepare:  func(f *fields) {},
+			params:   []httprouter.Param{},
+			response: ``,
+			err:      mw.ErrInvalidBoardIdParam,
 		},
 	}
 
@@ -449,9 +411,6 @@ func TestPartialUpdate(t *testing.T) {
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
-			}
 			body, _ := io.ReadAll(rec.Body)
 			if strings.Trim(string(body), "\n") != test.response {
 				t.Errorf("\nExpected: %s\nGot: %s", test.response, string(body))
@@ -466,10 +425,9 @@ func TestDelete(t *testing.T) {
 	}
 
 	type testCase struct {
-		prepare    func(f *fields)
-		params     httprouter.Params
-		statusCode int
-		err        error
+		prepare func(f *fields)
+		params  httprouter.Params
+		err     error
 	}
 
 	tests := map[string]testCase{
@@ -477,29 +435,25 @@ func TestDelete(t *testing.T) {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Delete(3).Return(nil)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			statusCode: http.StatusOK,
-			err:        nil,
+			params: []httprouter.Param{{Key: "board_id", Value: "3"}},
+			err:    nil,
 		},
 		"invalid board id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{{Key: "id", Value: "a"}},
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidBoardIdParam,
+			prepare: func(f *fields) {},
+			params:  []httprouter.Param{{Key: "board_id", Value: "a"}},
+			err:     mw.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
-			prepare:    func(f *fields) {},
-			params:     []httprouter.Param{},
-			statusCode: http.StatusBadRequest,
-			err:        ErrInvalidBoardIdParam,
+			prepare: func(f *fields) {},
+			params:  []httprouter.Param{},
+			err:     mw.ErrInvalidBoardIdParam,
 		},
 		"board not found": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Delete(3).Return(boards.ErrBoardNotFound)
+				f.serv.EXPECT().Delete(3).Return(_boards.ErrBoardNotFound)
 			},
-			params:     []httprouter.Param{{Key: "id", Value: "3"}},
-			statusCode: http.StatusNotFound,
-			err:        boards.ErrBoardNotFound,
+			params: []httprouter.Param{{Key: "board_id", Value: "3"}},
+			err:    mw.ErrBoardNotFound,
 		},
 	}
 
@@ -527,9 +481,6 @@ func TestDelete(t *testing.T) {
 			err := del.delete(rec, req, test.params)
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
-			}
-			if rec.Code != test.statusCode {
-				t.Errorf("\nExpected: %d\nGot: %d", test.statusCode, rec.Code)
 			}
 		})
 	}

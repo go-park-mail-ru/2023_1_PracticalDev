@@ -6,14 +6,14 @@ import (
 	"strconv"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/julienschmidt/httprouter"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, serv Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv Service) {
 	del := delivery{serv, logger}
 
-	mux.GET("/users/:id", middleware.HandleLogger(middleware.ErrorHandler(authorizer(middleware.CorsChecker(del.getUser)), logger), logger))
+	mux.GET("/users/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.getUser)), logger), logger))
 }
 
 type delivery struct {
@@ -22,23 +22,20 @@ type delivery struct {
 }
 
 func (del delivery) getUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	str_id := p.ByName("id")
-	id, err := strconv.Atoi(str_id)
+	strId := p.ByName("id")
+	id, err := strconv.Atoi(strId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return mw.ErrInvalidUserIdParam
 	}
 
 	user, err := del.serv.GetUser(id)
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return err
+		return mw.ErrService
 	}
 
 	data, err := json.Marshal(user)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return mw.ErrCreateResponse
 	}
 
 	_, err = w.Write(data)

@@ -5,6 +5,7 @@ import (
 	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	"github.com/pkg/errors"
 )
 
 type postgresRepository struct {
@@ -73,7 +74,11 @@ func (rep *postgresRepository) Get(id int) (models.Board, error) {
 	err := row.Scan(&board.Id, &board.Name, &description, &board.Privacy, &board.UserId)
 	board.Description = description.String
 	if err != nil {
-		err = _boards.ErrDb
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Board{}, _boards.ErrBoardNotFound
+		} else {
+			return models.Board{}, _boards.ErrDb
+		}
 	}
 	return board, err
 }
@@ -97,7 +102,11 @@ func (rep *postgresRepository) FullUpdate(params *_boards.FullUpdateParams) (mod
 	err := row.Scan(&updatedBoard.Id, &updatedBoard.Name, &description, &updatedBoard.Privacy, &updatedBoard.UserId)
 	updatedBoard.Description = description.String
 	if err != nil {
-		err = _boards.ErrDb
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Board{}, _boards.ErrBoardNotFound
+		} else {
+			return models.Board{}, _boards.ErrDb
+		}
 	}
 	return updatedBoard, err
 }
@@ -124,7 +133,11 @@ func (rep *postgresRepository) PartialUpdate(params *_boards.PartialUpdateParams
 	err := row.Scan(&updatedBoard.Id, &updatedBoard.Name, &description, &updatedBoard.Privacy, &updatedBoard.UserId)
 	updatedBoard.Description = description.String
 	if err != nil {
-		err = _boards.ErrDb
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Board{}, _boards.ErrBoardNotFound
+		} else {
+			return models.Board{}, _boards.ErrDb
+		}
 	}
 	return updatedBoard, err
 }

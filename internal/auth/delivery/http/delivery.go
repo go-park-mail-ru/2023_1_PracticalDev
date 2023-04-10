@@ -1,50 +1,46 @@
-package auth
+package http
 
 import (
 	"encoding/json"
-	"errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
+	"github.com/pkg/errors"
 	"net/http"
 	"strings"
 	"time"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models/api"
 	"github.com/julienschmidt/httprouter"
 )
 
-var (
-	BadRequestError  = errors.New("bad request")
-	BadSessionCookie = errors.New("bad session cookie")
-)
-
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv auth.Service) {
 	del := delivery{serv, logger}
-	mux.POST("/auth/login", middleware.HandleLogger(middleware.ErrorHandler(del.Authenticate, logger), logger))
-	mux.DELETE("/auth/logout", middleware.HandleLogger(middleware.ErrorHandler(del.Logout, logger), logger))
-	mux.POST("/auth/signup", middleware.HandleLogger(middleware.ErrorHandler(del.Register, logger), logger))
-	mux.GET("/auth/me", middleware.HandleLogger(middleware.ErrorHandler(del.CheckAuth, logger), logger))
+	mux.POST("/auth/login", mw.HandleLogger(mw.ErrorHandler(del.Authenticate, logger), logger))
+	mux.DELETE("/auth/logout", mw.HandleLogger(mw.ErrorHandler(del.Logout, logger), logger))
+	mux.POST("/auth/signup", mw.HandleLogger(mw.ErrorHandler(del.Register, logger), logger))
+	mux.GET("/auth/me", mw.HandleLogger(mw.ErrorHandler(del.CheckAuth, logger), logger))
 }
 
 type delivery struct {
-	serv Service
+	serv auth.Service
 	log  log.Logger
 }
 
 func parseSessionCookie(c *http.Cookie) (string, string, error) {
 	tmp := strings.Split(c.Value, "$")
 	if len(tmp) != 2 {
-		return "", "", BadSessionCookie
+		return "", "", mw.ErrBadSessionCookie
 	}
 
 	return tmp[0], c.Value, nil
 }
 
-func createSessionCookie(s SessionParams) *http.Cookie {
+func createSessionCookie(s auth.SessionParams) *http.Cookie {
 	return &http.Cookie{
 		Name:     "JSESSIONID",
-		Value:    s.token,
-		Expires:  time.Now().Add(s.livingTime),
+		Value:    s.Token,
+		Expires:  time.Now().Add(s.LivingTime),
 		HttpOnly: true,
 		Path:     "/",
 	}
@@ -53,82 +49,69 @@ func createSessionCookie(s SessionParams) *http.Cookie {
 func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-
 	data := api.LoginParams{}
-
 	if err := decoder.Decode(&data); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return BadRequestError
+		return mw.ErrBadRequest
 	}
 
 	user, session, err := del.serv.Authenticate(data.Email, data.Password)
 	if err != nil {
-		if errors.Is(err, WrongPasswordOrLoginError) {
-			w.WriteHeader(http.StatusNotFound)
-			return nil
+		if errors.Is(err, auth.WrongPasswordOrLoginError) {
+			return mw.ErrUserNotFound
 		} else {
-			log.New().Error(err)
-			w.WriteHeader(http.StatusInternalServerError)
+			del.log.Error(err)
+			return mw.ErrService
 		}
-		return err
 	}
 
 	sessionCookie := createSessionCookie(session)
-
 	http.SetCookie(w, sessionCookie)
 	encoder := json.NewEncoder(w)
-
 	if err := encoder.Encode(user); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		del.log.Error(err)
-		return err
+		return mw.ErrCreateResponse
 	}
-
 	return nil
 }
 
 func (del *delivery) CheckAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	sessionCookie, err := r.Cookie("JSESSIONID")
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return err
+		return mw.ErrBadSessionCookie
 	}
 
 	userId, sessionId, err := parseSessionCookie(sessionCookie)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return mw.ErrBadRequest
 	}
 
 	user, err := del.serv.CheckAuth(userId, sessionId)
 	if err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return err
+		return mw.ErrUnauthorized
 	}
 
 	decoder := json.NewEncoder(w)
 	w.Header().Set("Content-Type", "application/json")
 
 	if err = decoder.Encode(user); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		return err
+		return mw.ErrCreateResponse
 	}
 
-	w.WriteHeader(http.StatusOK)
 	return nil
 }
 
 func (del *delivery) Logout(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	sessionCookie, err := r.Cookie("JSESSIONID")
 	if err != nil {
-		w.WriteHeader(http.StatusNotFound)
-		return err
+		return mw.ErrUserNotFound
 	}
 
 	userId, sessionId, err := parseSessionCookie(sessionCookie)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return BadRequestError
+		return mw.ErrBadRequest
+	}
+
+	if err = del.serv.DeleteSession(userId, sessionId); err != nil {
+		return mw.ErrUnauthorized
 	}
 
 	newCookie := &http.Cookie{
@@ -138,15 +121,8 @@ func (del *delivery) Logout(w http.ResponseWriter, r *http.Request, p httprouter
 		MaxAge:   -1,
 		HttpOnly: true,
 	}
-
-	if err = del.serv.DeleteSession(userId, sessionId); err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-		return err
-	}
-
 	http.SetCookie(w, newCookie)
-	w.WriteHeader(http.StatusNoContent)
-	return nil
+	return mw.ErrNoContent
 }
 
 func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -155,22 +131,18 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 	params := api.RegisterParams{}
 
 	if err := decoder.Decode(&params); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return err
+		return mw.ErrParseJson
 	}
 
 	user, sessionParams, err := del.serv.Register(&params)
 	if err != nil {
 		switch {
-		case errors.Is(err, UserAlreadyExistsError):
-			w.WriteHeader(http.StatusBadRequest)
-			return nil
-		case errors.Is(err, UserCreationError):
-			w.WriteHeader(http.StatusInternalServerError)
-			return err
-		case errors.Is(err, DBConnectionError):
-			w.WriteHeader(http.StatusInternalServerError)
-			return err
+		case errors.Is(err, auth.UserAlreadyExistsError):
+			return mw.ErrUserAlreadyExists
+		case errors.Is(err, auth.UserCreationError):
+			return mw.ErrService
+		case errors.Is(err, auth.DBConnectionError):
+			return mw.ErrService
 		}
 	}
 
@@ -180,8 +152,7 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 
 	encoder := json.NewEncoder(w)
 	if err := encoder.Encode(user); err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		del.log.Error(err)
+		return mw.ErrCreateResponse
 	}
 
 	return nil
