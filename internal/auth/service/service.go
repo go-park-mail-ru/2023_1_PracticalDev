@@ -37,7 +37,7 @@ func (serv *service) Authenticate(email, password string) (models.User, auth.Ses
 func (serv *service) CreateSession(userId int) auth.SessionParams {
 	token := strconv.Itoa(userId) + "$" + uuid.New().String()
 	livingTime := 5 * time.Hour
-	return auth.SessionParams{token, livingTime}
+	return auth.SessionParams{Token: token, LivingTime: livingTime}
 }
 
 func (serv *service) SetSession(token string, session *models.Session, expiration time.Duration) error {
