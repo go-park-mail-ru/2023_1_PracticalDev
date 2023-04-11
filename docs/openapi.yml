@@ -18,10 +18,10 @@ tags:
   - name: Pins
   - name: Users
   - name: Profile
-  - name: Posts
   - name: Auth
   - name: Boards
   - name: BoardPins
+  - name: Likes
 
 paths:
   /users/{user_id}:
@@ -131,33 +131,114 @@ paths:
       security:
         - cookieAuth: [ ]
 
-  /posts:
+  /pins/{id}/like:
     parameters:
       - schema:
           type: integer
-        name: page
-        in: query
-        required: false
-      - schema:
-          type: integer
-        name: limit
-        in: query
-        required: false
-    get:
-      summary: Returns a segment of posts according to the page and the number of pins in one page (limit parameter)
+        name: id
+        description: pin id
+        in: path
+        required: true
+    post:
+      tags:
+        - Likes
+      summary: Like pin by id
+      description: Like pin by id
       responses:
-        "200": # status code
-          description: A JSON array of pins
-          content:
-            application/json:
-              schema:
-                $ref: "#/components/schemas/Pin"
+        "200":
+          description: Pin liked successfully.
         "400":
           $ref: "#/components/responses/ErrResponseBadRequest"
         "401":
           $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrResponseNoSuchPin"
+        "409":
+          $ref: "#/components/responses/ErrResponseAlreadyLiked"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+    delete:
       tags:
-        - Posts
+        - Likes
+      summary: Unlike pin by id
+      description: Unlike pin by id
+      responses:
+        "200":
+          description: Pin unliked successfully.
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrResponseNoSuchPin"
+        "409":
+          $ref: "#/components/responses/ErrResponseAlreadyUnliked"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
+  /pins/{id}/likes:
+    parameters:
+      - schema:
+          type: integer
+        name: id
+        description: pin id
+        in: path
+        required: true
+    get:
+      tags:
+        - Likes
+      summary: Returns likes by pin id
+      description: Returns likes by pin id
+      responses:
+        "200":
+          description: A JSON with likes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Likes"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrResponseNoSuchPin"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
+  /users/{id}/likes:
+    parameters:
+      - schema:
+          type: integer
+        name: id
+        description: user id
+        in: path
+        required: true
+    get:
+      tags:
+        - Likes
+      summary: Returns likes by user id
+      description: Returns likes by user id
+      responses:
+        "200":
+          description: A JSON with likes
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Likes"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrResponseNoSuchPin"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
       security:
         - cookieAuth: [ ]
 
@@ -675,6 +756,23 @@ components:
           type: string
         website_url:
           type: string
+    Like:
+      type: object
+      properties:
+        pin_id:
+          type: integer
+        author_id:
+          type: integer
+        created_at:
+          type: string
+          example: "2023-04-10T21:18:09.058657Z"
+    Likes:
+      type: object
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/Like"
     Board:
       type: object
       properties:
@@ -876,6 +974,24 @@ components:
             $ref: "#/components/schemas/Error"
     ErrResponseNoSuchCookie:
       description: Cookie not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrResponseNoSuchPin:
+      description: Pin not found
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrResponseAlreadyLiked:
+      description: Pin already liked
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrResponseAlreadyUnliked:
+      description: Pin already unliked
       content:
         application/problem+json:
           schema:
