@@ -19,6 +19,7 @@ var (
 	ErrBoardNotFound       = errors.New("board not found")
 	ErrPinNotFound         = errors.New("pin not found")
 	ErrUserNotFound        = errors.New("user not found")
+	ErrLikeNotFound        = errors.New("no such like")
 	ErrBadParams           = errors.New("bad params")
 	ErrBadRequest          = errors.New("bad request")
 	ErrBadSessionCookie    = errors.New("bad session cookie")
@@ -31,6 +32,7 @@ var (
 	ErrUnauthorized        = errors.New("unauthorized")
 	ErrNoContent           = errors.New("no content")
 	ErrForbidden           = errors.New("access denied")
+	ErrLikeAlreadyExists   = errors.New("like already exists")
 )
 
 var statusCodes = map[error]int{
@@ -53,6 +55,8 @@ var statusCodes = map[error]int{
 	ErrUnauthorized:        http.StatusUnauthorized,
 	ErrNoContent:           http.StatusNoContent,
 	ErrForbidden:           http.StatusForbidden,
+	ErrLikeAlreadyExists:   http.StatusConflict,
+	ErrLikeNotFound:        http.StatusConflict,
 }
 
 func ErrorHandler(handler func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error, log log.Logger) httprouter.Handle {

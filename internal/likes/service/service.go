@@ -14,10 +14,58 @@ func NewService(rep likes.Repository) likes.Service {
 }
 
 func (serv *service) Like(pinId, authorId int) error {
+	exists, err := serv.rep.PinExists(pinId)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return likes.ErrPinNotFound
+	}
+
+	exists, err = serv.rep.UserExists(authorId)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return likes.ErrAuthorNotFound
+	}
+
+	exists, err = serv.rep.LikeExists(pinId, authorId)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return likes.ErrLikeAlreadyExists
+	}
+
 	return serv.rep.Create(pinId, authorId)
 }
 
 func (serv *service) Unlike(pinId, authorId int) error {
+	exists, err := serv.rep.PinExists(pinId)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return likes.ErrPinNotFound
+	}
+
+	exists, err = serv.rep.UserExists(authorId)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return likes.ErrAuthorNotFound
+	}
+
+	exists, err = serv.rep.LikeExists(pinId, authorId)
+	if err != nil {
+		return err
+	}
+	if !exists {
+		return likes.ErrLikeNotFound
+	}
+
 	return serv.rep.Delete(pinId, authorId)
 }
 

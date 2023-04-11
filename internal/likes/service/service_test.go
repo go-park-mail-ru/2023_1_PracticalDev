@@ -29,7 +29,12 @@ func TestLike(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Create(f.pinId, f.authorId).Return(nil)
+				gomock.InOrder(
+					f.repo.EXPECT().PinExists(f.pinId).Return(true, nil),
+					f.repo.EXPECT().UserExists(f.authorId).Return(true, nil),
+					f.repo.EXPECT().LikeExists(f.pinId, f.authorId).Return(false, nil),
+					f.repo.EXPECT().Create(f.pinId, f.authorId).Return(nil),
+				)
 			},
 			pinId:    3,
 			authorId: 2,
@@ -37,15 +42,24 @@ func TestLike(t *testing.T) {
 		},
 		"like already exists": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Create(f.pinId, f.authorId).Return(pkgLikes.ErrLikeAlreadyExists)
+				gomock.InOrder(
+					f.repo.EXPECT().PinExists(f.pinId).Return(true, nil),
+					f.repo.EXPECT().UserExists(f.authorId).Return(true, nil),
+					f.repo.EXPECT().LikeExists(f.pinId, f.authorId).Return(true, nil),
+				)
 			},
 			pinId:    3,
 			authorId: 2,
 			err:      pkgLikes.ErrLikeAlreadyExists,
 		},
-		"db error": {
+		"db error in Create": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Create(f.pinId, f.authorId).Return(pkgLikes.ErrDb)
+				gomock.InOrder(
+					f.repo.EXPECT().PinExists(f.pinId).Return(true, nil),
+					f.repo.EXPECT().UserExists(f.authorId).Return(true, nil),
+					f.repo.EXPECT().LikeExists(f.pinId, f.authorId).Return(false, nil),
+					f.repo.EXPECT().Create(f.pinId, f.authorId).Return(pkgLikes.ErrDb),
+				)
 			},
 			pinId:    3,
 			authorId: 2,
@@ -216,7 +230,12 @@ func TestDelete(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Delete(f.pinId, f.authorId).Return(nil)
+				gomock.InOrder(
+					f.repo.EXPECT().PinExists(f.pinId).Return(true, nil),
+					f.repo.EXPECT().UserExists(f.authorId).Return(true, nil),
+					f.repo.EXPECT().LikeExists(f.pinId, f.authorId).Return(true, nil),
+					f.repo.EXPECT().Delete(f.pinId, f.authorId).Return(nil),
+				)
 			},
 			pinId:    3,
 			authorId: 2,
@@ -224,15 +243,24 @@ func TestDelete(t *testing.T) {
 		},
 		"like not found": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Delete(f.pinId, f.authorId).Return(pkgLikes.ErrLikeNotFound)
+				gomock.InOrder(
+					f.repo.EXPECT().PinExists(f.pinId).Return(true, nil),
+					f.repo.EXPECT().UserExists(f.authorId).Return(true, nil),
+					f.repo.EXPECT().LikeExists(f.pinId, f.authorId).Return(false, nil),
+				)
 			},
 			pinId:    3,
 			authorId: 2,
 			err:      pkgLikes.ErrLikeNotFound,
 		},
-		"db error": {
+		"db error in Delete": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Delete(f.pinId, f.authorId).Return(pkgLikes.ErrDb)
+				gomock.InOrder(
+					f.repo.EXPECT().PinExists(f.pinId).Return(true, nil),
+					f.repo.EXPECT().UserExists(f.authorId).Return(true, nil),
+					f.repo.EXPECT().LikeExists(f.pinId, f.authorId).Return(true, nil),
+					f.repo.EXPECT().Delete(f.pinId, f.authorId).Return(pkgLikes.ErrDb),
+				)
 			},
 			pinId:    3,
 			authorId: 2,

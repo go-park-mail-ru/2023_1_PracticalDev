@@ -8,7 +8,9 @@ import (
 
 var (
 	ErrDb                = errors.New("db error")
-	ErrLikeNotFound      = errors.New("like not found")
+	ErrPinNotFound       = errors.New("no such pin")
+	ErrAuthorNotFound    = errors.New("no such author")
+	ErrLikeNotFound      = errors.New("no such like")
 	ErrLikeAlreadyExists = errors.New("like already exists")
 )
 
@@ -18,4 +20,8 @@ type Repository interface {
 
 	ListByAuthor(authorId int) ([]models.Like, error)
 	ListByPin(pinId int) ([]models.Like, error)
+
+	PinExists(pinId int) (bool, error)
+	UserExists(userId int) (bool, error)
+	LikeExists(pinId, authorId int) (bool, error)
 }

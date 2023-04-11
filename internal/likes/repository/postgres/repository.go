@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"database/sql"
-
 	pkgLikes "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
@@ -27,9 +26,9 @@ func (repo *repository) Create(pinId, authorId int) error {
 	}
 	rowsAffected, err := res.RowsAffected()
 	if err != nil || rowsAffected < 1 {
-		return pkgLikes.ErrLikeAlreadyExists
+		return pkgLikes.ErrDb
 	}
-	return err
+	return nil
 }
 
 const deleteCmd = `DELETE FROM pin_likes 
@@ -42,9 +41,9 @@ func (repo *repository) Delete(pinId, authorId int) error {
 	}
 	rowsAffected, err := res.RowsAffected()
 	if err != nil || rowsAffected < 1 {
-		return pkgLikes.ErrLikeNotFound
+		return pkgLikes.ErrDb
 	}
-	return err
+	return nil
 }
 
 const listByAuthorCmd = `SELECT pin_id, author_id, created_at
@@ -91,4 +90,49 @@ func (repo *repository) ListByPin(pinId int) ([]models.Like, error) {
 		likes = append(likes, like)
 	}
 	return likes, nil
+}
+
+const pinExistsCmd = `SELECT EXISTS(SELECT id
+									FROM pins
+									WHERE id = $1) AS exists;`
+
+func (repo *repository) PinExists(pinId int) (bool, error) {
+	row := repo.db.QueryRow(pinExistsCmd, pinId)
+
+	var exists bool
+	err := row.Scan(&exists)
+	if err != nil {
+		return false, pkgLikes.ErrDb
+	}
+	return exists, nil
+}
+
+const userExistsCmd = `SELECT EXISTS(SELECT id
+										FROM users
+										WHERE id = $1) AS exists;`
+
+func (repo *repository) UserExists(userId int) (bool, error) {
+	row := repo.db.QueryRow(userExistsCmd, userId)
+
+	var exists bool
+	err := row.Scan(&exists)
+	if err != nil {
+		return false, pkgLikes.ErrDb
+	}
+	return exists, nil
+}
+
+const likeExistsCmd = `SELECT EXISTS(SELECT pin_id
+										FROM pin_likes
+										WHERE pin_id = $1 AND author_id = $2) AS exists;`
+
+func (repo *repository) LikeExists(pinId, authorId int) (bool, error) {
+	row := repo.db.QueryRow(likeExistsCmd, pinId, authorId)
+
+	var exists bool
+	err := row.Scan(&exists)
+	if err != nil {
+		return false, pkgLikes.ErrDb
+	}
+	return exists, nil
 }

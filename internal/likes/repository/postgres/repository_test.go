@@ -40,7 +40,7 @@ func TestCreate(t *testing.T) {
 			authorId: 2,
 			err:      nil,
 		},
-		"like already exists": {
+		"rows affected error": {
 			prepare: func(f *fields) {
 				f.mock.
 					ExpectExec(regexp.QuoteMeta(createCmd)).
@@ -49,7 +49,7 @@ func TestCreate(t *testing.T) {
 			},
 			pinId:    3,
 			authorId: 2,
-			err:      pkgLikes.ErrLikeAlreadyExists,
+			err:      pkgLikes.ErrDb,
 		},
 		"exec error": {
 			prepare: func(f *fields) {
@@ -298,7 +298,7 @@ func TestDelete(t *testing.T) {
 			authorId: 2,
 			err:      nil,
 		},
-		"like not found": {
+		"rows affected error": {
 			prepare: func(f *fields) {
 				f.mock.
 					ExpectExec(regexp.QuoteMeta(deleteCmd)).
@@ -307,7 +307,7 @@ func TestDelete(t *testing.T) {
 			},
 			pinId:    3,
 			authorId: 2,
-			err:      pkgLikes.ErrLikeNotFound,
+			err:      pkgLikes.ErrDb,
 		},
 		"exec error": {
 			prepare: func(f *fields) {

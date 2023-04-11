@@ -40,7 +40,20 @@ func (del *delivery) like(w http.ResponseWriter, r *http.Request, p httprouter.P
 		return mw.ErrInvalidPinIdParam
 	}
 
-	return del.serv.Like(pinId, userId)
+	err = del.serv.Like(pinId, userId)
+	if err != nil {
+		switch err {
+		case pkgLikes.ErrLikeAlreadyExists:
+			return mw.ErrLikeAlreadyExists
+		case pkgLikes.ErrPinNotFound:
+			return mw.ErrPinNotFound
+		case pkgLikes.ErrAuthorNotFound:
+			return mw.ErrUserNotFound
+		default:
+			return mw.ErrService
+		}
+	}
+	return nil
 }
 
 func (del *delivery) unlike(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -56,7 +69,20 @@ func (del *delivery) unlike(w http.ResponseWriter, r *http.Request, p httprouter
 		return mw.ErrInvalidPinIdParam
 	}
 
-	return del.serv.Unlike(pinId, userId)
+	err = del.serv.Unlike(pinId, userId)
+	if err != nil {
+		switch err {
+		case pkgLikes.ErrLikeNotFound:
+			return mw.ErrLikeNotFound
+		case pkgLikes.ErrPinNotFound:
+			return mw.ErrPinNotFound
+		case pkgLikes.ErrAuthorNotFound:
+			return mw.ErrUserNotFound
+		default:
+			return mw.ErrService
+		}
+	}
+	return nil
 }
 
 func (del *delivery) listByPin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
