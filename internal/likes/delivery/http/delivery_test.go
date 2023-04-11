@@ -100,7 +100,7 @@ func TestListByAuthor(t *testing.T) {
 				}, nil)
 			},
 			params:   []httprouter.Param{{Key: "id", Value: "12"}},
-			response: `{"likes":[{"pin_id":2,"author_id":12,"created_at":"2023-04-11T00:48:34+03:00"},{"pin_id":3,"author_id":12,"created_at":"2023-04-11T00:43:20+03:00"},{"pin_id":4,"author_id":12,"created_at":"2023-04-11T01:09:15+03:00"}]}`,
+			response: `{"likes":[{"pin_id":2,"author_id":12,"created_at":"2023-04-10T21:48:34Z"},{"pin_id":3,"author_id":12,"created_at":"2023-04-10T21:43:20Z"},{"pin_id":4,"author_id":12,"created_at":"2023-04-10T22:09:15Z"}]}`,
 			err:      nil,
 		},
 		"no likes": {
@@ -175,7 +175,7 @@ func TestListByPin(t *testing.T) {
 				}, nil)
 			},
 			params:   []httprouter.Param{{Key: "id", Value: "12"}},
-			response: `{"likes":[{"pin_id":12,"author_id":4,"created_at":"2023-04-11T00:48:34+03:00"},{"pin_id":12,"author_id":23,"created_at":"2023-04-11T00:43:20+03:00"},{"pin_id":12,"author_id":2,"created_at":"2023-04-11T01:09:15+03:00"}]}`,
+			response: `{"likes":[{"pin_id":12,"author_id":4,"created_at":"2023-04-10T21:48:34Z"},{"pin_id":12,"author_id":23,"created_at":"2023-04-10T21:43:20Z"},{"pin_id":12,"author_id":2,"created_at":"2023-04-10T22:09:15Z"}]}`,
 			err:      nil,
 		},
 		"no likes": {
