@@ -36,18 +36,18 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 }
 
 // Authenticate mocks base method.
-func (m *MockRepository) Authenticate(email, hashedPassword string) (models.User, error) {
+func (m *MockRepository) Authenticate(email, password string) (models.User, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Authenticate", email, hashedPassword)
+	ret := m.ctrl.Call(m, "Authenticate", email, password)
 	ret0, _ := ret[0].(models.User)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Authenticate indicates an expected call of Authenticate.
-func (mr *MockRepositoryMockRecorder) Authenticate(email, hashedPassword interface{}) *gomock.Call {
+func (mr *MockRepositoryMockRecorder) Authenticate(email, password interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockRepository)(nil).Authenticate), email, hashedPassword)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Authenticate", reflect.TypeOf((*MockRepository)(nil).Authenticate), email, password)
 }
 
 // CheckAuth mocks base method.
