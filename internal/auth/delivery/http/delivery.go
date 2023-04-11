@@ -66,6 +66,7 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 
 	sessionCookie := createSessionCookie(session)
 	http.SetCookie(w, sessionCookie)
+	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	if err := encoder.Encode(user); err != nil {
 		return mw.ErrCreateResponse

@@ -11,6 +11,10 @@ import (
 	authRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/repository/postgres"
 	authService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/service"
 
+	likesDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/delivery/http"
+	likesRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/repository/postgres"
+	likesService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/service"
+
 	pinsDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/delivery/http"
 	pinsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/repository/postgres"
 	pinsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/service"
@@ -64,6 +68,9 @@ func main() {
 	boardsServ := boardsService.NewBoardsService(boardsRepo)
 	boardsAccessChecker := middleware.NewAccessChecker(boardsServ)
 
+	likesRepo := likesRepository.NewRepository(db, logger)
+	likesServ := likesService.NewService(likesRepo)
+
 	authRepo := authRepository.NewRepository(db, rdb, ctx, logger)
 	authServ := authService.NewService(authRepo)
 	authorizer := middleware.NewAuthorizer(authServ)
@@ -75,6 +82,7 @@ func main() {
 	profileServ := profileService.NewProfileService(profileRepo)
 
 	authDelivery.RegisterHandlers(mux, logger, authServ)
+	likesDelivery.RegisterHandlers(mux, logger, authorizer, likesServ)
 	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
 	profileDelivery.RegisterHandlers(mux, logger, authorizer, profileServ)
 	boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ)

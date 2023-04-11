@@ -49,6 +49,14 @@ CREATE TABLE IF NOT EXISTS comments
     user_id     int       NOT NULL
 );
 
+CREATE TABLE IF NOT EXISTS pin_likes
+(
+    pin_id     int REFERENCES pins (id) ON DELETE CASCADE,
+    author_id  int REFERENCES users (id) ON DELETE CASCADE,
+    created_at timestamp NOT NULL DEFAULT now(),
+    PRIMARY KEY (pin_id, author_id)
+);
+
 ALTER TABLE ONLY boards
     ADD CONSTRAINT fk_boards_user_id
         FOREIGN KEY (user_id)
