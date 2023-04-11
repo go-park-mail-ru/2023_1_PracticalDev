@@ -2,35 +2,28 @@ package http
 
 import (
 	"encoding/json"
-	"errors"
 	"net/http"
 	"strconv"
 
-	_likes "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/julienschmidt/httprouter"
+
+	pkgLikes "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 )
 
-var (
-	ErrInvalidPinId  = errors.New("invalid pin id")
-	ErrInvalidUserId = errors.New("invalid user id")
-	ErrPinNotFound   = errors.New("pin not found")
-	ErrService       = errors.New("service error")
-)
-
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer middleware.Authorizer, serv _likes.Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv pkgLikes.Service) {
 	del := delivery{serv, logger}
 
-	mux.POST("/pins/:id/like", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(del.like)), logger), logger))
-	mux.DELETE("/pins/:id/like", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(del.unlike)), logger), logger))
+	mux.POST("/pins/:id/like", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.like)), logger), logger))
+	mux.DELETE("/pins/:id/like", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.unlike)), logger), logger))
 
-	mux.GET("/pins/:id/likes", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(del.listByPin)), logger), logger))
-	mux.GET("/users/:id/likes", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(authorizer(del.listByAuthor)), logger), logger))
+	mux.GET("/pins/:id/likes", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.listByPin)), logger), logger))
+	mux.GET("/users/:id/likes", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.listByAuthor)), logger), logger))
 }
 
 type delivery struct {
-	serv _likes.Service
+	serv pkgLikes.Service
 	log  log.Logger
 }
 
@@ -38,57 +31,43 @@ func (del *delivery) like(w http.ResponseWriter, r *http.Request, p httprouter.P
 	strId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrInvalidUserId
+		return mw.ErrInvalidUserIdParam
 	}
 
 	strId = p.ByName("id")
 	pinId, err := strconv.Atoi(strId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrInvalidPinId
+		return mw.ErrInvalidPinIdParam
 	}
 
-	err = del.serv.Like(pinId, userId)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	return err
+	return del.serv.Like(pinId, userId)
 }
 
 func (del *delivery) unlike(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrInvalidUserId
+		return mw.ErrInvalidUserIdParam
 	}
 
 	strId = p.ByName("id")
 	pinId, err := strconv.Atoi(strId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrInvalidPinId
+		return mw.ErrInvalidPinIdParam
 	}
 
-	err = del.serv.Unlike(pinId, userId)
-	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-	}
-	return err
+	return del.serv.Unlike(pinId, userId)
 }
 
 func (del *delivery) listByPin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	pinId, err := strconv.Atoi(strId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrInvalidPinId
+		return mw.ErrInvalidPinIdParam
 	}
 
 	likes, err := del.serv.ListByPin(pinId)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
@@ -97,7 +76,6 @@ func (del *delivery) listByPin(w http.ResponseWriter, r *http.Request, p httprou
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
@@ -110,13 +88,11 @@ func (del *delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p http
 	strId := p.ByName("id")
 	userId, err := strconv.Atoi(strId)
 	if err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		return ErrInvalidUserId
+		return mw.ErrInvalidUserIdParam
 	}
 
 	likes, err := del.serv.ListByAuthor(userId)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
@@ -125,7 +101,6 @@ func (del *delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p http
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
 		return err
 	}
 
