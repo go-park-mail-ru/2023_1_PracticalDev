@@ -35,20 +35,6 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
-// AddToBoard mocks base method.
-func (m *MockRepository) AddToBoard(boardId, pinId int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "AddToBoard", boardId, pinId)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// AddToBoard indicates an expected call of AddToBoard.
-func (mr *MockRepositoryMockRecorder) AddToBoard(boardId, pinId interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddToBoard", reflect.TypeOf((*MockRepository)(nil).AddToBoard), boardId, pinId)
-}
-
 // CheckReadAccess mocks base method.
 func (m *MockRepository) CheckReadAccess(userId, pinId string) (bool, error) {
 	m.ctrl.T.Helper()
@@ -153,21 +139,6 @@ func (mr *MockRepositoryMockRecorder) List(page, limit interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockRepository)(nil).List), page, limit)
 }
 
-// ListByBoard mocks base method.
-func (m *MockRepository) ListByBoard(boardId, page, limit int) ([]models.Pin, error) {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListByBoard", boardId, page, limit)
-	ret0, _ := ret[0].([]models.Pin)
-	ret1, _ := ret[1].(error)
-	return ret0, ret1
-}
-
-// ListByBoard indicates an expected call of ListByBoard.
-func (mr *MockRepositoryMockRecorder) ListByBoard(boardId, page, limit interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByBoard", reflect.TypeOf((*MockRepository)(nil).ListByBoard), boardId, page, limit)
-}
-
 // ListByUser mocks base method.
 func (m *MockRepository) ListByUser(userId, page, limit int) ([]models.Pin, error) {
 	m.ctrl.T.Helper()
@@ -181,18 +152,4 @@ func (m *MockRepository) ListByUser(userId, page, limit int) ([]models.Pin, erro
 func (mr *MockRepositoryMockRecorder) ListByUser(userId, page, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByUser", reflect.TypeOf((*MockRepository)(nil).ListByUser), userId, page, limit)
-}
-
-// RemoveFromBoard mocks base method.
-func (m *MockRepository) RemoveFromBoard(boardId, pinId int) error {
-	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "RemoveFromBoard", boardId, pinId)
-	ret0, _ := ret[0].(error)
-	return ret0
-}
-
-// RemoveFromBoard indicates an expected call of RemoveFromBoard.
-func (mr *MockRepositoryMockRecorder) RemoveFromBoard(boardId, pinId interface{}) *gomock.Call {
-	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemoveFromBoard", reflect.TypeOf((*MockRepository)(nil).RemoveFromBoard), boardId, pinId)
 }

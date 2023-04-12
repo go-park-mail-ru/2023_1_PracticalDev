@@ -26,6 +26,10 @@ type listResponse struct {
 	Boards []models.Board `json:"boards"`
 }
 
+type pinListResponse struct {
+	Pins []models.Pin `json:"pins"`
+}
+
 type getResponse struct {
 	Id          int    `json:"id"`
 	Name        string `json:"name"`

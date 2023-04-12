@@ -35,6 +35,20 @@ func (m *MockRepository) EXPECT() *MockRepositoryMockRecorder {
 	return m.recorder
 }
 
+// AddPin mocks base method.
+func (m *MockRepository) AddPin(boardId, pinId int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "AddPin", boardId, pinId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// AddPin indicates an expected call of AddPin.
+func (mr *MockRepositoryMockRecorder) AddPin(boardId, pinId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "AddPin", reflect.TypeOf((*MockRepository)(nil).AddPin), boardId, pinId)
+}
+
 // CheckReadAccess mocks base method.
 func (m *MockRepository) CheckReadAccess(userId, boardId string) (bool, error) {
 	m.ctrl.T.Helper()
@@ -152,4 +166,33 @@ func (m *MockRepository) PartialUpdate(params *boards.PartialUpdateParams) (mode
 func (mr *MockRepositoryMockRecorder) PartialUpdate(params interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PartialUpdate", reflect.TypeOf((*MockRepository)(nil).PartialUpdate), params)
+}
+
+// PinsList mocks base method.
+func (m *MockRepository) PinsList(boardId, page, limit int) ([]models.Pin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "PinsList", boardId, page, limit)
+	ret0, _ := ret[0].([]models.Pin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// PinsList indicates an expected call of PinsList.
+func (mr *MockRepositoryMockRecorder) PinsList(boardId, page, limit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PinsList", reflect.TypeOf((*MockRepository)(nil).PinsList), boardId, page, limit)
+}
+
+// RemovePin mocks base method.
+func (m *MockRepository) RemovePin(boardId, pinId int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "RemovePin", boardId, pinId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// RemovePin indicates an expected call of RemovePin.
+func (mr *MockRepositoryMockRecorder) RemovePin(boardId, pinId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "RemovePin", reflect.TypeOf((*MockRepository)(nil).RemovePin), boardId, pinId)
 }

@@ -14,13 +14,6 @@ const listByUserCmd = `SELECT id, title, description, media_source, author_id
 						ORDER BY created_at DESC 
 						LIMIT $2 OFFSET $3;`
 
-const listByBoardCmd = `SELECT pins.id, title, description, media_source, author_id 
-						FROM pins 
-						JOIN boards_pins AS b
-						ON b.board_id = $1 AND b.pin_id = pins.id
-						ORDER BY created_at DESC 
-						LIMIT $2 OFFSET $3;`
-
 const listCmd = `SELECT id, title, description, media_source, author_id 
 					FROM pins 
 					ORDER BY created_at DESC 
@@ -35,12 +28,6 @@ const fullUpdateCmd = `UPDATE pins
 
 const deleteCmd = `DELETE FROM pins 
 					WHERE id = $1;`
-
-const addToBoardCmd = `INSERT INTO boards_pins(pin_id, board_id)
-						VALUES($1, $2);`
-
-const deleteFromBoardCmd = `DELETE FROM boards_pins
-							WHERE pin_id = $1 AND board_id = $2;`
 
 const checkWriteCmd = `SELECT EXISTS(SELECT id
 						FROM pins

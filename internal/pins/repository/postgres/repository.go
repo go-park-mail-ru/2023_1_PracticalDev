@@ -80,28 +80,6 @@ func (repo *repository) ListByUser(userId int, page, limit int) ([]models.Pin, e
 	return pins, nil
 }
 
-func (repo *repository) ListByBoard(boardId int, page, limit int) ([]models.Pin, error) {
-	rows, err := repo.db.Query(listByBoardCmd, boardId, limit, (page-1)*limit)
-	if err != nil {
-		return nil, _pins.ErrDb
-	}
-
-	var pins []models.Pin
-	retrievedPin := models.Pin{}
-	var title, description, mediaSource sql.NullString
-	for rows.Next() {
-		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
-		if err != nil {
-			return nil, _pins.ErrDb
-		}
-		retrievedPin.Title = title.String
-		retrievedPin.Description = description.String
-		retrievedPin.MediaSource = mediaSource.String
-		pins = append(pins, retrievedPin)
-	}
-	return pins, nil
-}
-
 func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listCmd, limit, (page-1)*limit)
 	if err != nil {
@@ -151,30 +129,6 @@ func (repo *repository) FullUpdate(params *_pins.FullUpdateParams) (models.Pin, 
 
 func (repo *repository) Delete(id int) error {
 	res, err := repo.db.Exec(deleteCmd, id)
-	if err != nil {
-		return err
-	}
-	count, err := res.RowsAffected()
-	if err != nil || count < 1 {
-		return err
-	}
-	return nil
-}
-
-func (repo *repository) AddToBoard(boardId, pinId int) error {
-	res, err := repo.db.Exec(addToBoardCmd, pinId, boardId)
-	if err != nil {
-		return err
-	}
-	count, err := res.RowsAffected()
-	if err != nil || count < 1 {
-		return err
-	}
-	return nil
-}
-
-func (repo *repository) RemoveFromBoard(boardId, pinId int) error {
-	res, err := repo.db.Exec(deleteFromBoardCmd, pinId, boardId)
 	if err != nil {
 		return err
 	}

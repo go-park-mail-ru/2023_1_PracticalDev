@@ -5,6 +5,7 @@ import (
 	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	"github.com/pkg/errors"
 )
 
@@ -153,6 +154,65 @@ func (rep *postgresRepository) Delete(id int) error {
 	count, err := res.RowsAffected()
 	if err != nil || count < 1 {
 		return _boards.ErrBoardNotFound
+	}
+	return nil
+}
+
+const addToBoardCmd = `INSERT INTO boards_pins(pin_id, board_id)
+						VALUES($1, $2);`
+
+func (rep *postgresRepository) AddPin(boardId, pinId int) error {
+	res, err := rep.db.Exec(addToBoardCmd, pinId, boardId)
+	if err != nil {
+		return err
+	}
+	count, err := res.RowsAffected()
+	if err != nil || count < 1 {
+		return err
+	}
+	return nil
+}
+
+const listByBoardCmd = `SELECT pins.id, title, description, media_source, author_id 
+						FROM pins 
+						JOIN boards_pins AS b
+						ON b.board_id = $1 AND b.pin_id = pins.id
+						ORDER BY created_at DESC 
+						LIMIT $2 OFFSET $3;`
+
+func (rep *postgresRepository) PinsList(boardId int, page, limit int) ([]models.Pin, error) {
+	rows, err := rep.db.Query(listByBoardCmd, boardId, limit, (page-1)*limit)
+	if err != nil {
+		return nil, pkgPins.ErrDb
+	}
+
+	var pins []models.Pin
+	retrievedPin := models.Pin{}
+	var title, description, mediaSource sql.NullString
+	for rows.Next() {
+		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+		if err != nil {
+			return nil, pkgPins.ErrDb
+		}
+		retrievedPin.Title = title.String
+		retrievedPin.Description = description.String
+		retrievedPin.MediaSource = mediaSource.String
+		pins = append(pins, retrievedPin)
+	}
+	return pins, nil
+}
+
+const deleteFromBoardCmd = `DELETE FROM boards_pins
+							WHERE pin_id = $1 AND board_id = $2;`
+
+func (rep *postgresRepository) RemovePin(boardId, pinId int) error {
+	res, err := rep.db.Exec(deleteFromBoardCmd, pinId, boardId)
+	if err != nil {
+		return err
+	}
+	count, err := res.RowsAffected()
+	if err != nil || count < 1 {
+		return err
 	}
 	return nil
 }

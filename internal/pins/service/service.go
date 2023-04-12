@@ -25,10 +25,6 @@ func (serv *service) ListByUser(userId int, page, limit int) ([]models.Pin, erro
 	return serv.rep.ListByUser(userId, page, limit)
 }
 
-func (serv *service) ListByBoard(boardId int, page, limit int) ([]models.Pin, error) {
-	return serv.rep.ListByBoard(boardId, page, limit)
-}
-
 func (serv *service) List(page, limit int) ([]models.Pin, error) {
 	return serv.rep.List(page, limit)
 }
@@ -39,14 +35,6 @@ func (serv *service) FullUpdate(params *pins.FullUpdateParams) (models.Pin, erro
 
 func (serv *service) Delete(id int) error {
 	return serv.rep.Delete(id)
-}
-
-func (serv *service) AddToBoard(boardId, pinId int) error {
-	return serv.rep.AddToBoard(boardId, pinId)
-}
-
-func (serv *service) RemoveFromBoard(boardId, pinId int) error {
-	return serv.rep.RemoveFromBoard(boardId, pinId)
 }
 
 func (serv *service) CheckWriteAccess(userId, pinId string) (bool, error) {
