@@ -23,15 +23,20 @@ var (
 	ErrBadParams           = errors.New("bad params")
 	ErrBadRequest          = errors.New("bad request")
 	ErrBadSessionCookie    = errors.New("bad session cookie")
+	ErrBadCsrfTokenCookie  = errors.New("bad csrf token cookie")
+	ErrBadTokenTime        = errors.New("bad token time")
+	ErrBadTokenData        = errors.New("bad token data")
 	ErrFileCopy            = errors.New("file copy error")
 	ErrParseForm           = errors.New("parse form error")
 	ErrParseJson           = errors.New("parse json error")
 	ErrUserAlreadyExists   = errors.New("user already exists")
 	ErrService             = errors.New("service error")
 	ErrCreateResponse      = errors.New("create response error")
+	ErrCreateCsrfToken     = errors.New("create csrf token error")
 	ErrUnauthorized        = errors.New("unauthorized")
 	ErrNoContent           = errors.New("no content")
 	ErrForbidden           = errors.New("access denied")
+	ErrTokenExpired        = errors.New("token expired")
 	ErrLikeAlreadyExists   = errors.New("like already exists")
 )
 
@@ -45,6 +50,9 @@ var statusCodes = map[error]int{
 	ErrBadParams:           http.StatusBadRequest,
 	ErrBadRequest:          http.StatusBadRequest,
 	ErrBadSessionCookie:    http.StatusBadRequest,
+	ErrBadCsrfTokenCookie:  http.StatusBadRequest,
+	ErrBadTokenTime:        http.StatusBadRequest,
+	ErrBadTokenData:        http.StatusBadRequest,
 	ErrParseForm:           http.StatusBadRequest,
 	ErrParseJson:           http.StatusBadRequest,
 	ErrUserAlreadyExists:   http.StatusBadRequest,
@@ -55,6 +63,7 @@ var statusCodes = map[error]int{
 	ErrUnauthorized:        http.StatusUnauthorized,
 	ErrNoContent:           http.StatusNoContent,
 	ErrForbidden:           http.StatusForbidden,
+	ErrTokenExpired:        http.StatusForbidden,
 	ErrLikeAlreadyExists:   http.StatusConflict,
 	ErrLikeNotFound:        http.StatusConflict,
 }

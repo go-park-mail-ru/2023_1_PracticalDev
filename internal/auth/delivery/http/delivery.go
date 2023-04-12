@@ -2,20 +2,21 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	"github.com/pkg/errors"
 	"net/http"
 	"strings"
 	"time"
 
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models/api"
 	"github.com/julienschmidt/httprouter"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv auth.Service) {
-	del := delivery{serv, logger}
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv auth.Service, token *tokens.HashToken) {
+	del := delivery{serv, logger, token}
 	mux.POST("/auth/login", mw.HandleLogger(mw.ErrorHandler(del.Authenticate, logger), logger))
 	mux.DELETE("/auth/logout", mw.HandleLogger(mw.ErrorHandler(del.Logout, logger), logger))
 	mux.POST("/auth/signup", mw.HandleLogger(mw.ErrorHandler(del.Register, logger), logger))
@@ -23,8 +24,9 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv auth.Servi
 }
 
 type delivery struct {
-	serv auth.Service
-	log  log.Logger
+	serv  auth.Service
+	log   log.Logger
+	token *tokens.HashToken
 }
 
 func parseSessionCookie(c *http.Cookie) (string, string, error) {
@@ -46,6 +48,16 @@ func createSessionCookie(s auth.SessionParams) *http.Cookie {
 	}
 }
 
+func createCsrfTokenCookie(token string) *http.Cookie {
+	return &http.Cookie{
+		Name:     "XSRF-TOKEN",
+		Value:    token,
+		Expires:  time.Now().Add(time.Hour * 5),
+		HttpOnly: false,
+		Path:     "/",
+	}
+}
+
 func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
@@ -59,16 +71,25 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 		if errors.Is(err, auth.WrongPasswordOrLoginError) {
 			return mw.ErrUserNotFound
 		} else {
-			del.log.Error(err)
 			return mw.ErrService
 		}
 	}
 
 	sessionCookie := createSessionCookie(session)
 	http.SetCookie(w, sessionCookie)
+
+	token, err := del.token.Create(&tokens.SessionParams{Token: session.Token}, time.Now().Add(session.LivingTime).Unix())
+	if err != nil {
+		del.log.Error("csrf token creation error:", err)
+		return mw.ErrCreateCsrfToken
+	}
+
+	csrfCookie := createCsrfTokenCookie(token)
+	http.SetCookie(w, csrfCookie)
+
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
-	if err := encoder.Encode(user); err != nil {
+	if err = encoder.Encode(user); err != nil {
 		return mw.ErrCreateResponse
 	}
 	return nil
@@ -152,7 +173,7 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 	w.Header().Set("Content-Type", "application/json")
 
 	encoder := json.NewEncoder(w)
-	if err := encoder.Encode(user); err != nil {
+	if err = encoder.Encode(user); err != nil {
 		return mw.ErrCreateResponse
 	}
 
