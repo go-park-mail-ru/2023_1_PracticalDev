@@ -43,8 +43,8 @@ func NewAuthorizer(serv AuthService, token *tokens.HashToken, log log.Logger) fu
 			check, err := token.Check(&session, csrfToken)
 			if err != nil || !check {
 				log.Warn("Potential CSRF request")
-				w.Write([]byte("{}"))
-				return nil
+				_, err = w.Write([]byte("{}"))
+				return err
 			}
 
 			p = append(p, httprouter.Param{Key: "user-id", Value: userId})
