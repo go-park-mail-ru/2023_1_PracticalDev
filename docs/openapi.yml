@@ -931,6 +931,9 @@ components:
           description: Image file
     FullUpdatePin:
       type: object
+      required:
+        - title
+        - description
       properties:
         title:
           type: string
@@ -938,10 +941,6 @@ components:
         description:
           type: string
           description: Description
-        bytes:
-          type: string
-          format: binary
-          description: Image file
     Error:
       type: object
       properties:
