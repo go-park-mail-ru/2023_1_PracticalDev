@@ -11,9 +11,9 @@ import (
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger) {
 	del := delivery{logger}
 
-	mux.GET("/ping", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(del.Ping), logger), logger))
-	mux.POST("/ping", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(del.Ping), logger), logger))
-	mux.DELETE("/ping", middleware.HandleLogger(middleware.ErrorHandler(middleware.CorsChecker(del.Ping), logger), logger))
+	mux.GET("/ping", middleware.HandleLogger(middleware.ErrorHandler(middleware.Cors(del.Ping), logger), logger))
+	mux.POST("/ping", middleware.HandleLogger(middleware.ErrorHandler(middleware.Cors(del.Ping), logger), logger))
+	mux.DELETE("/ping", middleware.HandleLogger(middleware.ErrorHandler(middleware.Cors(del.Ping), logger), logger))
 }
 
 type delivery struct {

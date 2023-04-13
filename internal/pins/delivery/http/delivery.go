@@ -21,12 +21,12 @@ import (
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv pkgPins.Service) {
 	del := delivery{serv, logger}
 
-	mux.POST("/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.create)), logger), logger))
-	mux.GET("/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.list)), logger), logger))
-	mux.GET("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.get)), logger), logger))
-	mux.GET("/users/:id/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.listByUser)), logger), logger))
-	mux.PUT("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(access.WriteChecker(del.fullUpdate))), logger), logger))
-	mux.DELETE("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(access.WriteChecker(del.delete))), logger), logger))
+	mux.POST("/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.create)), logger), logger))
+	mux.GET("/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.list)), logger), logger))
+	mux.GET("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.get)), logger), logger))
+	mux.GET("/users/:id/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.listByUser)), logger), logger))
+	mux.PUT("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.WriteChecker(del.fullUpdate))), logger), logger))
+	mux.DELETE("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.WriteChecker(del.delete))), logger), logger))
 }
 
 type delivery struct {

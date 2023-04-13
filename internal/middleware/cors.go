@@ -7,7 +7,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-const mainOrigin = "http://pickpin.ru"
+const mainOrigin = "https://pickpin.ru"
 
 var allowedOrigins = map[string]struct{}{
 	mainOrigin:                {},
@@ -31,7 +31,7 @@ func OptionsHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func CorsChecker(handler router.Handler) router.Handler {
+func Cors(handler router.Handler) router.Handler {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 		origin := mainOrigin
 		gotOrigin := r.Header.Get("Origin")

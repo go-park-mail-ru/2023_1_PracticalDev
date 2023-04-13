@@ -1,4 +1,4 @@
-package users
+package http
 
 import (
 	"encoding/json"
@@ -7,28 +7,29 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users"
 	"github.com/julienschmidt/httprouter"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv users.Service) {
 	del := delivery{serv, logger}
 
-	mux.GET("/users/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.getUser)), logger), logger))
+	mux.GET("/users/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.get)), logger), logger))
 }
 
 type delivery struct {
-	serv Service
+	serv users.Service
 	log  log.Logger
 }
 
-func (del delivery) getUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		return mw.ErrInvalidUserIdParam
 	}
 
-	user, err := del.serv.GetUser(id)
+	user, err := del.serv.Get(id)
 	if err != nil {
 		return mw.ErrService
 	}
@@ -38,6 +39,7 @@ func (del delivery) getUser(w http.ResponseWriter, r *http.Request, p httprouter
 		return mw.ErrCreateResponse
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	return err
 }
