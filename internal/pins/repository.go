@@ -16,7 +16,6 @@ type FullUpdateParams struct {
 	Id          int
 	Title       string
 	Description string
-	MediaSource models.Image
 }
 
 var (

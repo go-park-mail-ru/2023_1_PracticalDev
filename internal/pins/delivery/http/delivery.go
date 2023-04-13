@@ -15,10 +15,10 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	_pins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv _pins.Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv pkgPins.Service) {
 	del := delivery{serv, logger}
 
 	mux.POST("/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.create)), logger), logger))
@@ -30,7 +30,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.A
 }
 
 type delivery struct {
-	serv _pins.Service
+	serv pkgPins.Service
 	log  log.Logger
 }
 
@@ -62,7 +62,7 @@ func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.
 		Bytes: buf.Bytes(),
 	}
 
-	params := _pins.CreateParams{
+	params := pkgPins.CreateParams{
 		Title:       r.FormValue("title"),
 		Description: r.FormValue("description"),
 		MediaSource: image,
@@ -99,7 +99,7 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 
 	pin, err := del.serv.Get(id)
 	if err != nil {
-		if errors.Is(err, _pins.ErrPinNotFound) {
+		if errors.Is(err, pkgPins.ErrPinNotFound) {
 			return mw.ErrPinNotFound
 		} else {
 			return mw.ErrService
@@ -217,32 +217,10 @@ func (del delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprou
 		return mw.ErrInvalidPinIdParam
 	}
 
-	file, handler, err := r.FormFile("bytes")
-	if err != nil {
-		if errors.Is(err, http.ErrMissingFile) {
-			return mw.ErrMissingFile
-		} else {
-			return mw.ErrParseForm
-		}
-	}
-	defer file.Close()
-
-	buf := bytes.NewBuffer(nil)
-	_, err = io.Copy(buf, file)
-	if err != nil {
-		return mw.ErrFileCopy
-	}
-
-	image := models.Image{
-		ID:    uuid.NewString() + filepath.Ext(handler.Filename),
-		Bytes: buf.Bytes(),
-	}
-
-	params := _pins.FullUpdateParams{
+	params := pkgPins.FullUpdateParams{
 		Id:          id,
 		Title:       r.FormValue("title"),
 		Description: r.FormValue("description"),
-		MediaSource: image,
 	}
 	pin, err := del.serv.FullUpdate(&params)
 	if err != nil {
@@ -275,7 +253,7 @@ func (del delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.
 
 	err = del.serv.Delete(id)
 	if err != nil {
-		if errors.Is(err, _pins.ErrPinNotFound) {
+		if errors.Is(err, pkgPins.ErrPinNotFound) {
 			return mw.ErrPinNotFound
 		} else {
 			return mw.ErrService

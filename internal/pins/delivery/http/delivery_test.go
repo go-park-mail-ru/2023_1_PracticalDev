@@ -353,7 +353,6 @@ func TestFullUpdate(t *testing.T) {
 		prepare    func(f *fields)
 		params     httprouter.Params
 		formValues map[string]string
-		formFiles  map[string]utils.File
 		response   string
 		err        error
 	}
@@ -374,12 +373,6 @@ func TestFullUpdate(t *testing.T) {
 				"title":       "t1",
 				"description": "d1",
 			},
-			formFiles: map[string]utils.File{
-				"bytes": {
-					Name:  "test.jpg",
-					Bytes: make([]byte, 3),
-				},
-			},
 			response: `{"id":3,"title":"t1","description":"d1","media_source":"ms_url","author_id":12}`,
 			err:      nil,
 		},
@@ -390,9 +383,8 @@ func TestFullUpdate(t *testing.T) {
 				"title":       "t1",
 				"description": "d1",
 			},
-			formFiles: map[string]utils.File{},
-			response:  ``,
-			err:       mw.ErrMissingFile,
+			response: ``,
+			err:      mw.ErrMissingFile,
 		},
 		"invalid user id param": {
 			prepare: func(f *fields) {},
@@ -400,12 +392,6 @@ func TestFullUpdate(t *testing.T) {
 			formValues: map[string]string{
 				"title":       "t1",
 				"description": "d1",
-			},
-			formFiles: map[string]utils.File{
-				"bytes": {
-					Name:  "test.jpg",
-					Bytes: make([]byte, 3),
-				},
 			},
 			response: ``,
 			err:      mw.ErrInvalidPinIdParam,
@@ -431,7 +417,7 @@ func TestFullUpdate(t *testing.T) {
 				log:  logger,
 			}
 
-			reqBody, contentType, err := utils.CreateMultipartFormBody(test.formValues, test.formFiles)
+			reqBody, contentType, err := utils.CreateMultipartFormBody(test.formValues, map[string]utils.File{})
 			if err != nil {
 				t.Fatal(err)
 			}

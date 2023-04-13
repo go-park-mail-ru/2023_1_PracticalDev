@@ -5,10 +5,10 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	_pins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 )
 
-func NewRepository(db *sql.DB, s3Service images.Service, log log.Logger) _pins.Repository {
+func NewRepository(db *sql.DB, s3Service images.Service, log log.Logger) pkgPins.Repository {
 	return &repository{db, log, s3Service}
 }
 
@@ -18,7 +18,7 @@ type repository struct {
 	imgServ images.Service
 }
 
-func (repo *repository) Create(params *_pins.CreateParams) (models.Pin, error) {
+func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error) {
 	url, err := repo.imgServ.UploadImage(&params.MediaSource)
 	if err != nil {
 		return models.Pin{}, err
@@ -35,7 +35,7 @@ func (repo *repository) Create(params *_pins.CreateParams) (models.Pin, error) {
 	var title, description, mediaSource sql.NullString
 	err = row.Scan(&retrievedPin.Id, &title, &mediaSource, &description, &retrievedPin.Author)
 	if err != nil {
-		err = _pins.ErrDb
+		err = pkgPins.ErrDb
 	}
 	retrievedPin.Title = title.String
 	retrievedPin.Description = description.String
@@ -50,7 +50,7 @@ func (repo *repository) Get(id int) (models.Pin, error) {
 	var title, description, mediaSource sql.NullString
 	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
 	if err != nil {
-		err = _pins.ErrDb
+		err = pkgPins.ErrDb
 	}
 	retrievedPin.Title = title.String
 	retrievedPin.Description = description.String
@@ -61,7 +61,7 @@ func (repo *repository) Get(id int) (models.Pin, error) {
 func (repo *repository) ListByUser(userId int, page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listByUserCmd, userId, limit, (page-1)*limit)
 	if err != nil {
-		return nil, _pins.ErrDb
+		return nil, pkgPins.ErrDb
 	}
 
 	var pins []models.Pin
@@ -70,7 +70,7 @@ func (repo *repository) ListByUser(userId int, page, limit int) ([]models.Pin, e
 	for rows.Next() {
 		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
 		if err != nil {
-			return nil, _pins.ErrDb
+			return nil, pkgPins.ErrDb
 		}
 		retrievedPin.Title = title.String
 		retrievedPin.Description = description.String
@@ -83,7 +83,7 @@ func (repo *repository) ListByUser(userId int, page, limit int) ([]models.Pin, e
 func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listCmd, limit, (page-1)*limit)
 	if err != nil {
-		return nil, _pins.ErrDb
+		return nil, pkgPins.ErrDb
 	}
 
 	var pins []models.Pin
@@ -92,7 +92,7 @@ func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 	for rows.Next() {
 		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
 		if err != nil {
-			return nil, _pins.ErrDb
+			return nil, pkgPins.ErrDb
 		}
 		retrievedPin.Title = title.String
 		retrievedPin.Description = description.String
@@ -102,24 +102,18 @@ func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 	return pins, nil
 }
 
-func (repo *repository) FullUpdate(params *_pins.FullUpdateParams) (models.Pin, error) {
-	url, err := repo.imgServ.UploadImage(&params.MediaSource)
-	if err != nil {
-		return models.Pin{}, err
-	}
-
+func (repo *repository) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin, error) {
 	row := repo.db.QueryRow(fullUpdateCmd,
 		params.Title,
 		params.Description,
-		url,
 		params.Id,
 	)
 
 	retrievedPin := models.Pin{}
 	var title, description, mediaSource sql.NullString
-	err = row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
 	if err != nil {
-		err = _pins.ErrDb
+		err = pkgPins.ErrDb
 	}
 	retrievedPin.Title = title.String
 	retrievedPin.Description = description.String
