@@ -30,6 +30,7 @@ CREATE TABLE IF NOT EXISTS pins
     description  varchar(500),
     created_at   timestamp NOT NULL DEFAULT now(),
     media_source varchar,
+    n_likes      int       NOT NULL DEFAULT 0,
     author_id    int       NOT NULL
 );
 
@@ -100,3 +101,39 @@ ALTER TABLE ONLY comments
     DROP CONSTRAINT fk_pins_pin_id,
     ADD CONSTRAINT fk_pins_pin_id
         FOREIGN KEY (pin_id) REFERENCES pins (id) ON DELETE CASCADE;
+
+-- Обработка создания лайка
+CREATE OR REPLACE FUNCTION on_pin_like() RETURNS TRIGGER AS
+$$
+BEGIN
+    UPDATE pins
+    SET n_likes = n_likes + 1
+    WHERE id = new.pin_id;
+
+    RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER pin_like
+    AFTER INSERT
+    ON pin_likes
+    FOR EACH ROW
+EXECUTE PROCEDURE on_pin_like();
+
+-- Обработка удаления лайка
+CREATE OR REPLACE FUNCTION on_pin_unlike() RETURNS TRIGGER AS
+$$
+BEGIN
+    UPDATE pins
+    SET n_likes = n_likes - 1
+    WHERE id = old.pin_id;
+
+    RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER pin_unlike
+    AFTER DELETE
+    ON pin_likes
+    FOR EACH ROW
+EXECUTE PROCEDURE on_pin_unlike();
