@@ -15,7 +15,7 @@ VALUES ('Notes', 'public', 1),
        ('ToDo', 'secret', 3);
 
 INSERT INTO pins(title, author_id, media_source)
-       ('Ice', 1, 'https://pickpin.hb.bizmrg.com/68ed77e8-9002-491d-bd3d-d36938e054b8.jpg'),
+VALUES ('Ice', 1, 'https://pickpin.hb.bizmrg.com/68ed77e8-9002-491d-bd3d-d36938e054b8.jpg'),
        ('Future', 1, 'https://pickpin.hb.bizmrg.com/7c0a9457-6ea6-4c26-b8fd-4d7c0276c568.jpg'),
        ('Shops', 1, 'https://i.pinimg.com/564x/2f/93/56/2f9356b9346e82c14bf286c6a107bc7a.jpg'),
        ('Shops', 2, 'https://i.pinimg.com/564x/32/ff/71/32ff717c3cd3bd3d1886c775b59f0769.jpg'),
