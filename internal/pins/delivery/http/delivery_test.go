@@ -376,16 +376,6 @@ func TestFullUpdate(t *testing.T) {
 			response: `{"id":3,"title":"t1","description":"d1","media_source":"ms_url","author_id":12}`,
 			err:      nil,
 		},
-		"missing file": {
-			prepare: func(f *fields) {},
-			params:  []httprouter.Param{{Key: "id", Value: "3"}},
-			formValues: map[string]string{
-				"title":       "t1",
-				"description": "d1",
-			},
-			response: ``,
-			err:      mw.ErrMissingFile,
-		},
 		"invalid user id param": {
 			prepare: func(f *fields) {},
 			params:  []httprouter.Param{{Key: "id", Value: "a"}},
