@@ -2,9 +2,10 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
+
+	"github.com/pkg/errors"
 
 	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 
@@ -336,5 +337,5 @@ func (del *delivery) removePin(w http.ResponseWriter, r *http.Request, p httprou
 	if err != nil {
 		return mw.ErrService
 	}
-	return nil
+	return mw.ErrNoContent
 }
