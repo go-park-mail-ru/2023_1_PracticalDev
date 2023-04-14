@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+const defaultAvatar = "https://pickpin.hb.bizmrg.com/default-user-icon-8-4024862977"
+
 func NewService(rep auth.Repository) auth.Service {
 	return &service{rep}
 }
@@ -60,8 +62,8 @@ func (serv *service) Register(user *api.RegisterParams) (models.User, auth.Sessi
 		Name:           user.Name,
 		Username:       user.Username,
 		Email:          user.Email,
-		ProfileImage:   "",
-		WebsiteUrl:     "",
+		ProfileImage:   defaultAvatar,
+		WebsiteUrl:     "https://pickpin.hb.bizmrg.com/default-user-icon-8-4024862977",
 		AccountType:    "personal",
 		HashedPassword: hash,
 	}
