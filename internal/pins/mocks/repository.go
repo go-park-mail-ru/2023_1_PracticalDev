@@ -124,6 +124,21 @@ func (mr *MockRepositoryMockRecorder) Get(id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRepository)(nil).Get), id)
 }
 
+// IsLikedByUser mocks base method.
+func (m *MockRepository) IsLikedByUser(pinId, userId int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "IsLikedByUser", pinId, userId)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// IsLikedByUser indicates an expected call of IsLikedByUser.
+func (mr *MockRepositoryMockRecorder) IsLikedByUser(pinId, userId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "IsLikedByUser", reflect.TypeOf((*MockRepository)(nil).IsLikedByUser), pinId, userId)
+}
+
 // List mocks base method.
 func (m *MockRepository) List(page, limit int) ([]models.Pin, error) {
 	m.ctrl.T.Helper()
@@ -139,17 +154,17 @@ func (mr *MockRepositoryMockRecorder) List(page, limit interface{}) *gomock.Call
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockRepository)(nil).List), page, limit)
 }
 
-// ListByUser mocks base method.
-func (m *MockRepository) ListByUser(userId, page, limit int) ([]models.Pin, error) {
+// ListByAuthor mocks base method.
+func (m *MockRepository) ListByAuthor(userId, page, limit int) ([]models.Pin, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListByUser", userId, page, limit)
+	ret := m.ctrl.Call(m, "ListByAuthor", userId, page, limit)
 	ret0, _ := ret[0].([]models.Pin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ListByUser indicates an expected call of ListByUser.
-func (mr *MockRepositoryMockRecorder) ListByUser(userId, page, limit interface{}) *gomock.Call {
+// ListByAuthor indicates an expected call of ListByAuthor.
+func (mr *MockRepositoryMockRecorder) ListByAuthor(userId, page, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByUser", reflect.TypeOf((*MockRepository)(nil).ListByUser), userId, page, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByAuthor", reflect.TypeOf((*MockRepository)(nil).ListByAuthor), userId, page, limit)
 }

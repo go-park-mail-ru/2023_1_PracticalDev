@@ -290,7 +290,7 @@ func TestListByUser(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			pins, err := repo.ListByUser(test.userId, test.page, test.limit)
+			pins, err := repo.ListByAuthor(test.userId, test.page, test.limit)
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}

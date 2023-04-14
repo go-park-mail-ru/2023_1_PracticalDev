@@ -24,7 +24,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.A
 	mux.POST("/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.create)), logger), logger))
 	mux.GET("/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.list)), logger), logger))
 	mux.GET("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.get)), logger), logger))
-	mux.GET("/users/:id/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.listByUser)), logger), logger))
+	mux.GET("/users/:id/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.listByAuthor)), logger), logger))
 	mux.PUT("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.WriteChecker(del.fullUpdate))), logger), logger))
 	mux.DELETE("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.WriteChecker(del.delete))), logger), logger))
 }
@@ -97,7 +97,13 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		return mw.ErrInvalidPinIdParam
 	}
 
-	pin, err := del.serv.Get(id)
+	strUserId := p.ByName("user-id")
+	userId, err := strconv.Atoi(strUserId)
+	if err != nil {
+		return mw.ErrInvalidUserIdParam
+	}
+
+	pin, err := del.serv.Get(id, userId)
 	if err != nil {
 		if errors.Is(err, pkgPins.ErrPinNotFound) {
 			return mw.ErrPinNotFound
@@ -111,6 +117,8 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		Title:       pin.Title,
 		Description: pin.Description,
 		MediaSource: pin.MediaSource,
+		NumLikes:    pin.NumLikes,
+		Liked:       pin.Liked,
 		Author:      pin.Author,
 	}
 	data, err := json.Marshal(response)
@@ -123,8 +131,14 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	return err
 }
 
-func (del delivery) listByUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strUserId := p.ByName("id")
+func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strAuthorId := p.ByName("id")
+	authorId, err := strconv.Atoi(strAuthorId)
+	if err != nil {
+		return mw.ErrInvalidUserIdParam
+	}
+
+	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
 		return mw.ErrInvalidUserIdParam
@@ -153,7 +167,7 @@ func (del delivery) listByUser(w http.ResponseWriter, r *http.Request, p httprou
 		}
 	}
 
-	pins, err := del.serv.ListByUser(userId, page, limit)
+	pins, err := del.serv.ListByAuthor(authorId, userId, page, limit)
 	if err != nil {
 		return mw.ErrService
 	}
@@ -170,7 +184,12 @@ func (del delivery) listByUser(w http.ResponseWriter, r *http.Request, p httprou
 }
 
 func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	var err error
+	strUserId := p.ByName("user-id")
+	userId, err := strconv.Atoi(strUserId)
+	if err != nil {
+		return mw.ErrInvalidUserIdParam
+	}
+
 	queryValues := r.URL.Query()
 	page := 1
 	strPage := queryValues.Get("page")
@@ -194,7 +213,7 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 		}
 	}
 
-	pins, err := del.serv.List(page, limit)
+	pins, err := del.serv.List(userId, page, limit)
 	if err != nil {
 		return mw.ErrService
 	}

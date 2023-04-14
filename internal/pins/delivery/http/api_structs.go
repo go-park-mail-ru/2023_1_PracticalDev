@@ -1,6 +1,8 @@
 package http
 
-import "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+import (
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+)
 
 // API responses
 type createResponse struct {
@@ -12,7 +14,7 @@ type createResponse struct {
 }
 
 type listResponse struct {
-	Pins []models.Pin `json:"pins"`
+	Pins []pins.Pin `json:"pins"`
 }
 
 type getResponse struct {
@@ -20,6 +22,8 @@ type getResponse struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	MediaSource string `json:"media_source"`
+	NumLikes    int    `json:"n_likes"`
+	Liked       bool   `json:"liked"`
 	Author      int    `json:"author_id"`
 }
 

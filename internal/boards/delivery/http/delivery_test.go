@@ -593,7 +593,7 @@ func TestPinsList(t *testing.T) {
 				{Key: "limit", Value: "30"},
 				{Key: "id", Value: "12"},
 			},
-			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","author_id":10},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","author_id":3}]}`,
+			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","n_likes":0,"author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","n_likes":0,"author_id":10},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","n_likes":0,"author_id":3}]}`,
 			err:      nil,
 		},
 		"no pins": {

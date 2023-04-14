@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
+	pkgLikes "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
@@ -58,7 +59,7 @@ func (repo *repository) Get(id int) (models.Pin, error) {
 	return retrievedPin, err
 }
 
-func (repo *repository) ListByUser(userId int, page, limit int) ([]models.Pin, error) {
+func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listByUserCmd, userId, limit, (page-1)*limit)
 	if err != nil {
 		return nil, pkgPins.ErrDb
@@ -86,7 +87,7 @@ func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 		return nil, pkgPins.ErrDb
 	}
 
-	var pins []models.Pin
+	pins := []models.Pin{}
 	retrievedPin := models.Pin{}
 	var title, description, mediaSource sql.NullString
 	for rows.Next() {
@@ -131,6 +132,21 @@ func (repo *repository) Delete(id int) error {
 		return err
 	}
 	return nil
+}
+
+const isLikedByUserCmd = `SELECT EXISTS(SELECT pin_id
+										FROM pin_likes
+										WHERE pin_id = $1 AND author_id = $2) AS liked;`
+
+func (repo *repository) IsLikedByUser(pinId, userId int) (bool, error) {
+	row := repo.db.QueryRow(isLikedByUserCmd, pinId, userId)
+
+	var liked bool
+	err := row.Scan(&liked)
+	if err != nil {
+		return false, pkgLikes.ErrDb
+	}
+	return liked, nil
 }
 
 func (repo *repository) CheckWriteAccess(userId, pinId string) (bool, error) {

@@ -18,7 +18,7 @@ ENV REDIS_HOST=localhost
 RUN --mount=target=. \
     --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    mkdir /out && go test -v -coverprofile=/out/cover.out ./...
+    mkdir /out && go test -coverprofile=/out/cover.out ./...
 
 FROM scratch AS coverage
 COPY --from=unit-test /out/cover.out /cover.out

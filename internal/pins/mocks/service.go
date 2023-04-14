@@ -110,46 +110,46 @@ func (mr *MockServiceMockRecorder) FullUpdate(params interface{}) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockService) Get(id int) (models.Pin, error) {
+func (m *MockService) Get(id, userId int) (pins.Pin, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "Get", id)
-	ret0, _ := ret[0].(models.Pin)
+	ret := m.ctrl.Call(m, "Get", id, userId)
+	ret0, _ := ret[0].(pins.Pin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // Get indicates an expected call of Get.
-func (mr *MockServiceMockRecorder) Get(id interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) Get(id, userId interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockService)(nil).Get), id)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockService)(nil).Get), id, userId)
 }
 
 // List mocks base method.
-func (m *MockService) List(page, limit int) ([]models.Pin, error) {
+func (m *MockService) List(userId, page, limit int) ([]pins.Pin, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", page, limit)
-	ret0, _ := ret[0].([]models.Pin)
+	ret := m.ctrl.Call(m, "List", userId, page, limit)
+	ret0, _ := ret[0].([]pins.Pin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List.
-func (mr *MockServiceMockRecorder) List(page, limit interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) List(userId, page, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockService)(nil).List), page, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockService)(nil).List), userId, page, limit)
 }
 
-// ListByUser mocks base method.
-func (m *MockService) ListByUser(userId, page, limit int) ([]models.Pin, error) {
+// ListByAuthor mocks base method.
+func (m *MockService) ListByAuthor(authorId, userId, page, limit int) ([]pins.Pin, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "ListByUser", userId, page, limit)
-	ret0, _ := ret[0].([]models.Pin)
+	ret := m.ctrl.Call(m, "ListByAuthor", authorId, userId, page, limit)
+	ret0, _ := ret[0].([]pins.Pin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
-// ListByUser indicates an expected call of ListByUser.
-func (mr *MockServiceMockRecorder) ListByUser(userId, page, limit interface{}) *gomock.Call {
+// ListByAuthor indicates an expected call of ListByAuthor.
+func (mr *MockServiceMockRecorder) ListByAuthor(authorId, userId, page, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByUser", reflect.TypeOf((*MockService)(nil).ListByUser), userId, page, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByAuthor", reflect.TypeOf((*MockService)(nil).ListByAuthor), authorId, userId, page, limit)
 }

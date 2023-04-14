@@ -128,24 +128,25 @@ func TestList(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().List(1, 30).Return([]models.Pin{
+				f.serv.EXPECT().List(12, 1, 30).Return([]pins.Pin{
 					{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
 					{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 3},
 					{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 10},
 				}, nil)
 			},
 			params: []httprouter.Param{
+				{Key: "user-id", Value: "12"},
 				{Key: "page", Value: "1"},
 				{Key: "limit", Value: "30"},
 			},
-			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","author_id":3},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","author_id":10}]}`,
+			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","n_likes":0,"liked":false,"author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","n_likes":0,"liked":false,"author_id":3},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","n_likes":0,"liked":false,"author_id":10}]}`,
 			err:      nil,
 		},
 		"no pins": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().List(1, 30).Return([]models.Pin{}, nil)
+				f.serv.EXPECT().List(12, 1, 30).Return([]pins.Pin{}, nil)
 			},
-			params:   []httprouter.Param{{Key: "user-id", Value: "3"}},
+			params:   []httprouter.Param{{Key: "user-id", Value: "12"}},
 			response: `{"pins":[]}`,
 			err:      nil,
 		},
@@ -184,7 +185,7 @@ func TestList(t *testing.T) {
 	}
 }
 
-func TestListByUser(t *testing.T) {
+func TestListByAuthor(t *testing.T) {
 	type fields struct {
 		serv *mocks.MockService
 	}
@@ -199,7 +200,7 @@ func TestListByUser(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().ListByUser(12, 1, 30).Return([]models.Pin{
+				f.serv.EXPECT().ListByAuthor(12, 5, 1, 30).Return([]pins.Pin{
 					{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
 					{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
 					{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
@@ -209,18 +210,20 @@ func TestListByUser(t *testing.T) {
 				{Key: "page", Value: "1"},
 				{Key: "limit", Value: "30"},
 				{Key: "id", Value: "12"},
+				{Key: "user-id", Value: "5"},
 			},
-			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","author_id":12},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","author_id":12}]}`,
+			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","n_likes":0,"liked":false,"author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","n_likes":0,"liked":false,"author_id":12},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","n_likes":0,"liked":false,"author_id":12}]}`,
 			err:      nil,
 		},
 		"no pins": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().ListByUser(12, 1, 30).Return([]models.Pin{}, nil)
+				f.serv.EXPECT().ListByAuthor(12, 5, 1, 30).Return([]pins.Pin{}, nil)
 			},
 			params: []httprouter.Param{
 				{Key: "page", Value: "1"},
 				{Key: "limit", Value: "30"},
 				{Key: "id", Value: "12"},
+				{Key: "user-id", Value: "5"},
 			},
 			response: `{"pins":[]}`,
 			err:      nil,
@@ -248,7 +251,7 @@ func TestListByUser(t *testing.T) {
 
 			req := httptest.NewRequest(http.MethodGet, "/users/12/pins", nil)
 			rec := httptest.NewRecorder()
-			err := del.listByUser(rec, req, test.params)
+			err := del.listByAuthor(rec, req, test.params)
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
@@ -275,7 +278,7 @@ func TestGet(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Get(3).Return(models.Pin{
+				f.serv.EXPECT().Get(3, 12).Return(pins.Pin{
 					Id:          3,
 					Title:       "t1",
 					MediaSource: "ms_url1",
@@ -283,29 +286,41 @@ func TestGet(t *testing.T) {
 					Author:      12,
 				}, nil)
 			},
-			params:   []httprouter.Param{{Key: "id", Value: "3"}},
-			response: `{"id":3,"title":"t1","description":"d1","media_source":"ms_url1","author_id":12}`,
+			params: []httprouter.Param{
+				{Key: "id", Value: "3"},
+				{Key: "user-id", Value: "12"},
+			},
+			response: `{"id":3,"title":"t1","description":"d1","media_source":"ms_url1","n_likes":0,"liked":false,"author_id":12}`,
 			err:      nil,
 		},
 		"invalid pin id param": {
-			prepare:  func(f *fields) {},
-			params:   []httprouter.Param{{Key: "id", Value: "a"}},
+			prepare: func(f *fields) {},
+			params: []httprouter.Param{
+				{Key: "id", Value: "a"},
+				{Key: "user-id", Value: "12"},
+			},
 			response: ``,
 			err:      mw.ErrInvalidPinIdParam,
 		},
 		"pin not found": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Get(3).Return(models.Pin{}, pins.ErrPinNotFound)
+				f.serv.EXPECT().Get(3, 12).Return(pins.Pin{}, pins.ErrPinNotFound)
 			},
-			params:   []httprouter.Param{{Key: "id", Value: "3"}},
+			params: []httprouter.Param{
+				{Key: "id", Value: "3"},
+				{Key: "user-id", Value: "12"},
+			},
 			response: ``,
 			err:      mw.ErrPinNotFound,
 		},
 		"service error": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Get(3).Return(models.Pin{}, pins.ErrDb)
+				f.serv.EXPECT().Get(3, 12).Return(pins.Pin{}, pins.ErrDb)
 			},
-			params:   []httprouter.Param{{Key: "id", Value: "3"}},
+			params: []httprouter.Param{
+				{Key: "id", Value: "3"},
+				{Key: "user-id", Value: "12"},
+			},
 			response: ``,
 			err:      mw.ErrService,
 		},
