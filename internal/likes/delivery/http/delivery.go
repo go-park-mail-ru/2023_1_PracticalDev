@@ -53,7 +53,7 @@ func (del *delivery) like(w http.ResponseWriter, r *http.Request, p httprouter.P
 			return mw.ErrService
 		}
 	}
-	return nil
+	return mw.ErrNoContent
 }
 
 func (del *delivery) unlike(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -82,7 +82,7 @@ func (del *delivery) unlike(w http.ResponseWriter, r *http.Request, p httprouter
 			return mw.ErrService
 		}
 	}
-	return nil
+	return mw.ErrNoContent
 }
 
 func (del *delivery) listByPin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -107,7 +107,10 @@ func (del *delivery) listByPin(w http.ResponseWriter, r *http.Request, p httprou
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return mw.ErrCreateResponse
+	}
+	return nil
 }
 
 func (del *delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -132,5 +135,8 @@ func (del *delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p http
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return mw.ErrCreateResponse
+	}
+	return nil
 }
