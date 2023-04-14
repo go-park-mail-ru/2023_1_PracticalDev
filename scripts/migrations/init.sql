@@ -34,6 +34,14 @@ CREATE TABLE IF NOT EXISTS pins
     author_id    int       NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
+CREATE TABLE IF NOT EXISTS pin_likes
+(
+    pin_id     int REFERENCES pins (id) ON DELETE CASCADE,
+    author_id  int REFERENCES users (id) ON DELETE CASCADE,
+    created_at timestamp NOT NULL DEFAULT now(),
+    PRIMARY KEY (pin_id, author_id)
+);
+
 CREATE TABLE IF NOT EXISTS boards_pins
 (
     board_id int NOT NULL REFERENCES boards (id) ON DELETE CASCADE,
@@ -50,12 +58,12 @@ CREATE TABLE IF NOT EXISTS comments
     user_id     int       NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
-CREATE TABLE IF NOT EXISTS pin_likes
+CREATE TABLE IF NOT EXISTS comment_likes
 (
-    pin_id     int REFERENCES pins (id) ON DELETE CASCADE,
+    comment_id int REFERENCES comments (id) ON DELETE CASCADE,
     author_id  int REFERENCES users (id) ON DELETE CASCADE,
     created_at timestamp NOT NULL DEFAULT now(),
-    PRIMARY KEY (pin_id, author_id)
+    PRIMARY KEY (comment_id, author_id)
 );
 
 -- Обработка создания лайка
