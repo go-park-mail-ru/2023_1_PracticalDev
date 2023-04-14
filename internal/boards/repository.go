@@ -46,6 +46,7 @@ type Repository interface {
 	AddPin(boardId, pinId int) error
 	PinsList(boardId int, page, limit int) ([]models.Pin, error)
 	RemovePin(boardId, pinId int) error
+	HasPin(boardId, pinId int) (bool, error)
 
 	CheckWriteAccess(userId, boardId string) (bool, error)
 	CheckReadAccess(userId, boardId string) (bool, error)

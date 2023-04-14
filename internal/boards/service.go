@@ -6,7 +6,8 @@ import (
 )
 
 var (
-	ErrInvalidPrivacy = errors.New("invalid privacy")
+	ErrInvalidPrivacy  = errors.New("invalid privacy")
+	ErrPinAlreadyAdded = errors.New("pin already added")
 )
 
 type Service interface {

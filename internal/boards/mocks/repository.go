@@ -138,6 +138,21 @@ func (mr *MockRepositoryMockRecorder) Get(id interface{}) *gomock.Call {
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "Get", reflect.TypeOf((*MockRepository)(nil).Get), id)
 }
 
+// HasPin mocks base method.
+func (m *MockRepository) HasPin(boardId, pinId int) (bool, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "HasPin", boardId, pinId)
+	ret0, _ := ret[0].(bool)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// HasPin indicates an expected call of HasPin.
+func (mr *MockRepositoryMockRecorder) HasPin(boardId, pinId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "HasPin", reflect.TypeOf((*MockRepository)(nil).HasPin), boardId, pinId)
+}
+
 // List mocks base method.
 func (m *MockRepository) List(userId int) ([]models.Board, error) {
 	m.ctrl.T.Helper()

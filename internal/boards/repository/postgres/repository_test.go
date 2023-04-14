@@ -12,7 +12,6 @@ import (
 	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 )
 
 func TestCreate(t *testing.T) {
@@ -598,7 +597,7 @@ func TestPinsList(t *testing.T) {
 			page:    1,
 			limit:   30,
 			pins:    nil,
-			err:     pkgPins.ErrDb,
+			err:     pkgBoards.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
@@ -612,7 +611,7 @@ func TestPinsList(t *testing.T) {
 			page:    1,
 			limit:   30,
 			pins:    nil,
-			err:     pkgPins.ErrDb,
+			err:     pkgBoards.ErrDb,
 		},
 	}
 

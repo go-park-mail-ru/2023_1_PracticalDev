@@ -2,23 +2,23 @@ package postgres
 
 import (
 	"database/sql"
-	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
+	"github.com/pkg/errors"
+
+	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
-	"github.com/pkg/errors"
 )
 
-type postgresRepository struct {
+type repository struct {
 	db  *sql.DB
 	log log.Logger
 }
 
-func NewPostgresRepository(db *sql.DB, log log.Logger) _boards.Repository {
-	return &postgresRepository{db, log}
+func NewPostgresRepository(db *sql.DB, log log.Logger) pkgBoards.Repository {
+	return &repository{db, log}
 }
 
-func (rep *postgresRepository) Create(params *_boards.CreateParams) (models.Board, error) {
+func (rep *repository) Create(params *pkgBoards.CreateParams) (models.Board, error) {
 	const insertCommand = `INSERT INTO boards (name, description, privacy, user_id) 
 				      	   VALUES ($1, $2, $3, $4)
 						   RETURNING *;`
@@ -34,19 +34,19 @@ func (rep *postgresRepository) Create(params *_boards.CreateParams) (models.Boar
 	err := row.Scan(&createdBoard.Id, &createdBoard.Name, &description, &createdBoard.Privacy, &createdBoard.UserId)
 	createdBoard.Description = description.String
 	if err != nil {
-		err = _boards.ErrDb
+		err = pkgBoards.ErrDb
 	}
 	return createdBoard, err
 }
 
-func (rep *postgresRepository) List(userId int) ([]models.Board, error) {
+func (rep *repository) List(userId int) ([]models.Board, error) {
 	const getBoardsCommand = `SELECT * 
 							  FROM boards
 							  WHERE user_id = $1;`
 
 	rows, err := rep.db.Query(getBoardsCommand, userId)
 	if err != nil {
-		return nil, _boards.ErrDb
+		return nil, pkgBoards.ErrDb
 	}
 
 	var boards []models.Board
@@ -55,7 +55,7 @@ func (rep *postgresRepository) List(userId int) ([]models.Board, error) {
 	for rows.Next() {
 		err = rows.Scan(&board.Id, &board.Name, &description, &board.Privacy, &board.UserId)
 		if err != nil {
-			return nil, _boards.ErrDb
+			return nil, pkgBoards.ErrDb
 		}
 		board.Description = description.String
 		boards = append(boards, board)
@@ -63,7 +63,7 @@ func (rep *postgresRepository) List(userId int) ([]models.Board, error) {
 	return boards, nil
 }
 
-func (rep *postgresRepository) Get(id int) (models.Board, error) {
+func (rep *repository) Get(id int) (models.Board, error) {
 	const getBoardCommand = `SELECT *
 							 FROM boards
 							 WHERE id = $1;`
@@ -76,15 +76,15 @@ func (rep *postgresRepository) Get(id int) (models.Board, error) {
 	board.Description = description.String
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.Board{}, _boards.ErrBoardNotFound
+			return models.Board{}, pkgBoards.ErrBoardNotFound
 		} else {
-			return models.Board{}, _boards.ErrDb
+			return models.Board{}, pkgBoards.ErrDb
 		}
 	}
 	return board, err
 }
 
-func (rep *postgresRepository) FullUpdate(params *_boards.FullUpdateParams) (models.Board, error) {
+func (rep *repository) FullUpdate(params *pkgBoards.FullUpdateParams) (models.Board, error) {
 	const fullUpdateBoard = `UPDATE boards
 								SET name = $1::VARCHAR,
     							description = $2::TEXT,
@@ -104,15 +104,15 @@ func (rep *postgresRepository) FullUpdate(params *_boards.FullUpdateParams) (mod
 	updatedBoard.Description = description.String
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.Board{}, _boards.ErrBoardNotFound
+			return models.Board{}, pkgBoards.ErrBoardNotFound
 		} else {
-			return models.Board{}, _boards.ErrDb
+			return models.Board{}, pkgBoards.ErrDb
 		}
 	}
 	return updatedBoard, err
 }
 
-func (rep *postgresRepository) PartialUpdate(params *_boards.PartialUpdateParams) (models.Board, error) {
+func (rep *repository) PartialUpdate(params *pkgBoards.PartialUpdateParams) (models.Board, error) {
 	const partialUpdateBoard = `UPDATE boards
 								SET name = CASE WHEN $1::boolean THEN $2::VARCHAR ELSE name END,
     							description = CASE WHEN $3::boolean THEN $4::TEXT ELSE description END,
@@ -135,25 +135,25 @@ func (rep *postgresRepository) PartialUpdate(params *_boards.PartialUpdateParams
 	updatedBoard.Description = description.String
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return models.Board{}, _boards.ErrBoardNotFound
+			return models.Board{}, pkgBoards.ErrBoardNotFound
 		} else {
-			return models.Board{}, _boards.ErrDb
+			return models.Board{}, pkgBoards.ErrDb
 		}
 	}
 	return updatedBoard, err
 }
 
-func (rep *postgresRepository) Delete(id int) error {
+func (rep *repository) Delete(id int) error {
 	const deleteCommand = `DELETE FROM boards 
 						   WHERE id = $1;`
 
 	res, err := rep.db.Exec(deleteCommand, id)
 	if err != nil {
-		return _boards.ErrDb
+		return pkgBoards.ErrDb
 	}
 	count, err := res.RowsAffected()
 	if err != nil || count < 1 {
-		return _boards.ErrBoardNotFound
+		return pkgBoards.ErrBoardNotFound
 	}
 	return nil
 }
@@ -161,14 +161,14 @@ func (rep *postgresRepository) Delete(id int) error {
 const addToBoardCmd = `INSERT INTO boards_pins(pin_id, board_id)
 						VALUES($1, $2);`
 
-func (rep *postgresRepository) AddPin(boardId, pinId int) error {
+func (rep *repository) AddPin(boardId, pinId int) error {
 	res, err := rep.db.Exec(addToBoardCmd, pinId, boardId)
 	if err != nil {
-		return err
+		return pkgBoards.ErrDb
 	}
-	count, err := res.RowsAffected()
-	if err != nil || count < 1 {
-		return err
+	rowsAffected, err := res.RowsAffected()
+	if err != nil || rowsAffected < 1 {
+		return pkgBoards.ErrDb
 	}
 	return nil
 }
@@ -180,10 +180,10 @@ const listByBoardCmd = `SELECT pins.id, title, description, media_source, author
 						ORDER BY created_at DESC 
 						LIMIT $2 OFFSET $3;`
 
-func (rep *postgresRepository) PinsList(boardId int, page, limit int) ([]models.Pin, error) {
+func (rep *repository) PinsList(boardId int, page, limit int) ([]models.Pin, error) {
 	rows, err := rep.db.Query(listByBoardCmd, boardId, limit, (page-1)*limit)
 	if err != nil {
-		return nil, pkgPins.ErrDb
+		return nil, pkgBoards.ErrDb
 	}
 
 	var pins []models.Pin
@@ -192,7 +192,7 @@ func (rep *postgresRepository) PinsList(boardId int, page, limit int) ([]models.
 	for rows.Next() {
 		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
 		if err != nil {
-			return nil, pkgPins.ErrDb
+			return nil, pkgBoards.ErrDb
 		}
 		retrievedPin.Title = title.String
 		retrievedPin.Description = description.String
@@ -205,7 +205,7 @@ func (rep *postgresRepository) PinsList(boardId int, page, limit int) ([]models.
 const deleteFromBoardCmd = `DELETE FROM boards_pins
 							WHERE pin_id = $1 AND board_id = $2;`
 
-func (rep *postgresRepository) RemovePin(boardId, pinId int) error {
+func (rep *repository) RemovePin(boardId, pinId int) error {
 	res, err := rep.db.Exec(deleteFromBoardCmd, pinId, boardId)
 	if err != nil {
 		return err
@@ -217,12 +217,27 @@ func (rep *postgresRepository) RemovePin(boardId, pinId int) error {
 	return nil
 }
 
-func (rep *postgresRepository) CheckWriteAccess(userId, boardId string) (bool, error) {
-	const checkCommand = `SELECT EXISTS(SELECT id
+const hasPinCmd = `SELECT EXISTS(SELECT pin_id
+									FROM boards_pins
+									WHERE board_id = $1 AND pin_id = $2) AS has;`
+
+func (rep *repository) HasPin(boardId, pinId int) (bool, error) {
+	row := rep.db.QueryRow(hasPinCmd, boardId, pinId)
+
+	var has bool
+	err := row.Scan(&has)
+	if err != nil {
+		return false, pkgBoards.ErrDb
+	}
+	return has, nil
+}
+
+const checkWriteCommand = `SELECT EXISTS(SELECT id
      			          				FROM boards
               			  				WHERE id = $1 AND user_id = $2) AS access;`
 
-	row := rep.db.QueryRow(checkCommand,
+func (rep *repository) CheckWriteAccess(userId, boardId string) (bool, error) {
+	row := rep.db.QueryRow(checkWriteCommand,
 		boardId,
 		userId,
 	)
@@ -230,22 +245,22 @@ func (rep *postgresRepository) CheckWriteAccess(userId, boardId string) (bool, e
 	var access bool
 	err := row.Scan(&access)
 	if err != nil {
-		err = _boards.ErrDb
+		err = pkgBoards.ErrDb
 	}
 	return access, err
 }
 
-func (rep *postgresRepository) CheckReadAccess(userId, boardId string) (bool, error) {
-	const checkCommand = `SELECT EXISTS(SELECT
+const checkReadCommand = `SELECT EXISTS(SELECT
               							FROM boards
               							WHERE id = $1 AND (privacy = 'public' OR user_id = $2)) AS access;`
 
-	row := rep.db.QueryRow(checkCommand, boardId, userId)
+func (rep *repository) CheckReadAccess(userId, boardId string) (bool, error) {
+	row := rep.db.QueryRow(checkReadCommand, boardId, userId)
 
 	var access bool
 	err := row.Scan(&access)
 	if err != nil {
-		err = _boards.ErrDb
+		err = pkgBoards.ErrDb
 	}
 	return access, err
 }

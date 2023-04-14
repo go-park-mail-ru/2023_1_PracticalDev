@@ -48,6 +48,14 @@ func (serv *service) Delete(id int) error {
 }
 
 func (serv *service) AddPin(boardId, pinId int) error {
+	exists, err := serv.repo.HasPin(boardId, pinId)
+	if err != nil {
+		return err
+	}
+	if exists {
+		return boards.ErrPinAlreadyAdded
+	}
+
 	return serv.repo.AddPin(boardId, pinId)
 }
 

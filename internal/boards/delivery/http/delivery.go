@@ -7,14 +7,14 @@ import (
 
 	"github.com/pkg/errors"
 
-	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
+	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/julienschmidt/httprouter"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv _boards.Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv pkgBoards.Service) {
 	del := delivery{serv, logger}
 
 	mux.POST("/boards", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.create)), logger), logger))
@@ -30,7 +30,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.A
 }
 
 type delivery struct {
-	serv _boards.Service
+	serv pkgBoards.Service
 	log  log.Logger
 }
 
@@ -48,7 +48,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 		return mw.ErrParseJson
 	}
 
-	params := _boards.CreateParams{
+	params := pkgBoards.CreateParams{
 		Name:        request.Name,
 		Description: request.Description,
 		Privacy:     "secret",
@@ -60,7 +60,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 
 	createdBoard, err := del.serv.Create(&params)
 	if err != nil {
-		if errors.Is(err, _boards.ErrInvalidPrivacy) {
+		if errors.Is(err, pkgBoards.ErrInvalidPrivacy) {
 			return mw.ErrBadParams
 		} else {
 			return mw.ErrService
@@ -143,7 +143,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		return mw.ErrParseJson
 	}
 
-	params := _boards.FullUpdateParams{
+	params := pkgBoards.FullUpdateParams{
 		Id:          id,
 		Name:        request.Name,
 		Description: request.Description,
@@ -155,7 +155,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 
 	board, err := del.serv.FullUpdate(&params)
 	if err != nil {
-		if errors.Is(err, _boards.ErrBoardNotFound) {
+		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
 			return mw.ErrBoardNotFound
 		} else {
 			return mw.ErrService
@@ -193,7 +193,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		return mw.ErrParseJson
 	}
 
-	params := _boards.PartialUpdateParams{
+	params := pkgBoards.PartialUpdateParams{
 		Id:      id,
 		Privacy: "secret",
 	}
@@ -212,7 +212,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 
 	board, err := del.serv.PartialUpdate(&params)
 	if err != nil {
-		if errors.Is(err, _boards.ErrBoardNotFound) {
+		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
 			return mw.ErrBoardNotFound
 		} else {
 			return mw.ErrService
@@ -245,7 +245,7 @@ func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter
 
 	err = del.serv.Delete(id)
 	if err != nil {
-		if errors.Is(err, _boards.ErrBoardNotFound) {
+		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
 			return mw.ErrBoardNotFound
 		} else {
 			return mw.ErrService
@@ -315,7 +315,12 @@ func (del *delivery) addPin(w http.ResponseWriter, r *http.Request, p httprouter
 
 	err = del.serv.AddPin(boardId, pinId)
 	if err != nil {
-		return mw.ErrService
+		switch err {
+		case pkgBoards.ErrPinAlreadyAdded:
+			return mw.ErrPinAlreadyAdded
+		default:
+			return mw.ErrService
+		}
 	}
 	return nil
 }

@@ -38,6 +38,7 @@ var (
 	ErrForbidden           = errors.New("access denied")
 	ErrTokenExpired        = errors.New("token expired")
 	ErrLikeAlreadyExists   = errors.New("like already exists")
+	ErrPinAlreadyAdded     = errors.New("pin already added")
 )
 
 var statusCodes = map[error]int{
@@ -66,6 +67,7 @@ var statusCodes = map[error]int{
 	ErrTokenExpired:        http.StatusForbidden,
 	ErrLikeAlreadyExists:   http.StatusConflict,
 	ErrLikeNotFound:        http.StatusConflict,
+	ErrPinAlreadyAdded:     http.StatusConflict,
 }
 
 func ErrorHandler(handler func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error, log log.Logger) httprouter.Handle {
