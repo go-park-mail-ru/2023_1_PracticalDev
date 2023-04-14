@@ -47,16 +47,16 @@ func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error)
 func (repo *repository) Get(id int) (models.Pin, error) {
 	row := repo.db.QueryRow(getCmd, id)
 
-	retrievedPin := models.Pin{}
+	pin := models.Pin{}
 	var title, description, mediaSource sql.NullString
-	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+	err := row.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 	if err != nil {
 		err = pkgPins.ErrDb
 	}
-	retrievedPin.Title = title.String
-	retrievedPin.Description = description.String
-	retrievedPin.MediaSource = mediaSource.String
-	return retrievedPin, err
+	pin.Title = title.String
+	pin.Description = description.String
+	pin.MediaSource = mediaSource.String
+	return pin, err
 }
 
 func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin, error) {
@@ -66,17 +66,17 @@ func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin,
 	}
 
 	var pins []models.Pin
-	retrievedPin := models.Pin{}
+	pin := models.Pin{}
 	var title, description, mediaSource sql.NullString
 	for rows.Next() {
-		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 		if err != nil {
 			return nil, pkgPins.ErrDb
 		}
-		retrievedPin.Title = title.String
-		retrievedPin.Description = description.String
-		retrievedPin.MediaSource = mediaSource.String
-		pins = append(pins, retrievedPin)
+		pin.Title = title.String
+		pin.Description = description.String
+		pin.MediaSource = mediaSource.String
+		pins = append(pins, pin)
 	}
 	return pins, nil
 }
@@ -88,17 +88,17 @@ func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 	}
 
 	pins := []models.Pin{}
-	retrievedPin := models.Pin{}
+	pin := models.Pin{}
 	var title, description, mediaSource sql.NullString
 	for rows.Next() {
-		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 		if err != nil {
 			return nil, pkgPins.ErrDb
 		}
-		retrievedPin.Title = title.String
-		retrievedPin.Description = description.String
-		retrievedPin.MediaSource = mediaSource.String
-		pins = append(pins, retrievedPin)
+		pin.Title = title.String
+		pin.Description = description.String
+		pin.MediaSource = mediaSource.String
+		pins = append(pins, pin)
 	}
 	return pins, nil
 }
