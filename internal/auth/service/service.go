@@ -11,6 +11,7 @@ import (
 )
 
 const defaultAvatar = "https://pickpin.hb.bizmrg.com/default-user-icon-8-4024862977"
+const defaultAccountType = "personal"
 
 func NewService(rep auth.Repository) auth.Service {
 	return &service{rep}
@@ -64,7 +65,7 @@ func (serv *service) Register(user *api.RegisterParams) (models.User, auth.Sessi
 		Email:          user.Email,
 		ProfileImage:   defaultAvatar,
 		WebsiteUrl:     "",
-		AccountType:    "personal",
+		AccountType:    defaultAccountType,
 		HashedPassword: hash,
 	}
 
