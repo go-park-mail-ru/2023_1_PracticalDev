@@ -63,7 +63,7 @@ func (serv *service) Register(user *api.RegisterParams) (models.User, auth.Sessi
 		Username:       user.Username,
 		Email:          user.Email,
 		ProfileImage:   defaultAvatar,
-		WebsiteUrl:     "https://pickpin.hb.bizmrg.com/default-user-icon-8-4024862977",
+		WebsiteUrl:     "",
 		AccountType:    "personal",
 		HashedPassword: hash,
 	}
