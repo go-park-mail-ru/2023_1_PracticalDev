@@ -14,10 +14,6 @@ type Pin struct {
 	Author      int    `json:"author_id"`
 }
 
-type pinsList struct {
-	Pins []models.Pin `json:"pins"`
-}
-
 type Service interface {
 	Create(params *CreateParams) (models.Pin, error)
 	Get(id, userId int) (Pin, error)
