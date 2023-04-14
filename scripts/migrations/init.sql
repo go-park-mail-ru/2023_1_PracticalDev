@@ -5,7 +5,7 @@ CREATE TABLE IF NOT EXISTS users
 (
     id              serial       NOT NULL PRIMARY KEY,
     username        text         NOT NULL UNIQUE,
-    email           text         NOT NULL,
+    email           text         NOT NULL UNIQUE,
     hashed_password bytea        NOT NULL,
     name            varchar(256) NOT NULL,
     profile_image   varchar,
@@ -19,7 +19,7 @@ CREATE TABLE IF NOT EXISTS boards
     name        varchar(256) NOT NULL,
     description varchar(500),
     privacy     privacy      NOT NULL,
-    user_id     int          NOT NULL
+    user_id     int          NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS pins
@@ -31,13 +31,13 @@ CREATE TABLE IF NOT EXISTS pins
     created_at   timestamp NOT NULL DEFAULT now(),
     media_source varchar,
     n_likes      int       NOT NULL DEFAULT 0,
-    author_id    int       NOT NULL
+    author_id    int       NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS boards_pins
 (
-    board_id int REFERENCES boards (id) ON DELETE CASCADE,
-    pin_id   int REFERENCES pins (id) ON DELETE CASCADE,
+    board_id int NOT NULL REFERENCES boards (id) ON DELETE CASCADE,
+    pin_id   int NOT NULL REFERENCES pins (id) ON DELETE CASCADE,
     PRIMARY KEY (board_id, pin_id)
 );
 
@@ -46,8 +46,8 @@ CREATE TABLE IF NOT EXISTS comments
     id          serial    NOT NULL PRIMARY KEY,
     description text,
     created_at  timestamp NOT NULL DEFAULT now(),
-    pin_id      int       NOT NULL,
-    user_id     int       NOT NULL
+    pin_id      int       NOT NULL REFERENCES pins (id) ON DELETE CASCADE,
+    user_id     int       NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS pin_likes
@@ -57,31 +57,6 @@ CREATE TABLE IF NOT EXISTS pin_likes
     created_at timestamp NOT NULL DEFAULT now(),
     PRIMARY KEY (pin_id, author_id)
 );
-
-ALTER TABLE ONLY boards
-    ADD CONSTRAINT fk_boards_user_id
-        FOREIGN KEY (user_id)
-            REFERENCES users (id);
-
-ALTER TABLE ONLY pins
-    ADD CONSTRAINT fk_pins_author_id
-        FOREIGN KEY (author_id)
-            REFERENCES users (id);
-
-ALTER TABLE ONLY comments
-    ADD CONSTRAINT fk_pins_pin_id
-        FOREIGN KEY (pin_id)
-            REFERENCES pins (id);
-
-ALTER TABLE ONLY comments
-    ADD CONSTRAINT fk_pins_user_id
-        FOREIGN KEY (user_id)
-            REFERENCES users (id);
-
-ALTER TABLE ONLY comments
-    DROP CONSTRAINT fk_pins_pin_id,
-    ADD CONSTRAINT fk_pins_pin_id
-        FOREIGN KEY (pin_id) REFERENCES pins (id) ON DELETE CASCADE;
 
 -- Обработка создания лайка
 CREATE OR REPLACE FUNCTION on_pin_like() RETURNS TRIGGER AS
