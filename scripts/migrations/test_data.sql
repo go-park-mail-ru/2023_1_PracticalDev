@@ -55,7 +55,7 @@ VALUES ('Самолет', '#самолет #путешествия', 'https://pi
        ('Nature', '', 'https://pickpin.hb.bizmrg.com/15ea0fa6-0064-40af-b3b7-a5f5455119ae.jpg', 2),
        ('Nature', '', 'https://pickpin.hb.bizmrg.com/bbe7bb81-15fd-45a9-b614-3e4ca3e00cef.jpg', 2),
        ('Облака', '', 'https://pickpin.hb.bizmrg.com/1bc0410f-9977-4097-bffe-d16889a388d5.jpg', 2),
-       ('Ocean', '', 'https://pickpin.hb.bizmrg.com/97d80f59-c0dd-43b5-b491-ccce0cf0c2c5.jpg"', 2),
+       ('Ocean', '', 'https://pickpin.hb.bizmrg.com/97d80f59-c0dd-43b5-b491-ccce0cf0c2c5.jpg', 2),
        ('Природа', '', 'https://pickpin.hb.bizmrg.com/2f1e32b2-51ab-48e1-8ca2-aa64781a4d98.jpg', 2),
        ('Природа', '', 'https://pickpin.hb.bizmrg.com/a6eb885c-e845-4aba-a51b-020a2306d21f.jpg', 2),
        ('Beautiful Ocean', '', 'https://pickpin.hb.bizmrg.com/7ddacf84-8835-4e11-9df5-f0363c2449fa.jpg', 2),
