@@ -2,6 +2,7 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"net/http"
 	"net/http/httptest"
@@ -105,7 +106,7 @@ func TestAuthenticate(t *testing.T) {
 			test.prepare(&f)
 		}
 
-		del := delivery{f.serv, logger}
+		del := delivery{f.serv, logger, tokens.NewHMACHashToken("test_secret")}
 
 		url := "http://127.0.0.1/api/auth/login"
 		tmp, _ := json.Marshal(test.req)
@@ -237,7 +238,7 @@ func TestRegister(t *testing.T) {
 			test.prepare(&f)
 		}
 
-		del := delivery{f.serv, logger}
+		del := delivery{f.serv, logger, tokens.NewHMACHashToken("test_secret")}
 
 		url := "http://127.0.0.1/api/auth/signup"
 		tmp, _ := json.Marshal(test.req)
@@ -288,7 +289,7 @@ func TestLogout(t *testing.T) {
 			test.prepare(&f)
 		}
 
-		del := delivery{f.serv, logger}
+		del := delivery{f.serv, logger, tokens.NewHMACHashToken("test_secret")}
 
 		const url = "http://127.0.0.1/api/auth/logout"
 		req := httptest.NewRequest(http.MethodDelete, url, nil)

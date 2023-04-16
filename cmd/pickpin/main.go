@@ -30,6 +30,8 @@ import (
 	profileRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/repository/postgres"
 	profileService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/service"
 
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
 
@@ -71,9 +73,10 @@ func main() {
 	likesRepo := likesRepository.NewRepository(db, logger)
 	likesServ := likesService.NewService(likesRepo)
 
+	token := tokens.NewHMACHashToken(config.Get("CSRF_TOKEN_SECRET"))
 	authRepo := authRepository.NewRepository(db, rdb, ctx, logger)
 	authServ := authService.NewService(authRepo)
-	authorizer := middleware.NewAuthorizer(authServ)
+	authorizer := middleware.NewAuthorizer(authServ, token, logger)
 
 	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
 	pinsServ := pinsService.NewService(pinsRepo)
@@ -81,7 +84,7 @@ func main() {
 	profileRepo := profileRepository.NewPostgresRepository(db, imagesServ, logger)
 	profileServ := profileService.NewProfileService(profileRepo)
 
-	authDelivery.RegisterHandlers(mux, logger, authServ)
+	authDelivery.RegisterHandlers(mux, logger, authServ, token)
 	likesDelivery.RegisterHandlers(mux, logger, authorizer, likesServ)
 	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
 	profileDelivery.RegisterHandlers(mux, logger, authorizer, profileServ)
