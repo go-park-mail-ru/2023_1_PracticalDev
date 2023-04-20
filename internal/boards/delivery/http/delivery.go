@@ -2,30 +2,35 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"net/http"
 	"strconv"
 
-	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
+	"github.com/pkg/errors"
+
+	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/julienschmidt/httprouter"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv _boards.Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv pkgBoards.Service) {
 	del := delivery{serv, logger}
 
-	mux.POST("/boards", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.create)), logger), logger))
-	mux.GET("/boards", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.list)), logger), logger))
-	mux.GET("/boards/:board_id", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(access.ReadChecker(del.get))), logger), logger))
-	mux.PUT("/boards/:board_id", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(access.WriteChecker(del.fullUpdate))), logger), logger))
-	mux.PATCH("/boards/:board_id", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(access.WriteChecker(del.partialUpdate))), logger), logger))
-	mux.DELETE("/boards/:board_id", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(access.WriteChecker(del.delete))), logger), logger))
+	mux.POST("/boards", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.create)), logger), logger))
+	mux.GET("/boards", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.list)), logger), logger))
+	mux.GET("/boards/:id", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(access.ReadChecker(del.get))), logger), logger))
+	mux.PUT("/boards/:id", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(access.WriteChecker(del.fullUpdate))), logger), logger))
+	mux.PATCH("/boards/:id", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(access.WriteChecker(del.partialUpdate))), logger), logger))
+	mux.DELETE("/boards/:id", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(access.WriteChecker(del.delete))), logger), logger))
+
+	mux.POST("/boards/:id/pins/:pin_id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.WriteChecker(del.addPin))), logger), logger))
+	mux.GET("/boards/:id/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.ReadChecker(del.pinsList))), logger), logger))
+	mux.DELETE("/boards/:id/pins/:pin_id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.WriteChecker(del.removePin))), logger), logger))
 }
 
 type delivery struct {
-	serv _boards.Service
+	serv pkgBoards.Service
 	log  log.Logger
 }
 
@@ -43,7 +48,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 		return mw.ErrParseJson
 	}
 
-	params := _boards.CreateParams{
+	params := pkgBoards.CreateParams{
 		Name:        request.Name,
 		Description: request.Description,
 		Privacy:     "secret",
@@ -55,7 +60,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 
 	createdBoard, err := del.serv.Create(&params)
 	if err != nil {
-		if errors.Is(err, _boards.ErrInvalidPrivacy) {
+		if errors.Is(err, pkgBoards.ErrInvalidPrivacy) {
 			return mw.ErrBadParams
 		} else {
 			return mw.ErrService
@@ -96,7 +101,7 @@ func (del *delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.P
 }
 
 func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strId := p.ByName("board_id")
+	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		return mw.ErrInvalidBoardIdParam
@@ -119,12 +124,13 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 		return mw.ErrCreateResponse
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	return err
 }
 
 func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strId := p.ByName("board_id")
+	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		return mw.ErrInvalidBoardIdParam
@@ -137,7 +143,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		return mw.ErrParseJson
 	}
 
-	params := _boards.FullUpdateParams{
+	params := pkgBoards.FullUpdateParams{
 		Id:          id,
 		Name:        request.Name,
 		Description: request.Description,
@@ -149,7 +155,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 
 	board, err := del.serv.FullUpdate(&params)
 	if err != nil {
-		if errors.Is(err, _boards.ErrBoardNotFound) {
+		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
 			return mw.ErrBoardNotFound
 		} else {
 			return mw.ErrService
@@ -174,7 +180,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 }
 
 func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strId := p.ByName("board_id")
+	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		return mw.ErrInvalidBoardIdParam
@@ -187,7 +193,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		return mw.ErrParseJson
 	}
 
-	params := _boards.PartialUpdateParams{
+	params := pkgBoards.PartialUpdateParams{
 		Id:      id,
 		Privacy: "secret",
 	}
@@ -206,7 +212,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 
 	board, err := del.serv.PartialUpdate(&params)
 	if err != nil {
-		if errors.Is(err, _boards.ErrBoardNotFound) {
+		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
 			return mw.ErrBoardNotFound
 		} else {
 			return mw.ErrService
@@ -231,7 +237,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 }
 
 func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strId := p.ByName("board_id")
+	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
 		return mw.ErrInvalidBoardIdParam
@@ -239,11 +245,102 @@ func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter
 
 	err = del.serv.Delete(id)
 	if err != nil {
-		if errors.Is(err, _boards.ErrBoardNotFound) {
+		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
 			return mw.ErrBoardNotFound
 		} else {
 			return mw.ErrService
 		}
 	}
 	return nil
+}
+
+func (del *delivery) pinsList(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strBoardId := p.ByName("id")
+	boardId, err := strconv.Atoi(strBoardId)
+	if err != nil {
+		return mw.ErrInvalidBoardIdParam
+	}
+
+	queryValues := r.URL.Query()
+	page := 1
+	strPage := queryValues.Get("page")
+	if strPage != "" {
+		page, err = strconv.Atoi(strPage)
+		if err != nil {
+			return mw.ErrInvalidPageParam
+		} else if page < 1 {
+			return mw.ErrInvalidPageParam
+		}
+	}
+
+	limit := 30
+	strLimit := queryValues.Get("limit")
+	if strLimit != "" {
+		limit, err = strconv.Atoi(strLimit)
+		if err != nil {
+			return mw.ErrInvalidLimitParam
+		} else if limit < 0 {
+			return mw.ErrInvalidLimitParam
+		}
+	}
+
+	pins, err := del.serv.PinsList(boardId, page, limit)
+	if err != nil {
+		return mw.ErrService
+	}
+
+	response := pinListResponse{Pins: pins}
+	data, err := json.Marshal(response)
+	if err != nil {
+		return mw.ErrCreateResponse
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	return err
+}
+
+func (del *delivery) addPin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strId := p.ByName("id")
+	boardId, err := strconv.Atoi(strId)
+	if err != nil {
+		return mw.ErrInvalidBoardIdParam
+	}
+
+	strId = p.ByName("pin_id")
+	pinId, err := strconv.Atoi(strId)
+	if err != nil {
+		return mw.ErrInvalidPinIdParam
+	}
+
+	err = del.serv.AddPin(boardId, pinId)
+	if err != nil {
+		switch err {
+		case pkgBoards.ErrPinAlreadyAdded:
+			return mw.ErrPinAlreadyAdded
+		default:
+			return mw.ErrService
+		}
+	}
+	return nil
+}
+
+func (del *delivery) removePin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strId := p.ByName("id")
+	boardId, err := strconv.Atoi(strId)
+	if err != nil {
+		return mw.ErrInvalidBoardIdParam
+	}
+
+	strId = p.ByName("pin_id")
+	pinId, err := strconv.Atoi(strId)
+	if err != nil {
+		return mw.ErrInvalidPinIdParam
+	}
+
+	err = del.serv.RemovePin(boardId, pinId)
+	if err != nil {
+		return mw.ErrService
+	}
+	return mw.ErrNoContent
 }

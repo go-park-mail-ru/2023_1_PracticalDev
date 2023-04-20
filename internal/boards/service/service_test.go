@@ -395,6 +395,77 @@ func TestDelete(t *testing.T) {
 	}
 }
 
+func TestPinsList(t *testing.T) {
+	type fields struct {
+		repo *mocks.MockRepository
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		page    int
+		limit   int
+		boardId int
+		pins    []models.Pin
+		err     error
+	}
+
+	tests := map[string]testCase{
+		"usual": {
+			prepare: func(f *fields) {
+				f.repo.EXPECT().PinsList(3, 1, 30).Return([]models.Pin{
+					{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
+					{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
+					{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
+				}, nil)
+			},
+			page:    1,
+			limit:   30,
+			boardId: 3,
+			pins: []models.Pin{
+				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
+				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
+				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
+			},
+			err: nil,
+		},
+		"no boards": {
+			prepare: func(f *fields) {
+				f.repo.EXPECT().PinsList(3, 1, 30).Return([]models.Pin{}, nil)
+			},
+			boardId: 3,
+			page:    1,
+			limit:   30,
+			pins:    []models.Pin{},
+			err:     nil,
+		},
+	}
+
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
+
+			serv := NewBoardsService(f.repo)
+
+			pins, err := serv.PinsList(test.boardId, test.page, test.limit)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if !reflect.DeepEqual(pins, test.pins) {
+				t.Errorf("\nExpected: %v\nGot: %v", test.pins, pins)
+			}
+		})
+	}
+}
+
 func TestCheckWriteAccess(t *testing.T) {
 	type fields struct {
 		repo *mocks.MockRepository

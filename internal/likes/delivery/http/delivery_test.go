@@ -37,7 +37,7 @@ func TestLike(t *testing.T) {
 				{Key: "id", Value: "3"},
 				{Key: "user-id", Value: "2"},
 			},
-			err: nil,
+			err: mw.ErrNoContent,
 		},
 		"invalid user id param": {
 			prepare: func(f *fields) {},
@@ -247,7 +247,7 @@ func TestUnlike(t *testing.T) {
 				{Key: "id", Value: "3"},
 				{Key: "user-id", Value: "2"},
 			},
-			err: nil,
+			err: mw.ErrNoContent,
 		},
 		"invalid user id param": {
 			prepare: func(f *fields) {},

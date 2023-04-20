@@ -26,26 +26,27 @@ import (
 	imagesRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/repository/s3"
 	imagesService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/service"
 
+	usersDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users/delivery/http"
+	usersRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users/repository/postgres"
+	usersService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users/service"
+
 	profileDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/delivery/http"
 	profileRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/repository/postgres"
 	profileService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/service"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
+	pkgDb "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
-
-	_db "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/redis"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users"
 )
 
 func main() {
 	logger := log.New()
 
-	db, err := _db.New(logger)
+	db, err := pkgDb.New(logger)
 	if err != nil {
 		os.Exit(1)
 	}
@@ -81,12 +82,15 @@ func main() {
 	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
 	pinsServ := pinsService.NewService(pinsRepo)
 
+	usersRepo := usersRepository.NewRepository(db, logger)
+	usersServ := usersService.NewService(usersRepo)
+
 	profileRepo := profileRepository.NewPostgresRepository(db, imagesServ, logger)
 	profileServ := profileService.NewProfileService(profileRepo)
 
 	authDelivery.RegisterHandlers(mux, logger, authServ, token)
 	likesDelivery.RegisterHandlers(mux, logger, authorizer, likesServ)
-	users.RegisterHandlers(mux, logger, authorizer, users.NewService(users.NewRepository(db, logger)))
+	usersDelivery.RegisterHandlers(mux, logger, authorizer, usersServ)
 	profileDelivery.RegisterHandlers(mux, logger, authorizer, profileServ)
 	boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ)
 	ping.RegisterHandlers(mux, logger)

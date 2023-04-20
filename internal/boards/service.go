@@ -6,7 +6,8 @@ import (
 )
 
 var (
-	ErrInvalidPrivacy = errors.New("invalid privacy")
+	ErrInvalidPrivacy  = errors.New("invalid privacy")
+	ErrPinAlreadyAdded = errors.New("pin already added")
 )
 
 type Service interface {
@@ -16,6 +17,10 @@ type Service interface {
 	FullUpdate(params *FullUpdateParams) (models.Board, error)
 	PartialUpdate(params *PartialUpdateParams) (models.Board, error)
 	Delete(id int) error
+
+	AddPin(boardId, pinId int) error
+	PinsList(boardId int, page, limit int) ([]models.Pin, error)
+	RemovePin(boardId, pinId int) error
 
 	CheckWriteAccess(userId, boardId string) (bool, error)
 	CheckReadAccess(userId, boardId string) (bool, error)

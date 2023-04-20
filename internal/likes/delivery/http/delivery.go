@@ -15,11 +15,11 @@ import (
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv pkgLikes.Service) {
 	del := delivery{serv, logger}
 
-	mux.POST("/pins/:id/like", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.like)), logger), logger))
-	mux.DELETE("/pins/:id/like", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.unlike)), logger), logger))
+	mux.POST("/pins/:id/like", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.like)), logger), logger))
+	mux.DELETE("/pins/:id/like", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.unlike)), logger), logger))
 
-	mux.GET("/pins/:id/likes", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.listByPin)), logger), logger))
-	mux.GET("/users/:id/likes", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.listByAuthor)), logger), logger))
+	mux.GET("/pins/:id/likes", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.listByPin)), logger), logger))
+	mux.GET("/users/:id/likes", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.listByAuthor)), logger), logger))
 }
 
 type delivery struct {
@@ -53,7 +53,7 @@ func (del *delivery) like(w http.ResponseWriter, r *http.Request, p httprouter.P
 			return mw.ErrService
 		}
 	}
-	return nil
+	return mw.ErrNoContent
 }
 
 func (del *delivery) unlike(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -82,7 +82,7 @@ func (del *delivery) unlike(w http.ResponseWriter, r *http.Request, p httprouter
 			return mw.ErrService
 		}
 	}
-	return nil
+	return mw.ErrNoContent
 }
 
 func (del *delivery) listByPin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -107,7 +107,10 @@ func (del *delivery) listByPin(w http.ResponseWriter, r *http.Request, p httprou
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return mw.ErrCreateResponse
+	}
+	return nil
 }
 
 func (del *delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -132,5 +135,8 @@ func (del *delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p http
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return mw.ErrCreateResponse
+	}
+	return nil
 }

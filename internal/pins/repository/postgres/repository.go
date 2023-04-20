@@ -3,12 +3,13 @@ package postgres
 import (
 	"database/sql"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
+	pkgLikes "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	_pins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 )
 
-func NewRepository(db *sql.DB, s3Service images.Service, log log.Logger) _pins.Repository {
+func NewRepository(db *sql.DB, s3Service images.Service, log log.Logger) pkgPins.Repository {
 	return &repository{db, log, s3Service}
 }
 
@@ -18,7 +19,7 @@ type repository struct {
 	imgServ images.Service
 }
 
-func (repo *repository) Create(params *_pins.CreateParams) (models.Pin, error) {
+func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error) {
 	url, err := repo.imgServ.UploadImage(&params.MediaSource)
 	if err != nil {
 		return models.Pin{}, err
@@ -35,7 +36,7 @@ func (repo *repository) Create(params *_pins.CreateParams) (models.Pin, error) {
 	var title, description, mediaSource sql.NullString
 	err = row.Scan(&retrievedPin.Id, &title, &mediaSource, &description, &retrievedPin.Author)
 	if err != nil {
-		err = _pins.ErrDb
+		err = pkgPins.ErrDb
 	}
 	retrievedPin.Title = title.String
 	retrievedPin.Description = description.String
@@ -46,58 +47,36 @@ func (repo *repository) Create(params *_pins.CreateParams) (models.Pin, error) {
 func (repo *repository) Get(id int) (models.Pin, error) {
 	row := repo.db.QueryRow(getCmd, id)
 
-	retrievedPin := models.Pin{}
+	pin := models.Pin{}
 	var title, description, mediaSource sql.NullString
-	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+	err := row.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 	if err != nil {
-		err = _pins.ErrDb
+		err = pkgPins.ErrDb
 	}
-	retrievedPin.Title = title.String
-	retrievedPin.Description = description.String
-	retrievedPin.MediaSource = mediaSource.String
-	return retrievedPin, err
+	pin.Title = title.String
+	pin.Description = description.String
+	pin.MediaSource = mediaSource.String
+	return pin, err
 }
 
-func (repo *repository) ListByUser(userId int, page, limit int) ([]models.Pin, error) {
+func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listByUserCmd, userId, limit, (page-1)*limit)
 	if err != nil {
-		return nil, _pins.ErrDb
+		return nil, pkgPins.ErrDb
 	}
 
 	var pins []models.Pin
-	retrievedPin := models.Pin{}
+	pin := models.Pin{}
 	var title, description, mediaSource sql.NullString
 	for rows.Next() {
-		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 		if err != nil {
-			return nil, _pins.ErrDb
+			return nil, pkgPins.ErrDb
 		}
-		retrievedPin.Title = title.String
-		retrievedPin.Description = description.String
-		retrievedPin.MediaSource = mediaSource.String
-		pins = append(pins, retrievedPin)
-	}
-	return pins, nil
-}
-
-func (repo *repository) ListByBoard(boardId int, page, limit int) ([]models.Pin, error) {
-	rows, err := repo.db.Query(listByBoardCmd, boardId, limit, (page-1)*limit)
-	if err != nil {
-		return nil, _pins.ErrDb
-	}
-
-	var pins []models.Pin
-	retrievedPin := models.Pin{}
-	var title, description, mediaSource sql.NullString
-	for rows.Next() {
-		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
-		if err != nil {
-			return nil, _pins.ErrDb
-		}
-		retrievedPin.Title = title.String
-		retrievedPin.Description = description.String
-		retrievedPin.MediaSource = mediaSource.String
-		pins = append(pins, retrievedPin)
+		pin.Title = title.String
+		pin.Description = description.String
+		pin.MediaSource = mediaSource.String
+		pins = append(pins, pin)
 	}
 	return pins, nil
 }
@@ -105,43 +84,37 @@ func (repo *repository) ListByBoard(boardId int, page, limit int) ([]models.Pin,
 func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listCmd, limit, (page-1)*limit)
 	if err != nil {
-		return nil, _pins.ErrDb
+		return nil, pkgPins.ErrDb
 	}
 
-	var pins []models.Pin
-	retrievedPin := models.Pin{}
+	pins := []models.Pin{}
+	pin := models.Pin{}
 	var title, description, mediaSource sql.NullString
 	for rows.Next() {
-		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 		if err != nil {
-			return nil, _pins.ErrDb
+			return nil, pkgPins.ErrDb
 		}
-		retrievedPin.Title = title.String
-		retrievedPin.Description = description.String
-		retrievedPin.MediaSource = mediaSource.String
-		pins = append(pins, retrievedPin)
+		pin.Title = title.String
+		pin.Description = description.String
+		pin.MediaSource = mediaSource.String
+		pins = append(pins, pin)
 	}
 	return pins, nil
 }
 
-func (repo *repository) FullUpdate(params *_pins.FullUpdateParams) (models.Pin, error) {
-	url, err := repo.imgServ.UploadImage(&params.MediaSource)
-	if err != nil {
-		return models.Pin{}, err
-	}
-
+func (repo *repository) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin, error) {
 	row := repo.db.QueryRow(fullUpdateCmd,
 		params.Title,
 		params.Description,
-		url,
 		params.Id,
 	)
 
 	retrievedPin := models.Pin{}
 	var title, description, mediaSource sql.NullString
-	err = row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
 	if err != nil {
-		err = _pins.ErrDb
+		err = pkgPins.ErrDb
 	}
 	retrievedPin.Title = title.String
 	retrievedPin.Description = description.String
@@ -161,28 +134,19 @@ func (repo *repository) Delete(id int) error {
 	return nil
 }
 
-func (repo *repository) AddToBoard(boardId, pinId int) error {
-	res, err := repo.db.Exec(addToBoardCmd, pinId, boardId)
-	if err != nil {
-		return err
-	}
-	count, err := res.RowsAffected()
-	if err != nil || count < 1 {
-		return err
-	}
-	return nil
-}
+const isLikedByUserCmd = `SELECT EXISTS(SELECT pin_id
+										FROM pin_likes
+										WHERE pin_id = $1 AND author_id = $2) AS liked;`
 
-func (repo *repository) RemoveFromBoard(boardId, pinId int) error {
-	res, err := repo.db.Exec(deleteFromBoardCmd, pinId, boardId)
+func (repo *repository) IsLikedByUser(pinId, userId int) (bool, error) {
+	row := repo.db.QueryRow(isLikedByUserCmd, pinId, userId)
+
+	var liked bool
+	err := row.Scan(&liked)
 	if err != nil {
-		return err
+		return false, pkgLikes.ErrDb
 	}
-	count, err := res.RowsAffected()
-	if err != nil || count < 1 {
-		return err
-	}
-	return nil
+	return liked, nil
 }
 
 func (repo *repository) CheckWriteAccess(userId, pinId string) (bool, error) {

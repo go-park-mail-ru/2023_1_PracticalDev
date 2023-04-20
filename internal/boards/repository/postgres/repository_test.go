@@ -7,8 +7,9 @@ import (
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/golang/mock/gomock"
 
-	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
+	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
@@ -20,7 +21,7 @@ func TestCreate(t *testing.T) {
 
 	type testCase struct {
 		prepare func(f *fields)
-		params  _boards.CreateParams
+		params  pkgBoards.CreateParams
 		board   models.Board
 		err     error
 	}
@@ -39,7 +40,7 @@ func TestCreate(t *testing.T) {
 					WithArgs("n1", "d1", "secret", 12).
 					WillReturnRows(rows)
 			},
-			params: _boards.CreateParams{
+			params: pkgBoards.CreateParams{
 				Name:        "n1",
 				Description: "d1",
 				Privacy:     "secret",
@@ -53,16 +54,16 @@ func TestCreate(t *testing.T) {
 				f.mock.
 					ExpectQuery(regexp.QuoteMeta(createCmd)).
 					WithArgs("n1", "d1", "secret", 12).
-					WillReturnError(_boards.ErrDb)
+					WillReturnError(pkgBoards.ErrDb)
 			},
-			params: _boards.CreateParams{
+			params: pkgBoards.CreateParams{
 				Name:        "n1",
 				Description: "d1",
 				Privacy:     "secret",
 				UserId:      12,
 			},
 			board: models.Board{},
-			err:   _boards.ErrDb,
+			err:   pkgBoards.ErrDb,
 		},
 	}
 
@@ -149,7 +150,7 @@ func TestList(t *testing.T) {
 			},
 			userId: 12,
 			boards: nil,
-			err:    _boards.ErrDb,
+			err:    pkgBoards.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
@@ -161,7 +162,7 @@ func TestList(t *testing.T) {
 			},
 			userId: 12,
 			boards: nil,
-			err:    _boards.ErrDb,
+			err:    pkgBoards.ErrDb,
 		},
 	}
 
@@ -237,7 +238,7 @@ func TestGet(t *testing.T) {
 			},
 			id:    3,
 			board: models.Board{},
-			err:   _boards.ErrDb,
+			err:   pkgBoards.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
@@ -249,7 +250,7 @@ func TestGet(t *testing.T) {
 			},
 			id:    1,
 			board: models.Board{},
-			err:   _boards.ErrDb,
+			err:   pkgBoards.ErrDb,
 		},
 	}
 
@@ -293,7 +294,7 @@ func TestFullUpdate(t *testing.T) {
 
 	type testCase struct {
 		prepare func(f *fields)
-		params  _boards.FullUpdateParams
+		params  pkgBoards.FullUpdateParams
 		board   models.Board
 		err     error
 	}
@@ -315,7 +316,7 @@ func TestFullUpdate(t *testing.T) {
 					WithArgs("upd_n1", "upd_d1", "secret", 3).
 					WillReturnRows(rows)
 			},
-			params: _boards.FullUpdateParams{
+			params: pkgBoards.FullUpdateParams{
 				Id:          3,
 				Name:        "upd_n1",
 				Description: "upd_d1",
@@ -337,14 +338,14 @@ func TestFullUpdate(t *testing.T) {
 					WithArgs("upd_n1", "upd_d1", "secret", 3).
 					WillReturnError(fmt.Errorf("db error"))
 			},
-			params: _boards.FullUpdateParams{
+			params: pkgBoards.FullUpdateParams{
 				Id:          3,
 				Name:        "upd_n1",
 				Description: "upd_d1",
 				Privacy:     "secret",
 			},
 			board: models.Board{},
-			err:   _boards.ErrDb,
+			err:   pkgBoards.ErrDb,
 		},
 	}
 
@@ -388,7 +389,7 @@ func TestPartialUpdate(t *testing.T) {
 
 	type testCase struct {
 		prepare func(f *fields)
-		params  _boards.PartialUpdateParams
+		params  pkgBoards.PartialUpdateParams
 		board   models.Board
 		err     error
 	}
@@ -410,7 +411,7 @@ func TestPartialUpdate(t *testing.T) {
 					WithArgs(true, "upd_n1", true, "upd_d1", true, "secret", 3).
 					WillReturnRows(rows)
 			},
-			params: _boards.PartialUpdateParams{
+			params: pkgBoards.PartialUpdateParams{
 				Id:                3,
 				Name:              "upd_n1",
 				UpdateName:        true,
@@ -435,7 +436,7 @@ func TestPartialUpdate(t *testing.T) {
 					WithArgs(true, "upd_n1", true, "upd_d1", true, "secret", 3).
 					WillReturnError(fmt.Errorf("db error"))
 			},
-			params: _boards.PartialUpdateParams{
+			params: pkgBoards.PartialUpdateParams{
 				Id:                3,
 				Name:              "upd_n1",
 				UpdateName:        true,
@@ -445,7 +446,7 @@ func TestPartialUpdate(t *testing.T) {
 				UpdatePrivacy:     true,
 			},
 			board: models.Board{},
-			err:   _boards.ErrDb,
+			err:   pkgBoards.ErrDb,
 		},
 	}
 
@@ -515,7 +516,7 @@ func TestDelete(t *testing.T) {
 					WillReturnError(fmt.Errorf("db error"))
 			},
 			id:  3,
-			err: _boards.ErrDb,
+			err: pkgBoards.ErrDb,
 		},
 	}
 
@@ -543,6 +544,108 @@ func TestDelete(t *testing.T) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if err = mock.ExpectationsWereMet(); err != nil {
+				t.Errorf("\nThere were unfulfilled expectations: %s", err)
+			}
+		})
+	}
+}
+
+func TestPinsList(t *testing.T) {
+	type fields struct {
+		mock sqlmock.Sqlmock
+	}
+
+	type testCase struct {
+		prepare func(f *fields)
+		boardId int
+		page    int
+		limit   int
+		pins    []models.Pin
+		err     error
+	}
+
+	tests := map[string]testCase{
+		"good query": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"id", "title", "description", "media_source", "author_id"})
+				rows = rows.AddRow(1, "t1", "d1", "ms_url1", 12)
+				rows = rows.AddRow(2, "t2", "d2", "ms_url2", 12)
+				rows = rows.AddRow(3, "t3", "d3", "ms_url3", 12)
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(listByBoardCmd)).
+					WithArgs(3, 30, 0).
+					WillReturnRows(rows)
+			},
+			boardId: 3,
+			page:    1,
+			limit:   30,
+			pins: []models.Pin{
+				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
+				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
+				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
+			},
+			err: nil,
+		},
+		"query error": {
+			prepare: func(f *fields) {
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(listByBoardCmd)).
+					WithArgs(3, 30, 0).
+					WillReturnError(fmt.Errorf("sql error"))
+			},
+			boardId: 3,
+			page:    1,
+			limit:   30,
+			pins:    nil,
+			err:     pkgBoards.ErrDb,
+		},
+		"row scan error": {
+			prepare: func(f *fields) {
+				rows := sqlmock.NewRows([]string{"id", "title"}).AddRow(1, "t1")
+				f.mock.
+					ExpectQuery(regexp.QuoteMeta(listByBoardCmd)).
+					WithArgs(3, 30, 0).
+					WillReturnRows(rows)
+			},
+			boardId: 3,
+			page:    1,
+			limit:   30,
+			pins:    nil,
+			err:     pkgBoards.ErrDb,
+		},
+	}
+
+	for name, test := range tests {
+		test := test
+		t.Run(name, func(t *testing.T) {
+			t.Parallel()
+
+			db, sqlMock, err := sqlmock.New()
+			if err != nil {
+				t.Fatalf("can't create mock: %s", err)
+			}
+			defer db.Close()
+
+			logger := log.New()
+
+			ctrl := gomock.NewController(t)
+			defer ctrl.Finish()
+
+			repo := NewPostgresRepository(db, logger)
+
+			f := fields{mock: sqlMock}
+			if test.prepare != nil {
+				test.prepare(&f)
+			}
+
+			pins, err := repo.PinsList(test.boardId, test.page, test.limit)
+			if err != test.err {
+				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
+			}
+			if !reflect.DeepEqual(pins, test.pins) {
+				t.Errorf("\nExpected: %v\nGot: %v", test.pins, pins)
+			}
+			if err = sqlMock.ExpectationsWereMet(); err != nil {
 				t.Errorf("\nThere were unfulfilled expectations: %s", err)
 			}
 		})
@@ -590,7 +693,7 @@ func TestCheckWriteAccess(t *testing.T) {
 			userId:  "2",
 			boardId: "3",
 			access:  false,
-			err:     _boards.ErrDb,
+			err:     pkgBoards.ErrDb,
 		},
 	}
 
@@ -668,7 +771,7 @@ func TestCheckReadAccess(t *testing.T) {
 			userId:  "2",
 			boardId: "3",
 			access:  false,
-			err:     _boards.ErrDb,
+			err:     pkgBoards.ErrDb,
 		},
 	}
 

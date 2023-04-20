@@ -118,10 +118,10 @@ func TestList(t *testing.T) {
 	tests := map[string]testCase{
 		"good query": {
 			prepare: func(f *fields) {
-				rows := sqlmock.NewRows([]string{"id", "title", "description", "media_source", "author_id"})
-				rows = rows.AddRow(1, "t1", "d1", "ms_url1", 12)
-				rows = rows.AddRow(2, "t2", "d2", "ms_url2", 3)
-				rows = rows.AddRow(3, "t3", "d3", "ms_url3", 10)
+				rows := sqlmock.NewRows([]string{"id", "title", "description", "media_source", "n_likes", "author_id"})
+				rows = rows.AddRow(1, "t1", "d1", "ms_url1", 0, 12)
+				rows = rows.AddRow(2, "t2", "d2", "ms_url2", 2, 3)
+				rows = rows.AddRow(3, "t3", "d3", "ms_url3", 3, 10)
 				f.mock.
 					ExpectQuery(regexp.QuoteMeta(listCmd)).
 					WithArgs(30, 0).
@@ -130,9 +130,9 @@ func TestList(t *testing.T) {
 			page:  1,
 			limit: 30,
 			pins: []models.Pin{
-				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
-				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 3},
-				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 10},
+				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", NumLikes: 0, Author: 12},
+				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", NumLikes: 2, Author: 3},
+				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", NumLikes: 3, Author: 10},
 			},
 			err: nil,
 		},
@@ -218,10 +218,10 @@ func TestListByUser(t *testing.T) {
 	tests := map[string]testCase{
 		"good query": {
 			prepare: func(f *fields) {
-				rows := sqlmock.NewRows([]string{"id", "title", "description", "media_source", "author_id"})
-				rows = rows.AddRow(1, "t1", "d1", "ms_url1", 12)
-				rows = rows.AddRow(2, "t2", "d2", "ms_url2", 12)
-				rows = rows.AddRow(3, "t3", "d3", "ms_url3", 12)
+				rows := sqlmock.NewRows([]string{"id", "title", "description", "media_source", "n_likes", "author_id"})
+				rows = rows.AddRow(1, "t1", "d1", "ms_url1", 0, 12)
+				rows = rows.AddRow(2, "t2", "d2", "ms_url2", 2, 12)
+				rows = rows.AddRow(3, "t3", "d3", "ms_url3", 3, 12)
 				f.mock.
 					ExpectQuery(regexp.QuoteMeta(listByUserCmd)).
 					WithArgs(12, 30, 0).
@@ -231,9 +231,9 @@ func TestListByUser(t *testing.T) {
 			page:   1,
 			limit:  30,
 			pins: []models.Pin{
-				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
-				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
-				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
+				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", NumLikes: 0, Author: 12},
+				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", NumLikes: 2, Author: 12},
+				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", NumLikes: 3, Author: 12},
 			},
 			err: nil,
 		},
@@ -290,110 +290,7 @@ func TestListByUser(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			pins, err := repo.ListByUser(test.userId, test.page, test.limit)
-			if err != test.err {
-				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
-			}
-			if !reflect.DeepEqual(pins, test.pins) {
-				t.Errorf("\nExpected: %v\nGot: %v", test.pins, pins)
-			}
-			if err = sqlMock.ExpectationsWereMet(); err != nil {
-				t.Errorf("\nThere were unfulfilled expectations: %s", err)
-			}
-		})
-	}
-}
-
-func TestListByBoard(t *testing.T) {
-	type fields struct {
-		mock sqlmock.Sqlmock
-	}
-
-	type testCase struct {
-		prepare func(f *fields)
-		boardId int
-		page    int
-		limit   int
-		pins    []models.Pin
-		err     error
-	}
-
-	tests := map[string]testCase{
-		"good query": {
-			prepare: func(f *fields) {
-				rows := sqlmock.NewRows([]string{"id", "title", "description", "media_source", "author_id"})
-				rows = rows.AddRow(1, "t1", "d1", "ms_url1", 12)
-				rows = rows.AddRow(2, "t2", "d2", "ms_url2", 12)
-				rows = rows.AddRow(3, "t3", "d3", "ms_url3", 12)
-				f.mock.
-					ExpectQuery(regexp.QuoteMeta(listByBoardCmd)).
-					WithArgs(3, 30, 0).
-					WillReturnRows(rows)
-			},
-			boardId: 3,
-			page:    1,
-			limit:   30,
-			pins: []models.Pin{
-				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
-				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
-				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
-			},
-			err: nil,
-		},
-		"query error": {
-			prepare: func(f *fields) {
-				f.mock.
-					ExpectQuery(regexp.QuoteMeta(listByBoardCmd)).
-					WithArgs(3, 30, 0).
-					WillReturnError(fmt.Errorf("sql error"))
-			},
-			boardId: 3,
-			page:    1,
-			limit:   30,
-			pins:    nil,
-			err:     _pins.ErrDb,
-		},
-		"row scan error": {
-			prepare: func(f *fields) {
-				rows := sqlmock.NewRows([]string{"id", "title"}).AddRow(1, "t1")
-				f.mock.
-					ExpectQuery(regexp.QuoteMeta(listByBoardCmd)).
-					WithArgs(3, 30, 0).
-					WillReturnRows(rows)
-			},
-			boardId: 3,
-			page:    1,
-			limit:   30,
-			pins:    nil,
-			err:     _pins.ErrDb,
-		},
-	}
-
-	for name, test := range tests {
-		test := test
-		t.Run(name, func(t *testing.T) {
-			t.Parallel()
-
-			db, sqlMock, err := sqlmock.New()
-			if err != nil {
-				t.Fatalf("can't create mock: %s", err)
-			}
-			defer db.Close()
-
-			logger := log.New()
-
-			ctrl := gomock.NewController(t)
-			defer ctrl.Finish()
-			s3Serv := mocks.NewMockService(ctrl)
-
-			repo := NewRepository(db, s3Serv, logger)
-
-			f := fields{mock: sqlMock}
-			if test.prepare != nil {
-				test.prepare(&f)
-			}
-
-			pins, err := repo.ListByBoard(test.boardId, test.page, test.limit)
+			pins, err := repo.ListByAuthor(test.userId, test.page, test.limit)
 			if err != test.err {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
@@ -422,15 +319,15 @@ func TestGet(t *testing.T) {
 	tests := map[string]testCase{
 		"good query": {
 			prepare: func(f *fields) {
-				rows := sqlmock.NewRows([]string{"id", "title", "description", "media_source", "author_id"})
-				rows = rows.AddRow(3, "t1", "d1", "ms_url1", 12)
+				rows := sqlmock.NewRows([]string{"id", "title", "description", "media_source", "n_likes", "author_id"})
+				rows = rows.AddRow(3, "t1", "d1", "ms_url1", 3, 12)
 				f.mock.
 					ExpectQuery(regexp.QuoteMeta(getCmd)).
 					WithArgs(3).
 					WillReturnRows(rows)
 			},
 			id:  3,
-			pin: models.Pin{Id: 3, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
+			pin: models.Pin{Id: 3, Title: "t1", MediaSource: "ms_url1", Description: "d1", NumLikes: 3, Author: 12},
 			err: nil,
 		},
 		"query error": {

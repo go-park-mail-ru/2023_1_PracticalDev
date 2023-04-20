@@ -21,9 +21,9 @@ import (
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv profile.Service) {
 	del := delivery{serv, logger}
 
-	mux.GET("/users/:id/profile", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.getProfileByUser)), logger), logger))
-	mux.PUT("/profile", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.fullUpdate)), logger), logger))
-	mux.PATCH("/profile", mw.HandleLogger(mw.ErrorHandler(mw.CorsChecker(authorizer(del.partialUpdate)), logger), logger))
+	mux.GET("/users/:id/profile", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.getProfileByUser)), logger), logger))
+	mux.PUT("/profile", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.fullUpdate)), logger), logger))
+	mux.PATCH("/profile", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.partialUpdate)), logger), logger))
 }
 
 type delivery struct {

@@ -15,26 +15,22 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	_pins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv _pins.Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv pkgPins.Service) {
 	del := delivery{serv, logger}
 
-	mux.POST("/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.create)), logger), logger))
-	mux.GET("/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.list)), logger), logger))
-	mux.GET("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.get)), logger), logger))
-	mux.GET("/users/:id/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.listByUser)), logger), logger))
-	mux.GET("/boards/:board_id/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(del.listByBoard)), logger), logger))
-	mux.PUT("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(access.WriteChecker(del.fullUpdate))), logger), logger))
-	mux.DELETE("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(access.WriteChecker(del.delete))), logger), logger))
-
-	mux.POST("/boards/:board_id/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(access.WriteChecker(del.addToBoard))), logger), logger))
-	mux.DELETE("/boards/:board_id/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.CorsChecker(access.WriteChecker(del.removeFromBoard))), logger), logger))
+	mux.POST("/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.create)), logger), logger))
+	mux.GET("/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.list)), logger), logger))
+	mux.GET("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.get)), logger), logger))
+	mux.GET("/users/:id/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.listByAuthor)), logger), logger))
+	mux.PUT("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.WriteChecker(del.fullUpdate))), logger), logger))
+	mux.DELETE("/pins/:id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.WriteChecker(del.delete))), logger), logger))
 }
 
 type delivery struct {
-	serv _pins.Service
+	serv pkgPins.Service
 	log  log.Logger
 }
 
@@ -66,7 +62,7 @@ func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.
 		Bytes: buf.Bytes(),
 	}
 
-	params := _pins.CreateParams{
+	params := pkgPins.CreateParams{
 		Title:       r.FormValue("title"),
 		Description: r.FormValue("description"),
 		MediaSource: image,
@@ -101,9 +97,15 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		return mw.ErrInvalidPinIdParam
 	}
 
-	pin, err := del.serv.Get(id)
+	strUserId := p.ByName("user-id")
+	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
-		if errors.Is(err, _pins.ErrPinNotFound) {
+		return mw.ErrInvalidUserIdParam
+	}
+
+	pin, err := del.serv.Get(id, userId)
+	if err != nil {
+		if errors.Is(err, pkgPins.ErrPinNotFound) {
 			return mw.ErrPinNotFound
 		} else {
 			return mw.ErrService
@@ -115,6 +117,8 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		Title:       pin.Title,
 		Description: pin.Description,
 		MediaSource: pin.MediaSource,
+		NumLikes:    pin.NumLikes,
+		Liked:       pin.Liked,
 		Author:      pin.Author,
 	}
 	data, err := json.Marshal(response)
@@ -127,8 +131,14 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	return err
 }
 
-func (del delivery) listByUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strUserId := p.ByName("id")
+func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strAuthorId := p.ByName("id")
+	authorId, err := strconv.Atoi(strAuthorId)
+	if err != nil {
+		return mw.ErrInvalidUserIdParam
+	}
+
+	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
 		return mw.ErrInvalidUserIdParam
@@ -157,53 +167,7 @@ func (del delivery) listByUser(w http.ResponseWriter, r *http.Request, p httprou
 		}
 	}
 
-	pins, err := del.serv.ListByUser(userId, page, limit)
-	if err != nil {
-		return mw.ErrService
-	}
-
-	response := listResponse{Pins: pins}
-	data, err := json.Marshal(response)
-	if err != nil {
-		return mw.ErrCreateResponse
-	}
-
-	w.Header().Set("Content-Type", "application/json")
-	_, err = w.Write(data)
-	return err
-}
-
-func (del delivery) listByBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strBoardId := p.ByName("board_id")
-	boardId, err := strconv.Atoi(strBoardId)
-	if err != nil {
-		return mw.ErrInvalidBoardIdParam
-	}
-
-	queryValues := r.URL.Query()
-	page := 1
-	strPage := queryValues.Get("page")
-	if strPage != "" {
-		page, err = strconv.Atoi(strPage)
-		if err != nil {
-			return mw.ErrInvalidPageParam
-		} else if page < 1 {
-			return mw.ErrInvalidPageParam
-		}
-	}
-
-	limit := 30
-	strLimit := queryValues.Get("limit")
-	if strLimit != "" {
-		limit, err = strconv.Atoi(strLimit)
-		if err != nil {
-			return mw.ErrInvalidLimitParam
-		} else if limit < 0 {
-			return mw.ErrInvalidLimitParam
-		}
-	}
-
-	pins, err := del.serv.ListByBoard(boardId, page, limit)
+	pins, err := del.serv.ListByAuthor(authorId, userId, page, limit)
 	if err != nil {
 		return mw.ErrService
 	}
@@ -220,7 +184,12 @@ func (del delivery) listByBoard(w http.ResponseWriter, r *http.Request, p httpro
 }
 
 func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	var err error
+	strUserId := p.ByName("user-id")
+	userId, err := strconv.Atoi(strUserId)
+	if err != nil {
+		return mw.ErrInvalidUserIdParam
+	}
+
 	queryValues := r.URL.Query()
 	page := 1
 	strPage := queryValues.Get("page")
@@ -244,7 +213,7 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 		}
 	}
 
-	pins, err := del.serv.List(page, limit)
+	pins, err := del.serv.List(userId, page, limit)
 	if err != nil {
 		return mw.ErrService
 	}
@@ -267,32 +236,10 @@ func (del delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprou
 		return mw.ErrInvalidPinIdParam
 	}
 
-	file, handler, err := r.FormFile("bytes")
-	if err != nil {
-		if errors.Is(err, http.ErrMissingFile) {
-			return mw.ErrMissingFile
-		} else {
-			return mw.ErrParseForm
-		}
-	}
-	defer file.Close()
-
-	buf := bytes.NewBuffer(nil)
-	_, err = io.Copy(buf, file)
-	if err != nil {
-		return mw.ErrFileCopy
-	}
-
-	image := models.Image{
-		ID:    uuid.NewString() + filepath.Ext(handler.Filename),
-		Bytes: buf.Bytes(),
-	}
-
-	params := _pins.FullUpdateParams{
+	params := pkgPins.FullUpdateParams{
 		Id:          id,
 		Title:       r.FormValue("title"),
 		Description: r.FormValue("description"),
-		MediaSource: image,
 	}
 	pin, err := del.serv.FullUpdate(&params)
 	if err != nil {
@@ -325,51 +272,11 @@ func (del delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.
 
 	err = del.serv.Delete(id)
 	if err != nil {
-		if errors.Is(err, _pins.ErrPinNotFound) {
+		if errors.Is(err, pkgPins.ErrPinNotFound) {
 			return mw.ErrPinNotFound
 		} else {
 			return mw.ErrService
 		}
 	}
 	return err
-}
-
-func (del delivery) addToBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strId := p.ByName("board_id")
-	boardId, err := strconv.Atoi(strId)
-	if err != nil {
-		return mw.ErrInvalidBoardIdParam
-	}
-
-	strId = p.ByName("id")
-	pinId, err := strconv.Atoi(strId)
-	if err != nil {
-		return mw.ErrInvalidPinIdParam
-	}
-
-	err = del.serv.AddToBoard(boardId, pinId)
-	if err != nil {
-		return mw.ErrService
-	}
-	return nil
-}
-
-func (del delivery) removeFromBoard(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	strId := p.ByName("board_id")
-	boardId, err := strconv.Atoi(strId)
-	if err != nil {
-		return mw.ErrInvalidBoardIdParam
-	}
-
-	strId = p.ByName("id")
-	pinId, err := strconv.Atoi(strId)
-	if err != nil {
-		return mw.ErrInvalidPinIdParam
-	}
-
-	err = del.serv.RemoveFromBoard(boardId, pinId)
-	if err != nil {
-		return mw.ErrService
-	}
-	return nil
 }
