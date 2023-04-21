@@ -33,7 +33,7 @@ type pinListResponse struct {
 	Pins []models.Pin `json:"pins"`
 }
 
-type GetResponse struct {
+type getResponse struct {
 	Id          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -41,8 +41,8 @@ type GetResponse struct {
 	UserId      int    `json:"user_id"`
 }
 
-func NewGetResponse(board *models.Board) *GetResponse {
-	return &GetResponse{
+func newGetResponse(board *models.Board) *getResponse {
+	return &getResponse{
 		Id:          board.Id,
 		Name:        xss.Sanitize(board.Name),
 		Description: xss.Sanitize(board.Description),
@@ -51,7 +51,7 @@ func NewGetResponse(board *models.Board) *GetResponse {
 	}
 }
 
-type FullUpdateResponse struct {
+type fullUpdateResponse struct {
 	Id          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -59,8 +59,8 @@ type FullUpdateResponse struct {
 	UserId      int    `json:"user_id"`
 }
 
-func NewFullUpdateResponse(board *models.Board) *FullUpdateResponse {
-	return &FullUpdateResponse{
+func newFullUpdateResponse(board *models.Board) *fullUpdateResponse {
+	return &fullUpdateResponse{
 		Id:          board.Id,
 		Name:        xss.Sanitize(board.Name),
 		Description: xss.Sanitize(board.Description),
@@ -69,7 +69,7 @@ func NewFullUpdateResponse(board *models.Board) *FullUpdateResponse {
 	}
 }
 
-type PartialUpdateResponse struct {
+type partialUpdateResponse struct {
 	Id          int    `json:"id"`
 	Name        string `json:"name"`
 	Description string `json:"description"`
@@ -77,8 +77,8 @@ type PartialUpdateResponse struct {
 	UserId      int    `json:"user_id"`
 }
 
-func NewPartialUpdateResponse(board *models.Board) *PartialUpdateResponse {
-	return &PartialUpdateResponse{
+func newPartialUpdateResponse(board *models.Board) *partialUpdateResponse {
+	return &partialUpdateResponse{
 		Id:          board.Id,
 		Name:        xss.Sanitize(board.Name),
 		Description: xss.Sanitize(board.Description),
