@@ -1,4 +1,9 @@
-package api
+package http
+
+type LoginParams struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
 
 type RegisterParams struct {
 	Username string `json:"username"`

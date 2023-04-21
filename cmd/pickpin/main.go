@@ -34,9 +34,10 @@ import (
 	profileRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/repository/postgres"
 	profileService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/service"
 
+	pkgDb "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
-	pkgDb "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"

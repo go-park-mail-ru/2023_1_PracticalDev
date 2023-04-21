@@ -112,13 +112,7 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 		return mw.ErrBoardNotFound
 	}
 
-	response := getResponse{
-		Id:          board.Id,
-		Name:        board.Name,
-		Description: board.Description,
-		Privacy:     board.Privacy,
-		UserId:      board.UserId,
-	}
+	response := NewGetResponse(&board)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse
@@ -162,13 +156,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		}
 	}
 
-	response := fullUpdateResponse{
-		Id:          board.Id,
-		Name:        board.Name,
-		Description: board.Description,
-		Privacy:     board.Privacy,
-		UserId:      board.UserId,
-	}
+	response := NewFullUpdateResponse(&board)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse
@@ -219,13 +207,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		}
 	}
 
-	response := partialUpdateResponse{
-		Id:          board.Id,
-		Name:        board.Name,
-		Description: board.Description,
-		Privacy:     board.Privacy,
-		UserId:      board.UserId,
-	}
+	response := NewPartialUpdateResponse(&board)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse

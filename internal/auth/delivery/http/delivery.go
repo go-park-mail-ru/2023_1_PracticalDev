@@ -11,7 +11,6 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models/api"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -61,7 +60,7 @@ func createCsrfTokenCookie(token string) *http.Cookie {
 func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	decoder := json.NewDecoder(r.Body)
 	defer r.Body.Close()
-	data := api.LoginParams{}
+	data := LoginParams{}
 	if err := decoder.Decode(&data); err != nil {
 		return mw.ErrBadRequest
 	}
@@ -149,8 +148,13 @@ func (del *delivery) Logout(w http.ResponseWriter, r *http.Request, p httprouter
 
 func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
-	params := api.RegisterParams{}
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			del.log.Error(err)
+		}
+	}()
+	params := RegisterParams{}
 
 	if err := decoder.Decode(&params); err != nil {
 		return mw.ErrParseJson
