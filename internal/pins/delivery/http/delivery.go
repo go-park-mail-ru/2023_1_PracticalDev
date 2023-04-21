@@ -73,13 +73,7 @@ func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.
 		return mw.ErrService
 	}
 
-	response := createResponse{
-		Id:          pin.Id,
-		Title:       pin.Title,
-		Description: pin.Description,
-		MediaSource: pin.MediaSource,
-		Author:      pin.Author,
-	}
+	response := newCreateResponse(&pin)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse
@@ -112,15 +106,7 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		}
 	}
 
-	response := getResponse{
-		Id:          pin.Id,
-		Title:       pin.Title,
-		Description: pin.Description,
-		MediaSource: pin.MediaSource,
-		NumLikes:    pin.NumLikes,
-		Liked:       pin.Liked,
-		Author:      pin.Author,
-	}
+	response := newGetResponse(&pin)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse
@@ -172,7 +158,7 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 		return mw.ErrService
 	}
 
-	response := listResponse{Pins: pins}
+	response := newListResponse(pins)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse
@@ -218,7 +204,7 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 		return mw.ErrService
 	}
 
-	response := listResponse{Pins: pins}
+	response := newListResponse(pins)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse
@@ -246,13 +232,7 @@ func (del delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprou
 		return mw.ErrService
 	}
 
-	response := fullUpdateResponse{
-		Id:          pin.Id,
-		Title:       pin.Title,
-		Description: pin.Description,
-		MediaSource: pin.MediaSource,
-		Author:      pin.Author,
-	}
+	response := newFullUpdateResponse(&pin)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse
