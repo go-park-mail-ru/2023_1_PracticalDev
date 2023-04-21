@@ -16,7 +16,6 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models/api"
 )
 
 var (
@@ -24,7 +23,7 @@ var (
 	err    error
 )
 
-var existingUsers []api.LoginParams = []api.LoginParams{
+var existingUsers []auth.LoginParams = []auth.LoginParams{
 	{
 		Email:    "geogreck@vk.com",
 		Password: "12345678",
@@ -49,13 +48,13 @@ type fields struct {
 
 type AuthenticateTestCase struct {
 	prepare func(f *fields)
-	req     api.LoginParams
+	req     auth.LoginParams
 	err     error
 }
 
 type RegisterTestCase struct {
 	prepare func(f *fields)
-	req     api.RegisterParams
+	req     auth.RegisterParams
 	err     error
 }
 
@@ -89,7 +88,7 @@ func TestAuthenticate(t *testing.T) {
 				f.serv.EXPECT().Authenticate("123@vk.com", "12345678").
 					Return(models.User{}, auth.SessionParams{}, auth.WrongPasswordOrLoginError)
 			},
-			req: api.LoginParams{
+			req: auth.LoginParams{
 				Email:    "123@vk.com",
 				Password: "12345678",
 			},
@@ -125,7 +124,7 @@ func TestRegister(t *testing.T) {
 	tests := []RegisterTestCase{
 		{
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Register(&api.RegisterParams{
+				f.serv.EXPECT().Register(&auth.RegisterParams{
 					Username: "test1",
 					Email:    "test1@test.ru",
 					Name:     "test",
@@ -141,7 +140,7 @@ func TestRegister(t *testing.T) {
 					AccountType:    "personal",
 				}, auth.SessionParams{}, nil)
 			},
-			req: api.RegisterParams{
+			req: auth.RegisterParams{
 				Username: "test1",
 				Email:    "test1@test.ru",
 				Name:     "test",
@@ -151,7 +150,7 @@ func TestRegister(t *testing.T) {
 		},
 		{
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Register(&api.RegisterParams{
+				f.serv.EXPECT().Register(&auth.RegisterParams{
 					Username: "test3",
 					Email:    "test1@test.ru",
 					Name:     "test",
@@ -167,7 +166,7 @@ func TestRegister(t *testing.T) {
 					AccountType:    "personal",
 				}, auth.SessionParams{}, auth.UserAlreadyExistsError)
 			},
-			req: api.RegisterParams{
+			req: auth.RegisterParams{
 				Username: "test3",
 				Email:    "test1@test.ru",
 				Name:     "test",
@@ -177,7 +176,7 @@ func TestRegister(t *testing.T) {
 		},
 		{
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Register(&api.RegisterParams{
+				f.serv.EXPECT().Register(&auth.RegisterParams{
 					Username: "test3",
 					Email:    "test1@test.ru",
 					Name:     "test",
@@ -193,7 +192,7 @@ func TestRegister(t *testing.T) {
 					AccountType:    "personal",
 				}, auth.SessionParams{}, auth.DBConnectionError)
 			},
-			req: api.RegisterParams{
+			req: auth.RegisterParams{
 				Username: "test3",
 				Email:    "test1@test.ru",
 				Name:     "test",
@@ -203,7 +202,7 @@ func TestRegister(t *testing.T) {
 		},
 		{
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Register(&api.RegisterParams{
+				f.serv.EXPECT().Register(&auth.RegisterParams{
 					Username: "test3",
 					Email:    "test1@test.ru",
 					Name:     "test",
@@ -219,7 +218,7 @@ func TestRegister(t *testing.T) {
 					AccountType:    "personal",
 				}, auth.SessionParams{}, auth.UserCreationError)
 			},
-			req: api.RegisterParams{
+			req: auth.RegisterParams{
 				Username: "test3",
 				Email:    "test1@test.ru",
 				Name:     "test",
