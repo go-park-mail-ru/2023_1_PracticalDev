@@ -73,7 +73,12 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 			return mw.ErrParseForm
 		}
 	}
-	defer file.Close()
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			del.log.Error(err)
+		}
+	}()
 
 	buf := bytes.NewBuffer(nil)
 	_, err = io.Copy(buf, file)

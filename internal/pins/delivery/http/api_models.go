@@ -30,7 +30,7 @@ type listResponse struct {
 }
 
 func newListResponse(pins []pkgPins.Pin) *listResponse {
-	for i, _ := range pins {
+	for i := range pins {
 		pins[i].Title = xss.Sanitize(pins[i].Title)
 		pins[i].Description = xss.Sanitize(pins[i].Description)
 	}
