@@ -34,6 +34,10 @@ import (
 	profileRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/repository/postgres"
 	profileService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/service"
 
+	followingsDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings/delivery/http"
+	followingsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings/repository/postgres"
+	followingsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings/service"
+
 	pkgDb "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
@@ -89,13 +93,17 @@ func main() {
 	profileRepo := profileRepository.NewPostgresRepository(db, imagesServ, logger)
 	profileServ := profileService.NewProfileService(profileRepo)
 
+	followingsRepo := followingsRepository.NewRepository(db, logger)
+	followingsServ := followingsService.NewService(followingsRepo)
+
 	authDelivery.RegisterHandlers(mux, logger, authServ, token)
 	likesDelivery.RegisterHandlers(mux, logger, authorizer, likesServ)
 	usersDelivery.RegisterHandlers(mux, logger, authorizer, usersServ)
 	profileDelivery.RegisterHandlers(mux, logger, authorizer, profileServ)
+	followingsDelivery.RegisterHandlers(mux, logger, authorizer, followingsServ)
 	boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ)
-	ping.RegisterHandlers(mux, logger)
 	pinsDelivery.RegisterHandlers(mux, logger, authorizer, middleware.NewAccessChecker(pinsServ), pinsServ)
+	ping.RegisterHandlers(mux, logger)
 
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
