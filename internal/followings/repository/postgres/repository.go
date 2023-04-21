@@ -80,7 +80,6 @@ const getFollowersCmd = `SELECT u.id, u.username, u.name, u.profile_image, u.web
 func (repo *repository) GetFollowers(userId int) ([]followings.Follower, error) {
 	rows, err := repo.db.Query(getFollowersCmd, userId)
 	if err != nil {
-		repo.log.Error(err)
 		return nil, followings.ErrDb
 	}
 
@@ -92,13 +91,10 @@ func (repo *repository) GetFollowers(userId int) ([]followings.Follower, error) 
 		followee.ProfileImage = profileImage.String
 		followee.WebsiteUrl = websiteUrl.String
 		if err != nil {
-			repo.log.Error(err)
 			return nil, followings.ErrDb
 		}
 		followees = append(followees, followee)
-		repo.log.Error(err)
 	}
-	repo.log.Error(err)
 	return followees, nil
 }
 
