@@ -69,10 +69,25 @@ func (serv *service) Unfollow(followerId, followeeId int) error {
 }
 
 func (serv *service) GetFollowers(userId int) ([]followings.Follower, error) {
-	println("dfsdgdf")
+	exists, err := serv.rep.UserExists(userId)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, followings.ErrUserNotFound
+	}
+
 	return serv.rep.GetFollowers(userId)
 }
 
 func (serv *service) GetFollowees(userId int) ([]followings.Followee, error) {
+	exists, err := serv.rep.UserExists(userId)
+	if err != nil {
+		return nil, err
+	}
+	if !exists {
+		return nil, followings.ErrUserNotFound
+	}
+
 	return serv.rep.GetFollowees(userId)
 }

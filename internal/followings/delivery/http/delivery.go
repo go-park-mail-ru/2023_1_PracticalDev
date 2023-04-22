@@ -15,8 +15,8 @@ import (
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv followings.Service) {
 	del := delivery{serv, logger}
 
-	mux.POST("/users/:id/follow", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.follow)), logger), logger))
-	mux.DELETE("/users/:id/follow", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.unfollow)), logger), logger))
+	mux.POST("/users/:id/following", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.follow)), logger), logger))
+	mux.DELETE("/users/:id/following", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.unfollow)), logger), logger))
 
 	mux.GET("/users/:id/followers", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.getFollowers)), logger), logger))
 	mux.GET("/users/:id/followees", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.getFollowees)), logger), logger))
@@ -90,7 +90,12 @@ func (del *delivery) getFollowers(w http.ResponseWriter, r *http.Request, p http
 
 	followers, err := del.serv.GetFollowers(userId)
 	if err != nil {
-		return err
+		switch err {
+		case followings.ErrUserNotFound:
+			return mw.ErrUserNotFound
+		default:
+			return mw.ErrService
+		}
 	}
 
 	response := followersResponse{
@@ -98,7 +103,7 @@ func (del *delivery) getFollowers(w http.ResponseWriter, r *http.Request, p http
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
-		return err
+		return mw.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -118,7 +123,12 @@ func (del *delivery) getFollowees(w http.ResponseWriter, r *http.Request, p http
 
 	followees, err := del.serv.GetFollowees(userId)
 	if err != nil {
-		return err
+		switch err {
+		case followings.ErrUserNotFound:
+			return mw.ErrUserNotFound
+		default:
+			return mw.ErrService
+		}
 	}
 
 	response := followeesResponse{
@@ -126,7 +136,7 @@ func (del *delivery) getFollowees(w http.ResponseWriter, r *http.Request, p http
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
-		return err
+		return mw.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
