@@ -22,6 +22,7 @@ tags:
   - name: Boards
   - name: BoardPins
   - name: Likes
+  - name: Followings
 
 paths:
   /users/{user_id}:
@@ -237,6 +238,117 @@ paths:
           $ref: "#/components/responses/ErrUnauthorized"
         "404":
           $ref: "#/components/responses/ErrResponseNoSuchPin"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
+  /users/{id}/follow:
+    parameters:
+      - schema:
+          type: integer
+        name: id
+        description: user id
+        in: path
+        required: true
+    post:
+      tags:
+        - Followings
+      summary: Follow user by id
+      description: Follow user by id
+      responses:
+        "204":
+          description: User followed successfully.
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrResponseNoSuchUser"
+        "409":
+          $ref: "#/components/responses/ErrResponseAlreadyFollowed"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+    delete:
+      tags:
+        - Followings
+      summary: Unfollow user by id
+      description: Unfollow user by id
+      responses:
+        "204":
+          description: User unfollowed successfully.
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrResponseNoSuchUser"
+        "409":
+          $ref: "#/components/responses/ErrResponseAlreadyUnfollowed"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
+  /users/{id}/followers:
+    parameters:
+      - schema:
+          type: integer
+        name: id
+        description: user id
+        in: path
+        required: true
+    get:
+      tags:
+        - Followings
+      summary: Returns user followers by user id
+      description: Returns user followers by user id
+      responses:
+        "200":
+          description: A JSON with followers
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Followers"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrResponseNoSuchUser"
+        "500":
+          $ref: "#/components/responses/ErrInternalServerError"
+      security:
+        - cookieAuth: [ ]
+
+  /users/{id}/followees:
+    parameters:
+      - schema:
+          type: integer
+        name: id
+        description: user id
+        in: path
+        required: true
+    get:
+      tags:
+        - Followings
+      summary: Returns user followees by user id
+      description: Returns user followees by user id
+      responses:
+        "200":
+          description: A JSON with followees
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Followees"
+        "400":
+          $ref: "#/components/responses/ErrResponseBadRequest"
+        "401":
+          $ref: "#/components/responses/ErrUnauthorized"
+        "404":
+          $ref: "#/components/responses/ErrResponseNoSuchUser"
         "500":
           $ref: "#/components/responses/ErrInternalServerError"
       security:
@@ -756,6 +868,46 @@ components:
           type: string
         website_url:
           type: string
+    Followee:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          $ref: "#/components/schemas/Username"
+        name:
+          $ref: "#/components/schemas/Name"
+        profile_image:
+          type: string
+        website_url:
+          type: string
+    Followees:
+      type: object
+      properties:
+        followees:
+          type: array
+          items:
+            $ref: "#/components/schemas/Followee"
+    Follower:
+      type: object
+      properties:
+        id:
+          type: integer
+        username:
+          $ref: "#/components/schemas/Username"
+        name:
+          $ref: "#/components/schemas/Name"
+        profile_image:
+          type: string
+        website_url:
+          type: string
+    Followers:
+      type: object
+      properties:
+        followers:
+          type: array
+          items:
+            $ref: "#/components/schemas/Follower"
     Like:
       type: object
       properties:
@@ -769,7 +921,7 @@ components:
     Likes:
       type: object
       properties:
-        items:
+        likes:
           type: array
           items:
             $ref: "#/components/schemas/Like"
@@ -991,6 +1143,18 @@ components:
             $ref: "#/components/schemas/Error"
     ErrResponseAlreadyUnliked:
       description: Pin already unliked
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrResponseAlreadyFollowed:
+      description: User already followed
+      content:
+        application/problem+json:
+          schema:
+            $ref: "#/components/schemas/Error"
+    ErrResponseAlreadyUnfollowed:
+      description: User already unfollowed
       content:
         application/problem+json:
           schema:
