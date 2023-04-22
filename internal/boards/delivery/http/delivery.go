@@ -43,7 +43,12 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 
 	var request createRequest
 	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		err = r.Body.Close()
+		if err != nil {
+			del.log.Error(err)
+		}
+	}()
 	if err = decoder.Decode(&request); err != nil {
 		return mw.ErrParseJson
 	}
@@ -112,13 +117,7 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 		return mw.ErrBoardNotFound
 	}
 
-	response := getResponse{
-		Id:          board.Id,
-		Name:        board.Name,
-		Description: board.Description,
-		Privacy:     board.Privacy,
-		UserId:      board.UserId,
-	}
+	response := newGetResponse(&board)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse
@@ -138,7 +137,12 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 
 	var request fullUpdateRequest
 	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		err = r.Body.Close()
+		if err != nil {
+			del.log.Error(err)
+		}
+	}()
 	if err = decoder.Decode(&request); err != nil {
 		return mw.ErrParseJson
 	}
@@ -162,13 +166,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		}
 	}
 
-	response := fullUpdateResponse{
-		Id:          board.Id,
-		Name:        board.Name,
-		Description: board.Description,
-		Privacy:     board.Privacy,
-		UserId:      board.UserId,
-	}
+	response := newFullUpdateResponse(&board)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse
@@ -188,7 +186,12 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 
 	var request partialUpdateRequest
 	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		err = r.Body.Close()
+		if err != nil {
+			del.log.Error(err)
+		}
+	}()
 	if err = decoder.Decode(&request); err != nil {
 		return mw.ErrParseJson
 	}
@@ -219,13 +222,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		}
 	}
 
-	response := partialUpdateResponse{
-		Id:          board.Id,
-		Name:        board.Name,
-		Description: board.Description,
-		Privacy:     board.Privacy,
-		UserId:      board.UserId,
-	}
+	response := newPartialUpdateResponse(&board)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse

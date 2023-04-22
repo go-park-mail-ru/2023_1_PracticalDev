@@ -47,12 +47,7 @@ func (del *delivery) getProfileByUser(w http.ResponseWriter, r *http.Request, p 
 		}
 	}
 
-	response := getProfileResponse{
-		Username:     prof.Username,
-		Name:         prof.Name,
-		ProfileImage: prof.ProfileImage,
-		WebsiteUrl:   prof.WebsiteUrl,
-	}
+	response := newGetResponse(&prof)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse
@@ -78,7 +73,12 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 			return mw.ErrParseForm
 		}
 	}
-	defer file.Close()
+	defer func() {
+		err = file.Close()
+		if err != nil {
+			del.log.Error(err)
+		}
+	}()
 
 	buf := bytes.NewBuffer(nil)
 	_, err = io.Copy(buf, file)
@@ -108,12 +108,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		}
 	}
 
-	response := fullUpdateResponse{
-		Username:     prof.Username,
-		Name:         prof.Name,
-		ProfileImage: prof.ProfileImage,
-		WebsiteUrl:   prof.WebsiteUrl,
-	}
+	response := newFullUpdateResponse(&prof)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse
@@ -177,12 +172,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		}
 	}
 
-	response := partialUpdateResponse{
-		Username:     prof.Username,
-		Name:         prof.Name,
-		ProfileImage: prof.ProfileImage,
-		WebsiteUrl:   prof.WebsiteUrl,
-	}
+	response := newPartialUpdateResponse(&prof)
 	data, err := json.Marshal(response)
 	if err != nil {
 		return mw.ErrCreateResponse

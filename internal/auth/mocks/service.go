@@ -10,7 +10,6 @@ import (
 
 	auth "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	models "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	api "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models/api"
 	gomock "github.com/golang/mock/gomock"
 )
 
@@ -97,7 +96,7 @@ func (mr *MockServiceMockRecorder) DeleteSession(userId, sessionId interface{}) 
 }
 
 // Register mocks base method.
-func (m *MockService) Register(user *api.RegisterParams) (models.User, auth.SessionParams, error) {
+func (m *MockService) Register(user *auth.RegisterParams) (models.User, auth.SessionParams, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Register", user)
 	ret0, _ := ret[0].(models.User)

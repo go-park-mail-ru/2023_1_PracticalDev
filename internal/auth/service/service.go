@@ -4,7 +4,6 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	hasherPkg "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/hasher"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models/api"
 	"github.com/google/uuid"
 	"strconv"
 	"time"
@@ -55,7 +54,7 @@ func (serv *service) DeleteSession(userId, sessionId string) error {
 	return serv.rep.DeleteSession(userId, sessionId)
 }
 
-func (serv *service) Register(user *api.RegisterParams) (models.User, auth.SessionParams, error) {
+func (serv *service) Register(user *auth.RegisterParams) (models.User, auth.SessionParams, error) {
 	hasher := hasherPkg.NewHasher()
 	hash, _ := hasher.GetHashedPassword(user.Password)
 
