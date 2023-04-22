@@ -23,6 +23,7 @@ type Followee struct {
 var (
 	ErrDb                     = errors.New("db error")
 	ErrUserNotFound           = errors.New("no such user")
+	ErrSameUserId             = errors.New("same user id: user cannot follow himself")
 	ErrFollowingNotFound      = errors.New("no such following")
 	ErrFollowingAlreadyExists = errors.New("following already exists")
 )

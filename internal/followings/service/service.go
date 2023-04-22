@@ -13,6 +13,10 @@ func NewService(rep followings.Repository) followings.Service {
 }
 
 func (serv *service) Follow(followerId, followeeId int) error {
+	if followerId == followeeId {
+		return followings.ErrSameUserId
+	}
+
 	exists, err := serv.rep.UserExists(followerId)
 	if err != nil {
 		return err
@@ -41,6 +45,10 @@ func (serv *service) Follow(followerId, followeeId int) error {
 }
 
 func (serv *service) Unfollow(followerId, followeeId int) error {
+	if followerId == followeeId {
+		return followings.ErrSameUserId
+	}
+
 	exists, err := serv.rep.UserExists(followerId)
 	if err != nil {
 		return err

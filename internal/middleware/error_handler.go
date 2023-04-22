@@ -31,6 +31,7 @@ var (
 	ErrParseForm              = errors.New("parse form error")
 	ErrParseJson              = errors.New("parse json error")
 	ErrUserAlreadyExists      = errors.New("user already exists")
+	ErrSameUserId             = errors.New("same user id: user cannot follow himself")
 	ErrService                = errors.New("service error")
 	ErrCreateResponse         = errors.New("create response error")
 	ErrCreateCsrfToken        = errors.New("create csrf token error")
@@ -59,6 +60,7 @@ var statusCodes = map[error]int{
 	ErrParseForm:              http.StatusBadRequest,
 	ErrParseJson:              http.StatusBadRequest,
 	ErrUserAlreadyExists:      http.StatusBadRequest,
+	ErrSameUserId:             http.StatusBadRequest,
 	ErrProfileNotFound:        http.StatusNotFound,
 	ErrBoardNotFound:          http.StatusNotFound,
 	ErrPinNotFound:            http.StatusNotFound,

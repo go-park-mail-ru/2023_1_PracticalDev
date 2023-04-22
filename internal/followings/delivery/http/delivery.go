@@ -43,6 +43,8 @@ func (del *delivery) follow(w http.ResponseWriter, r *http.Request, p httprouter
 	err = del.serv.Follow(followerId, followeeId)
 	if err != nil {
 		switch err {
+		case followings.ErrSameUserId:
+			return mw.ErrSameUserId
 		case followings.ErrFollowingAlreadyExists:
 			return mw.ErrFollowingAlreadyExists
 		case followings.ErrUserNotFound:
@@ -70,6 +72,8 @@ func (del *delivery) unfollow(w http.ResponseWriter, r *http.Request, p httprout
 	err = del.serv.Unfollow(followerId, followeeId)
 	if err != nil {
 		switch err {
+		case followings.ErrSameUserId:
+			return mw.ErrSameUserId
 		case followings.ErrFollowingNotFound:
 			return mw.ErrFollowingNotFound
 		case followings.ErrUserNotFound:
