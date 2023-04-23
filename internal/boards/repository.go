@@ -1,8 +1,6 @@
 package boards
 
 import (
-	"github.com/pkg/errors"
-
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 
@@ -29,11 +27,6 @@ type FullUpdateParams struct {
 	Description string
 	Privacy     string
 }
-
-var (
-	ErrBoardNotFound = errors.New("board not found")
-	ErrDb            = errors.New("db error")
-)
 
 type Repository interface {
 	Create(params *CreateParams) (models.Board, error)

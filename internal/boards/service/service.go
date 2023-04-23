@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 type service struct {
@@ -15,7 +16,7 @@ func NewBoardsService(repo boards.Repository) boards.Service {
 
 func validatePrivacy(privacy string) error {
 	if privacy != "secret" && privacy != "public" {
-		return boards.ErrInvalidPrivacy
+		return pkgErrors.ErrInvalidPrivacy
 	}
 	return nil
 }
@@ -53,7 +54,7 @@ func (serv *service) AddPin(boardId, pinId int) error {
 		return err
 	}
 	if exists {
-		return boards.ErrPinAlreadyAdded
+		return pkgErrors.ErrPinAlreadyAdded
 	}
 
 	return serv.repo.AddPin(boardId, pinId)

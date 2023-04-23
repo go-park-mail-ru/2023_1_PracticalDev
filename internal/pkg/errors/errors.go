@@ -30,11 +30,13 @@ var (
 	ErrWrongLoginOrPassword = errors.New("wrong login or password")
 	ErrUserAlreadyExists    = errors.New("user already exists")
 
-	ErrInvalidUserIdParam     = errors.New("invalid user id param")
-	ErrInvalidBoardIdParam    = errors.New("invalid board id param")
-	ErrInvalidPinIdParam      = errors.New("invalid pin id param")
-	ErrInvalidPageParam       = errors.New("invalid page param")
-	ErrInvalidLimitParam      = errors.New("invalid limit param")
+	ErrInvalidUserIdParam  = errors.New("invalid user id param")
+	ErrInvalidBoardIdParam = errors.New("invalid board id param")
+	ErrInvalidPinIdParam   = errors.New("invalid pin id param")
+	ErrInvalidPageParam    = errors.New("invalid page param")
+	ErrInvalidLimitParam   = errors.New("invalid limit param")
+	ErrInvalidPrivacy      = errors.New("invalid privacy")
+
 	ErrBadParams              = errors.New("bad params")
 	ErrBadRequest             = errors.New("bad request")
 	ErrBadSessionCookie       = errors.New("bad session cookie")

@@ -2,12 +2,6 @@ package boards
 
 import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	"github.com/pkg/errors"
-)
-
-var (
-	ErrInvalidPrivacy  = errors.New("invalid privacy")
-	ErrPinAlreadyAdded = errors.New("pin already added")
 )
 
 type Service interface {

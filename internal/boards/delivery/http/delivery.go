@@ -5,8 +5,6 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/pkg/errors"
-
 	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
@@ -65,11 +63,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 
 	createdBoard, err := del.serv.Create(&params)
 	if err != nil {
-		if errors.Is(err, pkgBoards.ErrInvalidPrivacy) {
-			return pkgErrors.ErrBadParams
-		} else {
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 
 	data, err := json.Marshal(createdBoard)
@@ -159,11 +153,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 
 	board, err := del.serv.FullUpdate(&params)
 	if err != nil {
-		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
-			return pkgErrors.ErrBoardNotFound
-		} else {
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 
 	response := newFullUpdateResponse(&board)
@@ -215,11 +205,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 
 	board, err := del.serv.PartialUpdate(&params)
 	if err != nil {
-		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
-			return pkgErrors.ErrBoardNotFound
-		} else {
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 
 	response := newPartialUpdateResponse(&board)
@@ -242,13 +228,9 @@ func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter
 
 	err = del.serv.Delete(id)
 	if err != nil {
-		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
-			return pkgErrors.ErrBoardNotFound
-		} else {
-			return pkgErrors.ErrService
-		}
+		return err
 	}
-	return nil
+	return pkgErrors.ErrNoContent
 }
 
 func (del *delivery) pinsList(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -312,14 +294,9 @@ func (del *delivery) addPin(w http.ResponseWriter, r *http.Request, p httprouter
 
 	err = del.serv.AddPin(boardId, pinId)
 	if err != nil {
-		switch err {
-		case pkgBoards.ErrPinAlreadyAdded:
-			return pkgErrors.ErrPinAlreadyAdded
-		default:
-			return pkgErrors.ErrService
-		}
+		return err
 	}
-	return nil
+	return pkgErrors.ErrNoContent
 }
 
 func (del *delivery) removePin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -337,7 +314,7 @@ func (del *delivery) removePin(w http.ResponseWriter, r *http.Request, p httprou
 
 	err = del.serv.RemovePin(boardId, pinId)
 	if err != nil {
-		return pkgErrors.ErrService
+		return err
 	}
 	return pkgErrors.ErrNoContent
 }

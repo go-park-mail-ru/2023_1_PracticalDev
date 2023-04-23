@@ -36,10 +36,11 @@ func scanUser(user *models.User, row *sql.Row) error {
 	return err
 }
 
+const authCommand = "SELECT * FROM users WHERE email = $1"
+
 func (rep *repository) Authenticate(email, password string) (models.User, error) {
 	const fnAuthenticate = "Authenticate"
 
-	authCommand := "SELECT * FROM users WHERE email = $1"
 	row := rep.db.QueryRow(authCommand, email)
 	user := models.User{}
 	hasher := hasherPkg.NewHasher()
