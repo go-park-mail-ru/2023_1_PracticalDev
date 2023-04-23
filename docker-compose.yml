@@ -42,6 +42,7 @@ services:
     depends_on:
       - db
       - redis
+      - images
     networks:
       - nginx-network
       - db-network
@@ -52,6 +53,23 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+
+  images:
+    build:
+      context: .
+      dockerfile: images.Dockerfile
+    container_name: images
+    ports:
+      - 8088:8088
+    env_file:
+      - .env
+    volumes:
+      - ./.aws/credentials:/root/.aws/credentials
+    deploy:
+      restart_policy:
+        condition: on-failure
+    networks:
+      - api-network
 
   docs:
     image: nginx

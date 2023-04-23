@@ -9,7 +9,7 @@ import (
 	"github.com/aws/aws-sdk-go-v2/service/s3"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
+	images "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/server"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )

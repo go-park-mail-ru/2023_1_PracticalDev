@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/julienschmidt/httprouter"
+	"google.golang.org/grpc"
 
 	authDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/delivery/http"
 	authRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/repository/postgres"
@@ -24,8 +25,7 @@ import (
 	boardsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/repository/postgres"
 	boardsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/service"
 
-	imagesRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/repository/s3"
-	imagesService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/service"
+	imagesService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/client"
 
 	usersDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users/delivery/http"
 	usersRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users/repository/postgres"
@@ -70,11 +70,15 @@ func main() {
 		os.Exit(1)
 	}
 
-	bucket, err := imagesRepository.NewS3Repository(logger)
+	grcpConn, err := grpc.Dial(
+		"images:8088",
+		grpc.WithInsecure(),
+	)
 	if err != nil {
+		logger.Error("cant connect to grpc")
 		os.Exit(1)
 	}
-	imagesServ := imagesService.NewS3Service(bucket)
+	imagesServ := imagesService.NewImageUploaderClient(grcpConn)
 
 	ctx := context.Background()
 	rdb, err := redis.NewRedisClient(logger, ctx)

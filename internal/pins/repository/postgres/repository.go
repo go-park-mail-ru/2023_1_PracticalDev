@@ -1,29 +1,29 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 
-	"github.com/pkg/errors"
-
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
+	images "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/client"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
+	"github.com/pkg/errors"
 )
 
-func NewRepository(db *sql.DB, s3Service images.Service, log log.Logger) pkgPins.Repository {
+func NewRepository(db *sql.DB, s3Service images.ImageClient, log log.Logger) pkgPins.Repository {
 	return &repository{db, log, s3Service}
 }
 
 type repository struct {
 	db      *sql.DB
 	log     log.Logger
-	imgServ images.Service
+	imgServ images.ImageClient
 }
 
 func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error) {
-	url, err := repo.imgServ.UploadImage(&params.MediaSource)
+	url, err := repo.imgServ.UploadImage(context.Background(), &params.MediaSource)
 	if err != nil {
 		return models.Pin{}, errors.Wrap(pkgErrors.ErrImageService, err.Error())
 	}
