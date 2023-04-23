@@ -128,3 +128,9 @@ VALUES (8, 1),
        (4, 27),
        (4, 28),
        (4, 29);
+
+INSERT INTO followings (followee_id, follower_id)
+VALUES (1, 2),
+       (2, 3),
+       (3, 4),
+       (4, 1);

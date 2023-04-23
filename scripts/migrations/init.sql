@@ -66,6 +66,14 @@ CREATE TABLE IF NOT EXISTS comment_likes
     PRIMARY KEY (comment_id, author_id)
 );
 
+CREATE TABLE IF NOT EXISTS followings
+(
+    follower_id int REFERENCES users (id) ON DELETE CASCADE,
+    followee_id int REFERENCES users (id) ON DELETE CASCADE,
+    created_at  timestamp NOT NULL DEFAULT now(),
+    PRIMARY KEY (followee_id, follower_id)
+);
+
 -- Обработка создания лайка
 CREATE OR REPLACE FUNCTION on_pin_like() RETURNS TRIGGER AS
 $$
