@@ -37,6 +37,8 @@ func scanUser(user *models.User, row *sql.Row) error {
 }
 
 func (rep *repository) Authenticate(email, password string) (models.User, error) {
+	const fnAuthenticate = "Authenticate"
+
 	authCommand := "SELECT * FROM users WHERE email = $1"
 	row := rep.db.QueryRow(authCommand, email)
 	user := models.User{}
@@ -45,21 +47,28 @@ func (rep *repository) Authenticate(email, password string) (models.User, error)
 	err := scanUser(&user, row)
 
 	if errors.Is(err, sql.ErrNoRows) {
-		return models.User{}, errors.Wrapf(pkgErrors.ErrUserNotFound,
-			"Authenticate: query [%s], values [%s], internal error [%s]",
-			authCommand, email, err)
+		return models.User{}, errors.Wrap(pkgErrors.ErrUserNotFound,
+			pkgErrors.ErrRepositoryQuery{
+				Func:   fnAuthenticate,
+				Query:  authCommand,
+				Params: []any{email},
+				Err:    err,
+			}.Error())
 	}
 
 	if err != nil {
-		return models.User{}, errors.Wrapf(pkgErrors.ErrDb,
-			"Authenticate: query [%s], values [%s], internal error [%s]",
-			authCommand, email, err)
+		return models.User{}, errors.Wrap(pkgErrors.ErrDb,
+			pkgErrors.ErrRepositoryQuery{
+				Func:   fnAuthenticate,
+				Query:  authCommand,
+				Params: []any{email},
+				Err:    err,
+			}.Error())
 	}
 
 	if err = hasher.CompareHashAndPassword(user.HashedPassword, password); err != nil {
-		return models.User{}, errors.Wrapf(pkgErrors.ErrUserNotFound,
-			"Authenticate: query [%s], values [%s], internal error [%s]",
-			authCommand, email, err)
+		return models.User{}, errors.Wrapf(pkgErrors.ErrWrongLoginOrPassword,
+			"%s: error [%s]", fnAuthenticate, err)
 	}
 
 	return user, nil
@@ -99,22 +108,44 @@ func (rep *repository) DeleteSession(userId, sessionId string) error {
 }
 
 func (rep *repository) Register(user *models.User) error {
-	row := rep.db.QueryRow("SELECT email FROM users WHERE email = $1", user.Email)
+	const fnRegister = "Register"
+	const checkUserExistsCmd = "SELECT email FROM users WHERE email = $1"
+
+	row := rep.db.QueryRow(checkUserExistsCmd, user.Email)
 	tmp := ""
 	err := row.Scan(&tmp)
 	if err == nil {
-		return auth.UserAlreadyExistsError
+		return errors.Wrap(pkgErrors.ErrUserAlreadyExists,
+			pkgErrors.ErrRepositoryQuery{
+				Func:   fnRegister,
+				Query:  checkUserExistsCmd,
+				Params: []any{user.Email},
+				Err:    err,
+			}.Error())
 	}
 
-	if err.Error() != "sql: no rows in result set" {
-		return auth.DBConnectionError
+	if !errors.Is(err, sql.ErrNoRows) {
+		return errors.Wrap(pkgErrors.ErrDb,
+			pkgErrors.ErrRepositoryQuery{
+				Func:   fnRegister,
+				Query:  checkUserExistsCmd,
+				Params: []any{user.Email},
+				Err:    err,
+			}.Error())
 	}
 
 	const insertCommand = `INSERT INTO users (username, name, email, hashed_password, account_type, profile_image, website_url)
 							VALUES ($1, $2, $3, $4, $5, $6, $7);`
 
-	if _, err := rep.db.Exec(insertCommand, user.Username, user.Name, user.Email, user.HashedPassword, user.AccountType, user.ProfileImage, user.WebsiteUrl); err != nil {
-		return auth.UserCreationError
+	_, err = rep.db.Exec(insertCommand, user.Username, user.Name, user.Email, user.HashedPassword, user.AccountType, user.ProfileImage, user.WebsiteUrl)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrDb,
+			pkgErrors.ErrRepositoryQuery{
+				Func:   fnRegister,
+				Query:  insertCommand,
+				Params: []any{user.Username, user.Name, user.Email, user.HashedPassword, user.AccountType, user.ProfileImage, user.WebsiteUrl},
+				Err:    err,
+			}.Error())
 	}
 
 	return nil

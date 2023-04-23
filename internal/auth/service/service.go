@@ -70,7 +70,7 @@ func (serv *service) Register(user *auth.RegisterParams) (models.User, auth.Sess
 
 	err := serv.rep.Register(&tmp)
 	if err != nil {
-		return tmp, auth.SessionParams{}, err
+		return models.User{}, auth.SessionParams{}, errors.Wrap(err, "Register")
 	}
 
 	return serv.Authenticate(user.Email, user.Password)

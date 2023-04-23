@@ -1,6 +1,10 @@
 package errors
 
-import "github.com/pkg/errors"
+import (
+	"fmt"
+
+	"github.com/pkg/errors"
+)
 
 var (
 	// Common delivery
@@ -22,6 +26,10 @@ var (
 	ErrBadTokenTime       = errors.New("bad token time")
 	ErrBadTokenData       = errors.New("bad token data")
 
+	// Auth
+	ErrWrongLoginOrPassword = errors.New("wrong login or password")
+	ErrUserAlreadyExists    = errors.New("user already exists")
+
 	ErrInvalidUserIdParam     = errors.New("invalid user id param")
 	ErrInvalidBoardIdParam    = errors.New("invalid board id param")
 	ErrInvalidPinIdParam      = errors.New("invalid pin id param")
@@ -33,7 +41,6 @@ var (
 	ErrFileCopy               = errors.New("file copy error")
 	ErrParseForm              = errors.New("parse form error")
 	ErrParseJson              = errors.New("parse json error")
-	ErrUserAlreadyExists      = errors.New("user already exists")
 	ErrSameUserId             = errors.New("same user id: user cannot follow himself")
 	ErrService                = errors.New("service error")
 	ErrCreateResponse         = errors.New("create response error")
@@ -46,3 +53,14 @@ var (
 	ErrFollowingAlreadyExists = errors.New("following already exists")
 	ErrPinAlreadyAdded        = errors.New("pin already added")
 )
+
+type ErrRepositoryQuery struct {
+	Func   string // the failing function name
+	Query  string // query
+	Params []any  // query params
+	Err    error  // original error
+}
+
+func (e ErrRepositoryQuery) Error() string {
+	return fmt.Sprintf("%s: query [%s], params %v, error [%s]", e.Func, e.Query, e.Params, e.Err)
+}

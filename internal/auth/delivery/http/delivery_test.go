@@ -85,7 +85,7 @@ func TestAuthenticate(t *testing.T) {
 		{
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Authenticate("123@vk.com", "12345678").
-					Return(models.User{}, auth.SessionParams{}, auth.WrongPasswordOrLoginError)
+					Return(models.User{}, auth.SessionParams{}, pkgErrors.ErrUserNotFound)
 			},
 			req: auth.LoginParams{
 				Email:    "123@vk.com",
@@ -163,7 +163,7 @@ func TestRegister(t *testing.T) {
 					ProfileImage:   "",
 					WebsiteUrl:     "",
 					AccountType:    "personal",
-				}, auth.SessionParams{}, auth.UserAlreadyExistsError)
+				}, auth.SessionParams{}, pkgErrors.ErrUserAlreadyExists)
 			},
 			req: auth.RegisterParams{
 				Username: "test3",
@@ -189,7 +189,7 @@ func TestRegister(t *testing.T) {
 					ProfileImage:   "",
 					WebsiteUrl:     "",
 					AccountType:    "personal",
-				}, auth.SessionParams{}, auth.DBConnectionError)
+				}, auth.SessionParams{}, pkgErrors.ErrDb)
 			},
 			req: auth.RegisterParams{
 				Username: "test3",
@@ -197,33 +197,7 @@ func TestRegister(t *testing.T) {
 				Name:     "test",
 				Password: "12345",
 			},
-			err: pkgErrors.ErrService,
-		},
-		{
-			prepare: func(f *fields) {
-				f.serv.EXPECT().Register(&auth.RegisterParams{
-					Username: "test3",
-					Email:    "test1@test.ru",
-					Name:     "test",
-					Password: "12345",
-				}).Return(models.User{
-					Id:             2,
-					Username:       "test3",
-					Email:          "test1@test.ru",
-					HashedPassword: "hashed_pswd",
-					Name:           "test",
-					ProfileImage:   "",
-					WebsiteUrl:     "",
-					AccountType:    "personal",
-				}, auth.SessionParams{}, auth.UserCreationError)
-			},
-			req: auth.RegisterParams{
-				Username: "test3",
-				Email:    "test1@test.ru",
-				Name:     "test",
-				Password: "12345",
-			},
-			err: pkgErrors.ErrService,
+			err: pkgErrors.ErrDb,
 		},
 	}
 

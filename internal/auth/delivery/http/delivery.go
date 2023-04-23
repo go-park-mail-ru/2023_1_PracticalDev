@@ -2,17 +2,17 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/pkg/errors"
 	"net/http"
 	"strings"
 	"time"
+
+	"github.com/julienschmidt/httprouter"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/julienschmidt/httprouter"
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv auth.Service, token *tokens.HashToken) {
@@ -159,14 +159,7 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 
 	user, sessionParams, err := del.serv.Register(&params)
 	if err != nil {
-		switch {
-		case errors.Is(err, auth.UserAlreadyExistsError):
-			return pkgErrors.ErrUserAlreadyExists
-		case errors.Is(err, auth.UserCreationError):
-			return pkgErrors.ErrService
-		case errors.Is(err, auth.DBConnectionError):
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 
 	cookie := createSessionCookie(sessionParams)
