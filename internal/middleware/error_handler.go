@@ -20,14 +20,17 @@ func ErrorHandler(handler func(w http.ResponseWriter, r *http.Request, p httprou
 
 		err := handler(w, r, p)
 		if err != nil {
-			httpCode, exist := pkgErrors.GetHTTPCodeByError(err)
-			if !exist {
-				err = errors.Wrap(err, "undefined error")
-			}
 			log.Error(err.Error())
+
+			errCause := errors.Cause(err)
+
+			httpCode, exist := pkgErrors.GetHTTPCodeByError(errCause)
+			if !exist {
+				errCause = errors.Wrap(errCause, "undefined error")
+			}
 			w.WriteHeader(httpCode)
 
-			_, err = w.Write([]byte(err.Error()))
+			_, err = w.Write([]byte(errCause.Error()))
 			if err != nil {
 				log.Error(err.Error())
 			}

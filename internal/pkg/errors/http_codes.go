@@ -1,6 +1,8 @@
 package errors
 
-import "net/http"
+import (
+	"net/http"
+)
 
 var httpCodes = map[error]int{
 	ErrMissingFile:            http.StatusBadRequest,
@@ -37,7 +39,7 @@ var httpCodes = map[error]int{
 func GetHTTPCodeByError(err error) (int, bool) {
 	httpCode, exist := httpCodes[err]
 	if !exist {
-		return http.StatusInternalServerError, false
+		httpCode = http.StatusInternalServerError
 	}
-	return httpCode, true
+	return httpCode, exist
 }

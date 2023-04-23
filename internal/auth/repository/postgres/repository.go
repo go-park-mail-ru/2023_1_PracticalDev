@@ -7,12 +7,14 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/pkg/errors"
 	"github.com/redis/go-redis/v9"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	hasherPkg "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/hasher"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 type repository struct {
@@ -41,16 +43,23 @@ func (rep *repository) Authenticate(email, password string) (models.User, error)
 	hasher := hasherPkg.NewHasher()
 
 	err := scanUser(&user, row)
+
+	if errors.Is(err, sql.ErrNoRows) {
+		return models.User{}, errors.Wrapf(pkgErrors.ErrUserNotFound,
+			"Authenticate: query [%s], values [%s], internal error [%s]",
+			authCommand, email, err)
+	}
+
 	if err != nil {
-		if err == sql.ErrNoRows {
-			return models.User{}, auth.WrongPasswordOrLoginError
-		} else {
-			return models.User{}, auth.DBConnectionError
-		}
+		return models.User{}, errors.Wrapf(pkgErrors.ErrDb,
+			"Authenticate: query [%s], values [%s], internal error [%s]",
+			authCommand, email, err)
 	}
 
 	if err = hasher.CompareHashAndPassword(user.HashedPassword, password); err != nil {
-		return models.User{}, auth.WrongPasswordOrLoginError
+		return models.User{}, errors.Wrapf(pkgErrors.ErrUserNotFound,
+			"Authenticate: query [%s], values [%s], internal error [%s]",
+			authCommand, email, err)
 	}
 
 	return user, nil

@@ -68,11 +68,7 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 
 	user, session, err := del.serv.Authenticate(data.Email, data.Password)
 	if err != nil {
-		if errors.Is(err, auth.WrongPasswordOrLoginError) {
-			return pkgErrors.ErrUserNotFound
-		} else {
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 
 	sessionCookie := createSessionCookie(session)

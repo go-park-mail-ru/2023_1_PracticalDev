@@ -3,24 +3,33 @@ package errors
 import "github.com/pkg/errors"
 
 var (
-	ErrMissingFile            = errors.New("missing file")
+	// Common delivery
+	ErrMissingFile = errors.New("missing file")
+
+	// Common repository
+	ErrDb = errors.New("db error")
+
+	// Not found
+	ErrUserNotFound      = errors.New("user not found")
+	ErrProfileNotFound   = errors.New("profile not found")
+	ErrBoardNotFound     = errors.New("board not found")
+	ErrPinNotFound       = errors.New("pin not found")
+	ErrLikeNotFound      = errors.New("no such like")
+	ErrFollowingNotFound = errors.New("no such following")
+
+	// CSRF
+	ErrBadCsrfTokenCookie = errors.New("bad csrf token cookie")
+	ErrBadTokenTime       = errors.New("bad token time")
+	ErrBadTokenData       = errors.New("bad token data")
+
 	ErrInvalidUserIdParam     = errors.New("invalid user id param")
 	ErrInvalidBoardIdParam    = errors.New("invalid board id param")
 	ErrInvalidPinIdParam      = errors.New("invalid pin id param")
 	ErrInvalidPageParam       = errors.New("invalid page param")
 	ErrInvalidLimitParam      = errors.New("invalid limit param")
-	ErrProfileNotFound        = errors.New("profile not found")
-	ErrBoardNotFound          = errors.New("board not found")
-	ErrPinNotFound            = errors.New("pin not found")
-	ErrUserNotFound           = errors.New("user not found")
-	ErrLikeNotFound           = errors.New("no such like")
-	ErrFollowingNotFound      = errors.New("no such following")
 	ErrBadParams              = errors.New("bad params")
 	ErrBadRequest             = errors.New("bad request")
 	ErrBadSessionCookie       = errors.New("bad session cookie")
-	ErrBadCsrfTokenCookie     = errors.New("bad csrf token cookie")
-	ErrBadTokenTime           = errors.New("bad token time")
-	ErrBadTokenData           = errors.New("bad token data")
 	ErrFileCopy               = errors.New("file copy error")
 	ErrParseForm              = errors.New("parse form error")
 	ErrParseJson              = errors.New("parse json error")
