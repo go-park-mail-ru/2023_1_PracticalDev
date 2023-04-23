@@ -1,9 +1,12 @@
 package middleware
 
 import (
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/router"
-	"github.com/julienschmidt/httprouter"
 	"net/http"
+
+	"github.com/julienschmidt/httprouter"
+
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/router"
 )
 
 type AccessService interface {
@@ -26,10 +29,10 @@ func (accessChecker *AccessChecker) WriteChecker(handler router.Handler) router.
 
 		access, err := accessChecker.serv.CheckWriteAccess(userId, objectId)
 		if err != nil {
-			return ErrService
+			return pkgErrors.ErrService
 		}
 		if !access {
-			return ErrForbidden
+			return pkgErrors.ErrForbidden
 		}
 
 		return handler(w, r, p)
@@ -43,10 +46,10 @@ func (accessChecker *AccessChecker) ReadChecker(handler router.Handler) router.H
 
 		access, err := accessChecker.serv.CheckReadAccess(userId, objectId)
 		if err != nil {
-			return ErrService
+			return pkgErrors.ErrService
 		}
 		if !access {
-			return ErrForbidden
+			return pkgErrors.ErrForbidden
 		}
 
 		return handler(w, r, p)

@@ -1,13 +1,16 @@
 package middleware
 
 import (
+	"net/http"
+	"strings"
+
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/router"
-	"github.com/julienschmidt/httprouter"
-	"net/http"
-	"strings"
 )
 
 type (
@@ -23,19 +26,19 @@ func NewAuthorizer(serv AuthService, token *tokens.HashToken, log log.Logger) fu
 		return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 			sessionCookie, err := r.Cookie("JSESSIONID")
 			if err != nil {
-				return ErrUnauthorized
+				return pkgErrors.ErrUnauthorized
 			}
 
 			tmp := strings.Split(sessionCookie.Value, "$")
 
 			if len(tmp) != 2 {
-				return ErrUnauthorized
+				return pkgErrors.ErrUnauthorized
 			}
 
 			userId := tmp[0]
 
 			if _, err = serv.CheckAuth(userId, sessionCookie.Value); err != nil {
-				return ErrUnauthorized
+				return pkgErrors.ErrUnauthorized
 			}
 
 			csrfToken := r.Header.Get("X-XSRF-TOKEN")

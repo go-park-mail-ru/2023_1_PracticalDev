@@ -1,7 +1,6 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -14,8 +13,9 @@ import (
 	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func TestCreate(t *testing.T) {
@@ -55,13 +55,13 @@ func TestCreate(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "user-id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 		"missing user id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -132,13 +132,13 @@ func TestList(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "user-id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 		"missing user id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -206,13 +206,13 @@ func TestGet(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"board not found": {
 			prepare: func(f *fields) {
@@ -220,7 +220,7 @@ func TestGet(t *testing.T) {
 			},
 			params:   []httprouter.Param{{Key: "id", Value: "3"}},
 			response: ``,
-			err:      mw.ErrBoardNotFound,
+			err:      pkgErrors.ErrBoardNotFound,
 		},
 	}
 
@@ -294,13 +294,13 @@ func TestFullUpdate(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 	}
 
@@ -377,13 +377,13 @@ func TestPartialUpdate(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 	}
 
@@ -442,19 +442,19 @@ func TestDelete(t *testing.T) {
 		"invalid board id param": {
 			prepare: func(f *fields) {},
 			params:  []httprouter.Param{{Key: "id", Value: "a"}},
-			err:     mw.ErrInvalidBoardIdParam,
+			err:     pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
 			prepare: func(f *fields) {},
 			params:  []httprouter.Param{},
-			err:     mw.ErrInvalidBoardIdParam,
+			err:     pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"board not found": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Delete(3).Return(_boards.ErrBoardNotFound)
 			},
 			params: []httprouter.Param{{Key: "id", Value: "3"}},
-			err:    mw.ErrBoardNotFound,
+			err:    pkgErrors.ErrBoardNotFound,
 		},
 	}
 
@@ -516,7 +516,7 @@ func TestAddPin(t *testing.T) {
 				{Key: "id", Value: "a"},
 				{Key: "pin_id", Value: "3"},
 			},
-			err: mw.ErrInvalidBoardIdParam,
+			err: pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"invalid pin id": {
 			prepare: func(f *fields) {},
@@ -524,7 +524,7 @@ func TestAddPin(t *testing.T) {
 				{Key: "id", Value: "3"},
 				{Key: "pin_id", Value: "a"},
 			},
-			err: mw.ErrInvalidPinIdParam,
+			err: pkgErrors.ErrInvalidPinIdParam,
 		},
 		"service error": {
 			prepare: func(f *fields) {
@@ -534,7 +534,7 @@ func TestAddPin(t *testing.T) {
 				{Key: "id", Value: "3"},
 				{Key: "pin_id", Value: "2"},
 			},
-			err: mw.ErrService,
+			err: pkgErrors.ErrService,
 		},
 	}
 

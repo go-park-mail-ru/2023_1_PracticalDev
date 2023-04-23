@@ -13,8 +13,8 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func TestLike(t *testing.T) {
@@ -37,7 +37,7 @@ func TestLike(t *testing.T) {
 				{Key: "id", Value: "3"},
 				{Key: "user-id", Value: "2"},
 			},
-			err: mw.ErrNoContent,
+			err: pkgErrors.ErrNoContent,
 		},
 		"invalid user id param": {
 			prepare: func(f *fields) {},
@@ -45,12 +45,12 @@ func TestLike(t *testing.T) {
 				{Key: "id", Value: "3"},
 				{Key: "user-id", Value: "a"},
 			},
-			err: mw.ErrInvalidUserIdParam,
+			err: pkgErrors.ErrInvalidUserIdParam,
 		},
 		"missing user id param": {
 			prepare: func(f *fields) {},
 			params:  []httprouter.Param{{Key: "id", Value: "3"}},
-			err:     mw.ErrInvalidUserIdParam,
+			err:     pkgErrors.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -115,13 +115,13 @@ func TestListByAuthor(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 		"missing user id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -190,13 +190,13 @@ func TestListByPin(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidPinIdParam,
+			err:      pkgErrors.ErrInvalidPinIdParam,
 		},
 		"missing user id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidPinIdParam,
+			err:      pkgErrors.ErrInvalidPinIdParam,
 		},
 	}
 
@@ -247,7 +247,7 @@ func TestUnlike(t *testing.T) {
 				{Key: "id", Value: "3"},
 				{Key: "user-id", Value: "2"},
 			},
-			err: mw.ErrNoContent,
+			err: pkgErrors.ErrNoContent,
 		},
 		"invalid user id param": {
 			prepare: func(f *fields) {},
@@ -255,12 +255,12 @@ func TestUnlike(t *testing.T) {
 				{Key: "id", Value: "3"},
 				{Key: "user-id", Value: "a"},
 			},
-			err: mw.ErrInvalidUserIdParam,
+			err: pkgErrors.ErrInvalidUserIdParam,
 		},
 		"missing user id param": {
 			prepare: func(f *fields) {},
 			params:  []httprouter.Param{{Key: "id", Value: "3"}},
-			err:     mw.ErrInvalidUserIdParam,
+			err:     pkgErrors.ErrInvalidUserIdParam,
 		},
 	}
 

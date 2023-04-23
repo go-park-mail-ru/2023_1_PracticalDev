@@ -11,6 +11,7 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -31,7 +32,7 @@ type delivery struct {
 func parseSessionCookie(c *http.Cookie) (string, string, error) {
 	tmp := strings.Split(c.Value, "$")
 	if len(tmp) != 2 {
-		return "", "", mw.ErrBadSessionCookie
+		return "", "", pkgErrors.ErrBadSessionCookie
 	}
 
 	return tmp[0], c.Value, nil
@@ -62,15 +63,15 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 	defer r.Body.Close()
 	data := auth.LoginParams{}
 	if err := decoder.Decode(&data); err != nil {
-		return mw.ErrBadRequest
+		return pkgErrors.ErrBadRequest
 	}
 
 	user, session, err := del.serv.Authenticate(data.Email, data.Password)
 	if err != nil {
 		if errors.Is(err, auth.WrongPasswordOrLoginError) {
-			return mw.ErrUserNotFound
+			return pkgErrors.ErrUserNotFound
 		} else {
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
 
@@ -80,7 +81,7 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 	token, err := del.token.Create(&tokens.SessionParams{Token: session.Token}, time.Now().Add(session.LivingTime).Unix())
 	if err != nil {
 		del.log.Error("csrf token creation error:", err)
-		return mw.ErrCreateCsrfToken
+		return pkgErrors.ErrCreateCsrfToken
 	}
 
 	csrfCookie := createCsrfTokenCookie(token)
@@ -89,7 +90,7 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	if err = encoder.Encode(user); err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 	return nil
 }
@@ -97,24 +98,24 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 func (del *delivery) CheckAuth(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	sessionCookie, err := r.Cookie("JSESSIONID")
 	if err != nil {
-		return mw.ErrBadSessionCookie
+		return pkgErrors.ErrBadSessionCookie
 	}
 
 	userId, sessionId, err := parseSessionCookie(sessionCookie)
 	if err != nil {
-		return mw.ErrBadRequest
+		return pkgErrors.ErrBadRequest
 	}
 
 	user, err := del.serv.CheckAuth(userId, sessionId)
 	if err != nil {
-		return mw.ErrUnauthorized
+		return pkgErrors.ErrUnauthorized
 	}
 
 	decoder := json.NewEncoder(w)
 	w.Header().Set("Content-Type", "application/json")
 
 	if err = decoder.Encode(user); err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	return nil
@@ -123,16 +124,16 @@ func (del *delivery) CheckAuth(w http.ResponseWriter, r *http.Request, p httprou
 func (del *delivery) Logout(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	sessionCookie, err := r.Cookie("JSESSIONID")
 	if err != nil {
-		return mw.ErrUserNotFound
+		return pkgErrors.ErrUserNotFound
 	}
 
 	userId, sessionId, err := parseSessionCookie(sessionCookie)
 	if err != nil {
-		return mw.ErrBadRequest
+		return pkgErrors.ErrBadRequest
 	}
 
 	if err = del.serv.DeleteSession(userId, sessionId); err != nil {
-		return mw.ErrUnauthorized
+		return pkgErrors.ErrUnauthorized
 	}
 
 	newCookie := &http.Cookie{
@@ -143,7 +144,7 @@ func (del *delivery) Logout(w http.ResponseWriter, r *http.Request, p httprouter
 		HttpOnly: true,
 	}
 	http.SetCookie(w, newCookie)
-	return mw.ErrNoContent
+	return pkgErrors.ErrNoContent
 }
 
 func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -157,18 +158,18 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 	params := auth.RegisterParams{}
 
 	if err := decoder.Decode(&params); err != nil {
-		return mw.ErrParseJson
+		return pkgErrors.ErrParseJson
 	}
 
 	user, sessionParams, err := del.serv.Register(&params)
 	if err != nil {
 		switch {
 		case errors.Is(err, auth.UserAlreadyExistsError):
-			return mw.ErrUserAlreadyExists
+			return pkgErrors.ErrUserAlreadyExists
 		case errors.Is(err, auth.UserCreationError):
-			return mw.ErrService
+			return pkgErrors.ErrService
 		case errors.Is(err, auth.DBConnectionError):
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
 
@@ -178,7 +179,7 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 
 	encoder := json.NewEncoder(w)
 	if err = encoder.Encode(user); err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	return nil

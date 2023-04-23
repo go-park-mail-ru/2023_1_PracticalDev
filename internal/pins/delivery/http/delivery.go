@@ -3,8 +3,6 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -12,10 +10,13 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv pkgPins.Service) {
@@ -38,15 +39,15 @@ func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	file, handler, err := r.FormFile("bytes")
 	if err != nil {
 		if errors.Is(err, http.ErrMissingFile) {
-			return mw.ErrMissingFile
+			return pkgErrors.ErrMissingFile
 		} else {
-			return mw.ErrParseForm
+			return pkgErrors.ErrParseForm
 		}
 	}
 	defer file.Close()
@@ -54,7 +55,7 @@ func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.
 	buf := bytes.NewBuffer(nil)
 	_, err = io.Copy(buf, file)
 	if err != nil {
-		return mw.ErrFileCopy
+		return pkgErrors.ErrFileCopy
 	}
 
 	image := models.Image{
@@ -70,13 +71,13 @@ func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.
 	}
 	pin, err := del.serv.Create(&params)
 	if err != nil {
-		return mw.ErrService
+		return pkgErrors.ErrService
 	}
 
 	response := newCreateResponse(&pin)
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -88,28 +89,28 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidPinIdParam
+		return pkgErrors.ErrInvalidPinIdParam
 	}
 
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	pin, err := del.serv.Get(id, userId)
 	if err != nil {
 		if errors.Is(err, pkgPins.ErrPinNotFound) {
-			return mw.ErrPinNotFound
+			return pkgErrors.ErrPinNotFound
 		} else {
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
 
 	response := newGetResponse(&pin)
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -121,13 +122,13 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 	strAuthorId := p.ByName("id")
 	authorId, err := strconv.Atoi(strAuthorId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	queryValues := r.URL.Query()
@@ -136,9 +137,9 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 	if strPage != "" {
 		page, err = strconv.Atoi(strPage)
 		if err != nil {
-			return mw.ErrInvalidPageParam
+			return pkgErrors.ErrInvalidPageParam
 		} else if page < 1 {
-			return mw.ErrInvalidPageParam
+			return pkgErrors.ErrInvalidPageParam
 		}
 	}
 
@@ -147,21 +148,21 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 	if strLimit != "" {
 		limit, err = strconv.Atoi(strLimit)
 		if err != nil {
-			return mw.ErrInvalidLimitParam
+			return pkgErrors.ErrInvalidLimitParam
 		} else if limit < 0 {
-			return mw.ErrInvalidLimitParam
+			return pkgErrors.ErrInvalidLimitParam
 		}
 	}
 
 	pins, err := del.serv.ListByAuthor(authorId, userId, page, limit)
 	if err != nil {
-		return mw.ErrService
+		return pkgErrors.ErrService
 	}
 
 	response := newListResponse(pins)
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -173,7 +174,7 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	queryValues := r.URL.Query()
@@ -182,9 +183,9 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	if strPage != "" {
 		page, err = strconv.Atoi(strPage)
 		if err != nil {
-			return mw.ErrInvalidPageParam
+			return pkgErrors.ErrInvalidPageParam
 		} else if page < 1 {
-			return mw.ErrInvalidPageParam
+			return pkgErrors.ErrInvalidPageParam
 		}
 	}
 
@@ -193,21 +194,21 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	if strLimit != "" {
 		limit, err = strconv.Atoi(strLimit)
 		if err != nil {
-			return mw.ErrInvalidLimitParam
+			return pkgErrors.ErrInvalidLimitParam
 		} else if limit < 0 {
-			return mw.ErrInvalidLimitParam
+			return pkgErrors.ErrInvalidLimitParam
 		}
 	}
 
 	pins, err := del.serv.List(userId, page, limit)
 	if err != nil {
-		return mw.ErrService
+		return pkgErrors.ErrService
 	}
 
 	response := newListResponse(pins)
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -219,7 +220,7 @@ func (del delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprou
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidPinIdParam
+		return pkgErrors.ErrInvalidPinIdParam
 	}
 
 	params := pkgPins.FullUpdateParams{
@@ -229,13 +230,13 @@ func (del delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprou
 	}
 	pin, err := del.serv.FullUpdate(&params)
 	if err != nil {
-		return mw.ErrService
+		return pkgErrors.ErrService
 	}
 
 	response := newFullUpdateResponse(&pin)
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -247,15 +248,15 @@ func (del delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidPinIdParam
+		return pkgErrors.ErrInvalidPinIdParam
 	}
 
 	err = del.serv.Delete(id)
 	if err != nil {
 		if errors.Is(err, pkgPins.ErrPinNotFound) {
-			return mw.ErrPinNotFound
+			return pkgErrors.ErrPinNotFound
 		} else {
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
 	return err

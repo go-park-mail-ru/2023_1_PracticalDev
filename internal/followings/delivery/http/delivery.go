@@ -10,6 +10,7 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv followings.Service) {
@@ -31,74 +32,74 @@ func (del *delivery) follow(w http.ResponseWriter, r *http.Request, p httprouter
 	strFollowerId := p.ByName("user-id")
 	followerId, err := strconv.Atoi(strFollowerId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	strFolloweeId := p.ByName("id")
 	followeeId, err := strconv.Atoi(strFolloweeId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	err = del.serv.Follow(followerId, followeeId)
 	if err != nil {
 		switch err {
 		case followings.ErrSameUserId:
-			return mw.ErrSameUserId
+			return pkgErrors.ErrSameUserId
 		case followings.ErrFollowingAlreadyExists:
-			return mw.ErrFollowingAlreadyExists
+			return pkgErrors.ErrFollowingAlreadyExists
 		case followings.ErrUserNotFound:
-			return mw.ErrUserNotFound
+			return pkgErrors.ErrUserNotFound
 		default:
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
-	return mw.ErrNoContent
+	return pkgErrors.ErrNoContent
 }
 
 func (del *delivery) unfollow(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strFollowerId := p.ByName("user-id")
 	followerId, err := strconv.Atoi(strFollowerId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	strFolloweeId := p.ByName("id")
 	followeeId, err := strconv.Atoi(strFolloweeId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	err = del.serv.Unfollow(followerId, followeeId)
 	if err != nil {
 		switch err {
 		case followings.ErrSameUserId:
-			return mw.ErrSameUserId
+			return pkgErrors.ErrSameUserId
 		case followings.ErrFollowingNotFound:
-			return mw.ErrFollowingNotFound
+			return pkgErrors.ErrFollowingNotFound
 		case followings.ErrUserNotFound:
-			return mw.ErrUserNotFound
+			return pkgErrors.ErrUserNotFound
 		default:
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
-	return mw.ErrNoContent
+	return pkgErrors.ErrNoContent
 }
 
 func (del *delivery) getFollowers(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	userId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	followers, err := del.serv.GetFollowers(userId)
 	if err != nil {
 		switch err {
 		case followings.ErrUserNotFound:
-			return mw.ErrUserNotFound
+			return pkgErrors.ErrUserNotFound
 		default:
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
 
@@ -107,13 +108,13 @@ func (del *delivery) getFollowers(w http.ResponseWriter, r *http.Request, p http
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 	return nil
 }
@@ -122,16 +123,16 @@ func (del *delivery) getFollowees(w http.ResponseWriter, r *http.Request, p http
 	strId := p.ByName("id")
 	userId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	followees, err := del.serv.GetFollowees(userId)
 	if err != nil {
 		switch err {
 		case followings.ErrUserNotFound:
-			return mw.ErrUserNotFound
+			return pkgErrors.ErrUserNotFound
 		default:
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
 
@@ -140,13 +141,13 @@ func (del *delivery) getFollowees(w http.ResponseWriter, r *http.Request, p http
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 	return nil
 }

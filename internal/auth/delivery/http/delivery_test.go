@@ -2,8 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,9 +11,10 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	authMocks "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/mocks"
-
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 var (
@@ -92,7 +91,7 @@ func TestAuthenticate(t *testing.T) {
 				Email:    "123@vk.com",
 				Password: "12345678",
 			},
-			err: mw.ErrUserNotFound,
+			err: pkgErrors.ErrUserNotFound,
 		},
 	}
 
@@ -172,7 +171,7 @@ func TestRegister(t *testing.T) {
 				Name:     "test",
 				Password: "12345",
 			},
-			err: mw.ErrUserAlreadyExists,
+			err: pkgErrors.ErrUserAlreadyExists,
 		},
 		{
 			prepare: func(f *fields) {
@@ -198,7 +197,7 @@ func TestRegister(t *testing.T) {
 				Name:     "test",
 				Password: "12345",
 			},
-			err: mw.ErrService,
+			err: pkgErrors.ErrService,
 		},
 		{
 			prepare: func(f *fields) {
@@ -224,7 +223,7 @@ func TestRegister(t *testing.T) {
 				Name:     "test",
 				Password: "12345",
 			},
-			err: mw.ErrService,
+			err: pkgErrors.ErrService,
 		},
 	}
 
@@ -260,7 +259,7 @@ func TestLogout(t *testing.T) {
 				Name:  "JSESSIONID",
 				Value: "123456789",
 			},
-			err: mw.ErrBadRequest,
+			err: pkgErrors.ErrBadRequest,
 		},
 		{
 			prepare: func(f *fields) {
@@ -270,12 +269,12 @@ func TestLogout(t *testing.T) {
 				Name:  "JSESSIONID",
 				Value: "1$23456789",
 			},
-			err: mw.ErrUnauthorized,
+			err: pkgErrors.ErrUnauthorized,
 		},
 		{
 			prepare: func(f *fields) {},
 			cookie:  &http.Cookie{},
-			err:     mw.ErrUserNotFound,
+			err:     pkgErrors.ErrUserNotFound,
 		},
 	}
 

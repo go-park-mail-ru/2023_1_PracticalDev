@@ -1,8 +1,6 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -13,8 +11,10 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/mocks"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
 )
 
@@ -71,7 +71,7 @@ func TestCreate(t *testing.T) {
 				},
 			},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -300,7 +300,7 @@ func TestGet(t *testing.T) {
 				{Key: "user-id", Value: "12"},
 			},
 			response: ``,
-			err:      mw.ErrInvalidPinIdParam,
+			err:      pkgErrors.ErrInvalidPinIdParam,
 		},
 		"pin not found": {
 			prepare: func(f *fields) {
@@ -311,7 +311,7 @@ func TestGet(t *testing.T) {
 				{Key: "user-id", Value: "12"},
 			},
 			response: ``,
-			err:      mw.ErrPinNotFound,
+			err:      pkgErrors.ErrPinNotFound,
 		},
 		"service error": {
 			prepare: func(f *fields) {
@@ -322,7 +322,7 @@ func TestGet(t *testing.T) {
 				{Key: "user-id", Value: "12"},
 			},
 			response: ``,
-			err:      mw.ErrService,
+			err:      pkgErrors.ErrService,
 		},
 	}
 
@@ -399,7 +399,7 @@ func TestFullUpdate(t *testing.T) {
 				"description": "d1",
 			},
 			response: ``,
-			err:      mw.ErrInvalidPinIdParam,
+			err:      pkgErrors.ErrInvalidPinIdParam,
 		},
 	}
 
@@ -463,26 +463,26 @@ func TestDelete(t *testing.T) {
 		"invalid pin id param": {
 			prepare: func(f *fields) {},
 			params:  []httprouter.Param{{Key: "id", Value: "a"}},
-			err:     mw.ErrInvalidPinIdParam,
+			err:     pkgErrors.ErrInvalidPinIdParam,
 		},
 		"missing pin id param": {
 			prepare: func(f *fields) {},
 			params:  []httprouter.Param{},
-			err:     mw.ErrInvalidPinIdParam,
+			err:     pkgErrors.ErrInvalidPinIdParam,
 		},
 		"pin not found": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Delete(3).Return(pins.ErrPinNotFound)
 			},
 			params: []httprouter.Param{{Key: "id", Value: "3"}},
-			err:    mw.ErrPinNotFound,
+			err:    pkgErrors.ErrPinNotFound,
 		},
 		"service error": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Delete(3).Return(pins.ErrDb)
 			},
 			params: []httprouter.Param{{Key: "id", Value: "3"}},
-			err:    mw.ErrService,
+			err:    pkgErrors.ErrService,
 		},
 	}
 
