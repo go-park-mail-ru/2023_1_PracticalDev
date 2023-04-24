@@ -5,12 +5,10 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/pkg/errors"
-
 	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
-
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -38,7 +36,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	var request createRequest
@@ -50,7 +48,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 		}
 	}()
 	if err = decoder.Decode(&request); err != nil {
-		return mw.ErrParseJson
+		return pkgErrors.ErrParseJson
 	}
 
 	params := pkgBoards.CreateParams{
@@ -65,16 +63,12 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 
 	createdBoard, err := del.serv.Create(&params)
 	if err != nil {
-		if errors.Is(err, pkgBoards.ErrInvalidPrivacy) {
-			return mw.ErrBadParams
-		} else {
-			return mw.ErrService
-		}
+		return err
 	}
 
 	data, err := json.Marshal(createdBoard)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -86,18 +80,18 @@ func (del *delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.P
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	boards, err := del.serv.List(userId)
 	if err != nil {
-		return mw.ErrService
+		return pkgErrors.ErrService
 	}
 
 	response := listResponse{Boards: boards}
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -109,18 +103,18 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidBoardIdParam
+		return pkgErrors.ErrInvalidBoardIdParam
 	}
 
 	board, err := del.serv.Get(id)
 	if err != nil {
-		return mw.ErrBoardNotFound
+		return pkgErrors.ErrBoardNotFound
 	}
 
 	response := newGetResponse(&board)
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -132,7 +126,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidBoardIdParam
+		return pkgErrors.ErrInvalidBoardIdParam
 	}
 
 	var request fullUpdateRequest
@@ -144,7 +138,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		}
 	}()
 	if err = decoder.Decode(&request); err != nil {
-		return mw.ErrParseJson
+		return pkgErrors.ErrParseJson
 	}
 
 	params := pkgBoards.FullUpdateParams{
@@ -159,17 +153,13 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 
 	board, err := del.serv.FullUpdate(&params)
 	if err != nil {
-		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
-			return mw.ErrBoardNotFound
-		} else {
-			return mw.ErrService
-		}
+		return err
 	}
 
 	response := newFullUpdateResponse(&board)
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -181,7 +171,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidBoardIdParam
+		return pkgErrors.ErrInvalidBoardIdParam
 	}
 
 	var request partialUpdateRequest
@@ -193,7 +183,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		}
 	}()
 	if err = decoder.Decode(&request); err != nil {
-		return mw.ErrParseJson
+		return pkgErrors.ErrParseJson
 	}
 
 	params := pkgBoards.PartialUpdateParams{
@@ -215,17 +205,13 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 
 	board, err := del.serv.PartialUpdate(&params)
 	if err != nil {
-		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
-			return mw.ErrBoardNotFound
-		} else {
-			return mw.ErrService
-		}
+		return err
 	}
 
 	response := newPartialUpdateResponse(&board)
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -237,25 +223,21 @@ func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidBoardIdParam
+		return pkgErrors.ErrInvalidBoardIdParam
 	}
 
 	err = del.serv.Delete(id)
 	if err != nil {
-		if errors.Is(err, pkgBoards.ErrBoardNotFound) {
-			return mw.ErrBoardNotFound
-		} else {
-			return mw.ErrService
-		}
+		return err
 	}
-	return nil
+	return pkgErrors.ErrNoContent
 }
 
 func (del *delivery) pinsList(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strBoardId := p.ByName("id")
 	boardId, err := strconv.Atoi(strBoardId)
 	if err != nil {
-		return mw.ErrInvalidBoardIdParam
+		return pkgErrors.ErrInvalidBoardIdParam
 	}
 
 	queryValues := r.URL.Query()
@@ -264,9 +246,9 @@ func (del *delivery) pinsList(w http.ResponseWriter, r *http.Request, p httprout
 	if strPage != "" {
 		page, err = strconv.Atoi(strPage)
 		if err != nil {
-			return mw.ErrInvalidPageParam
+			return pkgErrors.ErrInvalidPageParam
 		} else if page < 1 {
-			return mw.ErrInvalidPageParam
+			return pkgErrors.ErrInvalidPageParam
 		}
 	}
 
@@ -275,21 +257,21 @@ func (del *delivery) pinsList(w http.ResponseWriter, r *http.Request, p httprout
 	if strLimit != "" {
 		limit, err = strconv.Atoi(strLimit)
 		if err != nil {
-			return mw.ErrInvalidLimitParam
+			return pkgErrors.ErrInvalidLimitParam
 		} else if limit < 0 {
-			return mw.ErrInvalidLimitParam
+			return pkgErrors.ErrInvalidLimitParam
 		}
 	}
 
 	pins, err := del.serv.PinsList(boardId, page, limit)
 	if err != nil {
-		return mw.ErrService
+		return pkgErrors.ErrService
 	}
 
 	response := pinListResponse{Pins: pins}
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -301,43 +283,38 @@ func (del *delivery) addPin(w http.ResponseWriter, r *http.Request, p httprouter
 	strId := p.ByName("id")
 	boardId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidBoardIdParam
+		return pkgErrors.ErrInvalidBoardIdParam
 	}
 
 	strId = p.ByName("pin_id")
 	pinId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidPinIdParam
+		return pkgErrors.ErrInvalidPinIdParam
 	}
 
 	err = del.serv.AddPin(boardId, pinId)
 	if err != nil {
-		switch err {
-		case pkgBoards.ErrPinAlreadyAdded:
-			return mw.ErrPinAlreadyAdded
-		default:
-			return mw.ErrService
-		}
+		return err
 	}
-	return nil
+	return pkgErrors.ErrNoContent
 }
 
 func (del *delivery) removePin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	boardId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidBoardIdParam
+		return pkgErrors.ErrInvalidBoardIdParam
 	}
 
 	strId = p.ByName("pin_id")
 	pinId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidPinIdParam
+		return pkgErrors.ErrInvalidPinIdParam
 	}
 
 	err = del.serv.RemovePin(boardId, pinId)
 	if err != nil {
-		return mw.ErrService
+		return err
 	}
-	return mw.ErrNoContent
+	return pkgErrors.ErrNoContent
 }

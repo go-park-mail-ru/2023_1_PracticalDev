@@ -5,6 +5,7 @@ import (
 	hasherPkg "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/hasher"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/google/uuid"
+	"github.com/pkg/errors"
 	"strconv"
 	"time"
 )
@@ -22,9 +23,8 @@ type service struct {
 
 func (serv *service) Authenticate(email, password string) (models.User, auth.SessionParams, error) {
 	user, err := serv.rep.Authenticate(email, password)
-	session := auth.SessionParams{}
 	if err != nil {
-		return user, session, err
+		return user, auth.SessionParams{}, errors.Wrap(err, "Authenticate")
 	}
 
 	sessionParams := serv.CreateSession(user.Id)
@@ -70,7 +70,7 @@ func (serv *service) Register(user *auth.RegisterParams) (models.User, auth.Sess
 
 	err := serv.rep.Register(&tmp)
 	if err != nil {
-		return tmp, auth.SessionParams{}, err
+		return models.User{}, auth.SessionParams{}, errors.Wrap(err, "Register")
 	}
 
 	return serv.Authenticate(user.Email, user.Password)

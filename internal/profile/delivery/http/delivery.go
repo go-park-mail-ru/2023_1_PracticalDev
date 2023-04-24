@@ -3,7 +3,6 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -11,10 +10,12 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 )
 
@@ -35,22 +36,22 @@ func (del *delivery) getProfileByUser(w http.ResponseWriter, r *http.Request, p 
 	strUserId := p.ByName("id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	prof, err := del.serv.GetProfileByUser(userId)
 	if err != nil {
 		if errors.Is(err, profile.ErrProfileNotFound) {
-			return mw.ErrProfileNotFound
+			return pkgErrors.ErrProfileNotFound
 		} else {
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
 
 	response := newGetResponse(&prof)
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -62,15 +63,15 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	strId := p.ByName("user-id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	file, handler, err := r.FormFile("bytes")
 	if err != nil {
 		if errors.Is(err, http.ErrMissingFile) {
-			return mw.ErrMissingFile
+			return pkgErrors.ErrMissingFile
 		} else {
-			return mw.ErrParseForm
+			return pkgErrors.ErrParseForm
 		}
 	}
 	defer func() {
@@ -83,7 +84,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	buf := bytes.NewBuffer(nil)
 	_, err = io.Copy(buf, file)
 	if err != nil {
-		return mw.ErrFileCopy
+		return pkgErrors.ErrFileCopy
 	}
 
 	image := models.Image{
@@ -102,16 +103,16 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	if err != nil {
 		switch err.(type) {
 		case profile.ErrBadParams:
-			return mw.ErrBadParams
+			return pkgErrors.ErrBadParams
 		default:
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
 
 	response := newFullUpdateResponse(&prof)
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -123,7 +124,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	strId := p.ByName("user-id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	params := profile.PartialUpdateParams{Id: id}
@@ -131,13 +132,13 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	file, handler, err := r.FormFile("bytes")
 	if err != nil {
 		if err != http.ErrMissingFile {
-			return mw.ErrParseForm
+			return pkgErrors.ErrParseForm
 		}
 	} else {
 		buf := bytes.NewBuffer(nil)
 		_, err = io.Copy(buf, file)
 		if err != nil {
-			return mw.ErrFileCopy
+			return pkgErrors.ErrFileCopy
 		}
 
 		image := models.Image{
@@ -166,16 +167,16 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	if err != nil {
 		switch err.(type) {
 		case profile.ErrBadParams:
-			return mw.ErrBadParams
+			return pkgErrors.ErrBadParams
 		default:
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
 
 	response := newPartialUpdateResponse(&prof)
 	data, err := json.Marshal(response)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")

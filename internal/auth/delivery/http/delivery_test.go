@@ -2,8 +2,6 @@ package http
 
 import (
 	"encoding/json"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -13,9 +11,10 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	authMocks "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/mocks"
-
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 var (
@@ -86,13 +85,13 @@ func TestAuthenticate(t *testing.T) {
 		{
 			prepare: func(f *fields) {
 				f.serv.EXPECT().Authenticate("123@vk.com", "12345678").
-					Return(models.User{}, auth.SessionParams{}, auth.WrongPasswordOrLoginError)
+					Return(models.User{}, auth.SessionParams{}, pkgErrors.ErrUserNotFound)
 			},
 			req: auth.LoginParams{
 				Email:    "123@vk.com",
 				Password: "12345678",
 			},
-			err: mw.ErrUserNotFound,
+			err: pkgErrors.ErrUserNotFound,
 		},
 	}
 
@@ -164,7 +163,7 @@ func TestRegister(t *testing.T) {
 					ProfileImage:   "",
 					WebsiteUrl:     "",
 					AccountType:    "personal",
-				}, auth.SessionParams{}, auth.UserAlreadyExistsError)
+				}, auth.SessionParams{}, pkgErrors.ErrUserAlreadyExists)
 			},
 			req: auth.RegisterParams{
 				Username: "test3",
@@ -172,7 +171,7 @@ func TestRegister(t *testing.T) {
 				Name:     "test",
 				Password: "12345",
 			},
-			err: mw.ErrUserAlreadyExists,
+			err: pkgErrors.ErrUserAlreadyExists,
 		},
 		{
 			prepare: func(f *fields) {
@@ -190,7 +189,7 @@ func TestRegister(t *testing.T) {
 					ProfileImage:   "",
 					WebsiteUrl:     "",
 					AccountType:    "personal",
-				}, auth.SessionParams{}, auth.DBConnectionError)
+				}, auth.SessionParams{}, pkgErrors.ErrDb)
 			},
 			req: auth.RegisterParams{
 				Username: "test3",
@@ -198,33 +197,7 @@ func TestRegister(t *testing.T) {
 				Name:     "test",
 				Password: "12345",
 			},
-			err: mw.ErrService,
-		},
-		{
-			prepare: func(f *fields) {
-				f.serv.EXPECT().Register(&auth.RegisterParams{
-					Username: "test3",
-					Email:    "test1@test.ru",
-					Name:     "test",
-					Password: "12345",
-				}).Return(models.User{
-					Id:             2,
-					Username:       "test3",
-					Email:          "test1@test.ru",
-					HashedPassword: "hashed_pswd",
-					Name:           "test",
-					ProfileImage:   "",
-					WebsiteUrl:     "",
-					AccountType:    "personal",
-				}, auth.SessionParams{}, auth.UserCreationError)
-			},
-			req: auth.RegisterParams{
-				Username: "test3",
-				Email:    "test1@test.ru",
-				Name:     "test",
-				Password: "12345",
-			},
-			err: mw.ErrService,
+			err: pkgErrors.ErrDb,
 		},
 	}
 
@@ -260,7 +233,7 @@ func TestLogout(t *testing.T) {
 				Name:  "JSESSIONID",
 				Value: "123456789",
 			},
-			err: mw.ErrBadRequest,
+			err: pkgErrors.ErrBadRequest,
 		},
 		{
 			prepare: func(f *fields) {
@@ -270,12 +243,12 @@ func TestLogout(t *testing.T) {
 				Name:  "JSESSIONID",
 				Value: "1$23456789",
 			},
-			err: mw.ErrUnauthorized,
+			err: pkgErrors.ErrUnauthorized,
 		},
 		{
 			prepare: func(f *fields) {},
 			cookie:  &http.Cookie{},
-			err:     mw.ErrUserNotFound,
+			err:     pkgErrors.ErrUserNotFound,
 		},
 	}
 

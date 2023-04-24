@@ -5,10 +5,12 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 
 	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func TestCreate(t *testing.T) {
@@ -61,7 +63,7 @@ func TestCreate(t *testing.T) {
 			serv := NewBoardsService(f.repo)
 
 			board, err := serv.Create(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if board != test.board {
@@ -126,7 +128,7 @@ func TestList(t *testing.T) {
 			serv := NewBoardsService(f.repo)
 
 			boards, err := serv.List(test.userId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(boards, test.boards) {
@@ -171,19 +173,19 @@ func TestGet(t *testing.T) {
 		},
 		"board not found": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Get(3).Return(models.Board{}, _boards.ErrBoardNotFound)
+				f.repo.EXPECT().Get(3).Return(models.Board{}, pkgErrors.ErrBoardNotFound)
 			},
 			id:    3,
 			board: models.Board{},
-			err:   _boards.ErrBoardNotFound,
+			err:   pkgErrors.ErrBoardNotFound,
 		},
 		"negative board id param": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Get(-1).Return(models.Board{}, _boards.ErrBoardNotFound)
+				f.repo.EXPECT().Get(-1).Return(models.Board{}, pkgErrors.ErrBoardNotFound)
 			},
 			id:    -1,
 			board: models.Board{},
-			err:   _boards.ErrBoardNotFound,
+			err:   pkgErrors.ErrBoardNotFound,
 		},
 	}
 
@@ -203,7 +205,7 @@ func TestGet(t *testing.T) {
 			serv := NewBoardsService(f.repo)
 
 			board, err := serv.Get(test.id)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if board != test.board {
@@ -263,7 +265,7 @@ func TestFullUpdate(t *testing.T) {
 			serv := NewBoardsService(f.repo)
 
 			board, err := serv.FullUpdate(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if board != test.board {
@@ -334,7 +336,7 @@ func TestPartialUpdate(t *testing.T) {
 			serv := NewBoardsService(f.repo)
 
 			board, err := serv.PartialUpdate(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if board != test.board {
@@ -365,10 +367,10 @@ func TestDelete(t *testing.T) {
 		},
 		"board not found": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Delete(3).Return(_boards.ErrBoardNotFound)
+				f.repo.EXPECT().Delete(3).Return(pkgErrors.ErrBoardNotFound)
 			},
 			id:  3,
-			err: _boards.ErrBoardNotFound,
+			err: pkgErrors.ErrBoardNotFound,
 		},
 	}
 
@@ -388,7 +390,7 @@ func TestDelete(t *testing.T) {
 			serv := NewBoardsService(f.repo)
 
 			err := serv.Delete(test.id)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 		})
@@ -456,7 +458,7 @@ func TestPinsList(t *testing.T) {
 			serv := NewBoardsService(f.repo)
 
 			pins, err := serv.PinsList(test.boardId, test.page, test.limit)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(pins, test.pins) {
@@ -516,7 +518,7 @@ func TestCheckWriteAccess(t *testing.T) {
 			serv := NewBoardsService(f.repo)
 
 			access, err := serv.CheckWriteAccess(test.userId, test.boardId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if access != test.access {
@@ -576,7 +578,7 @@ func TestCheckReadAccess(t *testing.T) {
 			serv := NewBoardsService(f.repo)
 
 			access, err := serv.CheckReadAccess(test.userId, test.boardId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if access != test.access {

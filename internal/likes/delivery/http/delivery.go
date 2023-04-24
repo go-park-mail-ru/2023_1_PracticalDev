@@ -10,6 +10,7 @@ import (
 	pkgLikes "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv pkgLikes.Service) {
@@ -31,65 +32,65 @@ func (del *delivery) like(w http.ResponseWriter, r *http.Request, p httprouter.P
 	strId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	strId = p.ByName("id")
 	pinId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidPinIdParam
+		return pkgErrors.ErrInvalidPinIdParam
 	}
 
 	err = del.serv.Like(pinId, userId)
 	if err != nil {
 		switch err {
 		case pkgLikes.ErrLikeAlreadyExists:
-			return mw.ErrLikeAlreadyExists
+			return pkgErrors.ErrLikeAlreadyExists
 		case pkgLikes.ErrPinNotFound:
-			return mw.ErrPinNotFound
+			return pkgErrors.ErrPinNotFound
 		case pkgLikes.ErrAuthorNotFound:
-			return mw.ErrUserNotFound
+			return pkgErrors.ErrUserNotFound
 		default:
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
-	return mw.ErrNoContent
+	return pkgErrors.ErrNoContent
 }
 
 func (del *delivery) unlike(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	strId = p.ByName("id")
 	pinId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidPinIdParam
+		return pkgErrors.ErrInvalidPinIdParam
 	}
 
 	err = del.serv.Unlike(pinId, userId)
 	if err != nil {
 		switch err {
 		case pkgLikes.ErrLikeNotFound:
-			return mw.ErrLikeNotFound
+			return pkgErrors.ErrLikeNotFound
 		case pkgLikes.ErrPinNotFound:
-			return mw.ErrPinNotFound
+			return pkgErrors.ErrPinNotFound
 		case pkgLikes.ErrAuthorNotFound:
-			return mw.ErrUserNotFound
+			return pkgErrors.ErrUserNotFound
 		default:
-			return mw.ErrService
+			return pkgErrors.ErrService
 		}
 	}
-	return mw.ErrNoContent
+	return pkgErrors.ErrNoContent
 }
 
 func (del *delivery) listByPin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	pinId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidPinIdParam
+		return pkgErrors.ErrInvalidPinIdParam
 	}
 
 	likes, err := del.serv.ListByPin(pinId)
@@ -108,7 +109,7 @@ func (del *delivery) listByPin(w http.ResponseWriter, r *http.Request, p httprou
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 	return nil
 }
@@ -117,7 +118,7 @@ func (del *delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p http
 	strId := p.ByName("id")
 	userId, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	likes, err := del.serv.ListByAuthor(userId)
@@ -136,7 +137,7 @@ func (del *delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p http
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 	return nil
 }

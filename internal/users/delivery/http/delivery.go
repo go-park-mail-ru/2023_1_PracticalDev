@@ -5,10 +5,12 @@ import (
 	"net/http"
 	"strconv"
 
+	"github.com/julienschmidt/httprouter"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users"
-	"github.com/julienschmidt/httprouter"
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv users.Service) {
@@ -26,17 +28,17 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		return mw.ErrInvalidUserIdParam
+		return pkgErrors.ErrInvalidUserIdParam
 	}
 
 	user, err := del.serv.Get(id)
 	if err != nil {
-		return mw.ErrService
+		return pkgErrors.ErrService
 	}
 
 	data, err := json.Marshal(user)
 	if err != nil {
-		return mw.ErrCreateResponse
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")

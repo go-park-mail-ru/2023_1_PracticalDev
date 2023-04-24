@@ -12,7 +12,7 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/mocks"
 )
@@ -47,7 +47,7 @@ func TestGetProfileByUser(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 		"profile not found": {
 			prepare: func(f *fields) {
@@ -55,7 +55,7 @@ func TestGetProfileByUser(t *testing.T) {
 			},
 			params:   []httprouter.Param{{Key: "id", Value: "3"}},
 			response: ``,
-			err:      mw.ErrProfileNotFound,
+			err:      pkgErrors.ErrProfileNotFound,
 		},
 		"service error": {
 			prepare: func(f *fields) {
@@ -63,7 +63,7 @@ func TestGetProfileByUser(t *testing.T) {
 			},
 			params:   []httprouter.Param{{Key: "id", Value: "3"}},
 			response: ``,
-			err:      mw.ErrService,
+			err:      pkgErrors.ErrService,
 		},
 	}
 
@@ -149,7 +149,7 @@ func TestFullUpdate(t *testing.T) {
 			},
 			formFiles: map[string]utils.File{},
 			response:  ``,
-			err:       mw.ErrMissingFile,
+			err:       pkgErrors.ErrMissingFile,
 		},
 		"invalid user id param": {
 			prepare: func(f *fields) {},
@@ -166,7 +166,7 @@ func TestFullUpdate(t *testing.T) {
 				},
 			},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -253,7 +253,7 @@ func TestPartialUpdate(t *testing.T) {
 			formValues: map[string]string{"username": "username1"},
 			formFiles:  map[string]utils.File{},
 			response:   ``,
-			err:        mw.ErrInvalidUserIdParam,
+			err:        pkgErrors.ErrInvalidUserIdParam,
 		},
 	}
 

@@ -1,7 +1,6 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,12 +9,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 
 	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
-	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func TestCreate(t *testing.T) {
@@ -55,13 +55,13 @@ func TestCreate(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "user-id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 		"missing user id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -84,7 +84,7 @@ func TestCreate(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/boards", strings.NewReader(test.request))
 			rec := httptest.NewRecorder()
 			err := del.create(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)
@@ -132,13 +132,13 @@ func TestList(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "user-id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 		"missing user id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidUserIdParam,
+			err:      pkgErrors.ErrInvalidUserIdParam,
 		},
 	}
 
@@ -164,7 +164,7 @@ func TestList(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/boards", nil)
 			rec := httptest.NewRecorder()
 			err := del.list(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)
@@ -206,21 +206,21 @@ func TestGet(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"board not found": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Get(3).Return(models.Board{}, _boards.ErrBoardNotFound)
+				f.serv.EXPECT().Get(3).Return(models.Board{}, pkgErrors.ErrBoardNotFound)
 			},
 			params:   []httprouter.Param{{Key: "id", Value: "3"}},
 			response: ``,
-			err:      mw.ErrBoardNotFound,
+			err:      pkgErrors.ErrBoardNotFound,
 		},
 	}
 
@@ -246,7 +246,7 @@ func TestGet(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/boards/3", nil)
 			rec := httptest.NewRecorder()
 			err := del.get(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)
@@ -294,13 +294,13 @@ func TestFullUpdate(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 	}
 
@@ -326,7 +326,7 @@ func TestFullUpdate(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPut, "/boards/1", strings.NewReader(test.request))
 			rec := httptest.NewRecorder()
 			err := del.fullUpdate(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)
@@ -377,13 +377,13 @@ func TestPartialUpdate(t *testing.T) {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{{Key: "id", Value: "a"}},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
 			prepare:  func(f *fields) {},
 			params:   []httprouter.Param{},
 			response: ``,
-			err:      mw.ErrInvalidBoardIdParam,
+			err:      pkgErrors.ErrInvalidBoardIdParam,
 		},
 	}
 
@@ -409,7 +409,7 @@ func TestPartialUpdate(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPatch, "/boards/1", strings.NewReader(test.request))
 			rec := httptest.NewRecorder()
 			err := del.partialUpdate(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)
@@ -437,24 +437,24 @@ func TestDelete(t *testing.T) {
 				f.serv.EXPECT().Delete(3).Return(nil)
 			},
 			params: []httprouter.Param{{Key: "id", Value: "3"}},
-			err:    nil,
+			err:    pkgErrors.ErrNoContent,
 		},
 		"invalid board id param": {
 			prepare: func(f *fields) {},
 			params:  []httprouter.Param{{Key: "id", Value: "a"}},
-			err:     mw.ErrInvalidBoardIdParam,
+			err:     pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"missing board id param": {
 			prepare: func(f *fields) {},
 			params:  []httprouter.Param{},
-			err:     mw.ErrInvalidBoardIdParam,
+			err:     pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"board not found": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Delete(3).Return(_boards.ErrBoardNotFound)
+				f.serv.EXPECT().Delete(3).Return(pkgErrors.ErrBoardNotFound)
 			},
 			params: []httprouter.Param{{Key: "id", Value: "3"}},
-			err:    mw.ErrBoardNotFound,
+			err:    pkgErrors.ErrBoardNotFound,
 		},
 	}
 
@@ -480,7 +480,7 @@ func TestDelete(t *testing.T) {
 			req := httptest.NewRequest(http.MethodDelete, "/boards/3", nil)
 			rec := httptest.NewRecorder()
 			err := del.delete(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 		})
@@ -508,7 +508,7 @@ func TestAddPin(t *testing.T) {
 				{Key: "id", Value: "3"},
 				{Key: "pin_id", Value: "2"},
 			},
-			err: nil,
+			err: pkgErrors.ErrNoContent,
 		},
 		"invalid board id param": {
 			prepare: func(f *fields) {},
@@ -516,7 +516,7 @@ func TestAddPin(t *testing.T) {
 				{Key: "id", Value: "a"},
 				{Key: "pin_id", Value: "3"},
 			},
-			err: mw.ErrInvalidBoardIdParam,
+			err: pkgErrors.ErrInvalidBoardIdParam,
 		},
 		"invalid pin id": {
 			prepare: func(f *fields) {},
@@ -524,17 +524,17 @@ func TestAddPin(t *testing.T) {
 				{Key: "id", Value: "3"},
 				{Key: "pin_id", Value: "a"},
 			},
-			err: mw.ErrInvalidPinIdParam,
+			err: pkgErrors.ErrInvalidPinIdParam,
 		},
-		"service error": {
+		"db error": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().AddPin(3, 2).Return(pins.ErrDb)
+				f.serv.EXPECT().AddPin(3, 2).Return(pkgErrors.ErrDb)
 			},
 			params: []httprouter.Param{
 				{Key: "id", Value: "3"},
 				{Key: "pin_id", Value: "2"},
 			},
-			err: mw.ErrService,
+			err: pkgErrors.ErrDb,
 		},
 	}
 
@@ -560,7 +560,7 @@ func TestAddPin(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/boards/3/pins/2", strings.NewReader(test.request))
 			rec := httptest.NewRecorder()
 			err := del.addPin(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 		})
@@ -632,7 +632,7 @@ func TestPinsList(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/boards/12/pins", nil)
 			rec := httptest.NewRecorder()
 			err := del.pinsList(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)

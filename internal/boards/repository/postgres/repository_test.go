@@ -8,10 +8,12 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 
 	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func TestCreate(t *testing.T) {
@@ -54,7 +56,7 @@ func TestCreate(t *testing.T) {
 				f.mock.
 					ExpectQuery(regexp.QuoteMeta(createCmd)).
 					WithArgs("n1", "d1", "secret", 12).
-					WillReturnError(pkgBoards.ErrDb)
+					WillReturnError(pkgErrors.ErrDb)
 			},
 			params: pkgBoards.CreateParams{
 				Name:        "n1",
@@ -63,7 +65,7 @@ func TestCreate(t *testing.T) {
 				UserId:      12,
 			},
 			board: models.Board{},
-			err:   pkgBoards.ErrDb,
+			err:   pkgErrors.ErrDb,
 		},
 	}
 
@@ -87,7 +89,7 @@ func TestCreate(t *testing.T) {
 			}
 
 			board, err := repo.Create(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if board != test.board {
@@ -150,7 +152,7 @@ func TestList(t *testing.T) {
 			},
 			userId: 12,
 			boards: nil,
-			err:    pkgBoards.ErrDb,
+			err:    pkgErrors.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
@@ -162,7 +164,7 @@ func TestList(t *testing.T) {
 			},
 			userId: 12,
 			boards: nil,
-			err:    pkgBoards.ErrDb,
+			err:    pkgErrors.ErrDb,
 		},
 	}
 
@@ -186,7 +188,7 @@ func TestList(t *testing.T) {
 			}
 
 			boards, err := repo.List(test.userId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(boards, test.boards) {
@@ -238,7 +240,7 @@ func TestGet(t *testing.T) {
 			},
 			id:    3,
 			board: models.Board{},
-			err:   pkgBoards.ErrDb,
+			err:   pkgErrors.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
@@ -250,7 +252,7 @@ func TestGet(t *testing.T) {
 			},
 			id:    1,
 			board: models.Board{},
-			err:   pkgBoards.ErrDb,
+			err:   pkgErrors.ErrDb,
 		},
 	}
 
@@ -274,7 +276,7 @@ func TestGet(t *testing.T) {
 			}
 
 			board, err := repo.Get(test.id)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if board != test.board {
@@ -345,7 +347,7 @@ func TestFullUpdate(t *testing.T) {
 				Privacy:     "secret",
 			},
 			board: models.Board{},
-			err:   pkgBoards.ErrDb,
+			err:   pkgErrors.ErrDb,
 		},
 	}
 
@@ -369,7 +371,7 @@ func TestFullUpdate(t *testing.T) {
 			}
 
 			board, err := repo.FullUpdate(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if board != test.board {
@@ -446,7 +448,7 @@ func TestPartialUpdate(t *testing.T) {
 				UpdatePrivacy:     true,
 			},
 			board: models.Board{},
-			err:   pkgBoards.ErrDb,
+			err:   pkgErrors.ErrDb,
 		},
 	}
 
@@ -470,7 +472,7 @@ func TestPartialUpdate(t *testing.T) {
 			}
 
 			board, err := repo.PartialUpdate(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if board != test.board {
@@ -516,7 +518,7 @@ func TestDelete(t *testing.T) {
 					WillReturnError(fmt.Errorf("db error"))
 			},
 			id:  3,
-			err: pkgBoards.ErrDb,
+			err: pkgErrors.ErrDb,
 		},
 	}
 
@@ -540,7 +542,7 @@ func TestDelete(t *testing.T) {
 			}
 
 			err = repo.Delete(test.id)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if err = mock.ExpectationsWereMet(); err != nil {
@@ -572,7 +574,7 @@ func TestPinsList(t *testing.T) {
 				rows = rows.AddRow(2, "t2", "d2", "ms_url2", 12)
 				rows = rows.AddRow(3, "t3", "d3", "ms_url3", 12)
 				f.mock.
-					ExpectQuery(regexp.QuoteMeta(listByBoardCmd)).
+					ExpectQuery(regexp.QuoteMeta(pinsListCmd)).
 					WithArgs(3, 30, 0).
 					WillReturnRows(rows)
 			},
@@ -589,7 +591,7 @@ func TestPinsList(t *testing.T) {
 		"query error": {
 			prepare: func(f *fields) {
 				f.mock.
-					ExpectQuery(regexp.QuoteMeta(listByBoardCmd)).
+					ExpectQuery(regexp.QuoteMeta(pinsListCmd)).
 					WithArgs(3, 30, 0).
 					WillReturnError(fmt.Errorf("sql error"))
 			},
@@ -597,13 +599,13 @@ func TestPinsList(t *testing.T) {
 			page:    1,
 			limit:   30,
 			pins:    nil,
-			err:     pkgBoards.ErrDb,
+			err:     pkgErrors.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
 				rows := sqlmock.NewRows([]string{"id", "title"}).AddRow(1, "t1")
 				f.mock.
-					ExpectQuery(regexp.QuoteMeta(listByBoardCmd)).
+					ExpectQuery(regexp.QuoteMeta(pinsListCmd)).
 					WithArgs(3, 30, 0).
 					WillReturnRows(rows)
 			},
@@ -611,7 +613,7 @@ func TestPinsList(t *testing.T) {
 			page:    1,
 			limit:   30,
 			pins:    nil,
-			err:     pkgBoards.ErrDb,
+			err:     pkgErrors.ErrDb,
 		},
 	}
 
@@ -639,7 +641,7 @@ func TestPinsList(t *testing.T) {
 			}
 
 			pins, err := repo.PinsList(test.boardId, test.page, test.limit)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(pins, test.pins) {
@@ -693,7 +695,7 @@ func TestCheckWriteAccess(t *testing.T) {
 			userId:  "2",
 			boardId: "3",
 			access:  false,
-			err:     pkgBoards.ErrDb,
+			err:     pkgErrors.ErrDb,
 		},
 	}
 
@@ -717,7 +719,7 @@ func TestCheckWriteAccess(t *testing.T) {
 			}
 
 			access, err := repo.CheckWriteAccess(test.userId, test.boardId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if access != test.access {
@@ -771,7 +773,7 @@ func TestCheckReadAccess(t *testing.T) {
 			userId:  "2",
 			boardId: "3",
 			access:  false,
-			err:     pkgBoards.ErrDb,
+			err:     pkgErrors.ErrDb,
 		},
 	}
 
@@ -795,7 +797,7 @@ func TestCheckReadAccess(t *testing.T) {
 			}
 
 			access, err := repo.CheckReadAccess(test.userId, test.boardId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if access != test.access {
