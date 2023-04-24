@@ -8,10 +8,11 @@ import (
 	"time"
 
 	"github.com/DATA-DOG/go-sqlmock"
+	"github.com/pkg/errors"
 
-	pkgLikes "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func TestCreate(t *testing.T) {
@@ -40,17 +41,6 @@ func TestCreate(t *testing.T) {
 			authorId: 2,
 			err:      nil,
 		},
-		"rows affected error": {
-			prepare: func(f *fields) {
-				f.mock.
-					ExpectExec(regexp.QuoteMeta(createCmd)).
-					WithArgs(f.pinId, f.authorId).
-					WillReturnResult(sqlmock.NewResult(0, 0))
-			},
-			pinId:    3,
-			authorId: 2,
-			err:      pkgLikes.ErrDb,
-		},
 		"exec error": {
 			prepare: func(f *fields) {
 				f.mock.
@@ -60,7 +50,7 @@ func TestCreate(t *testing.T) {
 			},
 			pinId:    3,
 			authorId: 2,
-			err:      pkgLikes.ErrDb,
+			err:      pkgErrors.ErrDb,
 		},
 	}
 
@@ -82,7 +72,7 @@ func TestCreate(t *testing.T) {
 
 			repo := NewRepository(db, log.New())
 			err = repo.Create(test.pinId, test.authorId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if err = mock.ExpectationsWereMet(); err != nil {
@@ -135,7 +125,7 @@ func TestListByAuthor(t *testing.T) {
 			},
 			authorId: 12,
 			likes:    nil,
-			err:      pkgLikes.ErrDb,
+			err:      pkgErrors.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
@@ -147,7 +137,7 @@ func TestListByAuthor(t *testing.T) {
 			},
 			authorId: 12,
 			likes:    nil,
-			err:      pkgLikes.ErrDb,
+			err:      pkgErrors.ErrDb,
 		},
 	}
 
@@ -169,7 +159,7 @@ func TestListByAuthor(t *testing.T) {
 
 			repo := NewRepository(db, log.New())
 			likes, err := repo.ListByAuthor(test.authorId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(likes, test.likes) {
@@ -225,7 +215,7 @@ func TestListByPin(t *testing.T) {
 			},
 			pinId: 12,
 			likes: nil,
-			err:   pkgLikes.ErrDb,
+			err:   pkgErrors.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
@@ -237,7 +227,7 @@ func TestListByPin(t *testing.T) {
 			},
 			pinId: 12,
 			likes: nil,
-			err:   pkgLikes.ErrDb,
+			err:   pkgErrors.ErrDb,
 		},
 	}
 
@@ -259,7 +249,7 @@ func TestListByPin(t *testing.T) {
 
 			repo := NewRepository(db, log.New())
 			likes, err := repo.ListByPin(test.pinId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(likes, test.likes) {
@@ -298,17 +288,6 @@ func TestDelete(t *testing.T) {
 			authorId: 2,
 			err:      nil,
 		},
-		"rows affected error": {
-			prepare: func(f *fields) {
-				f.mock.
-					ExpectExec(regexp.QuoteMeta(deleteCmd)).
-					WithArgs(f.pinId, f.authorId).
-					WillReturnResult(sqlmock.NewResult(0, 0))
-			},
-			pinId:    3,
-			authorId: 2,
-			err:      pkgLikes.ErrDb,
-		},
 		"exec error": {
 			prepare: func(f *fields) {
 				f.mock.
@@ -318,7 +297,7 @@ func TestDelete(t *testing.T) {
 			},
 			pinId:    3,
 			authorId: 2,
-			err:      pkgLikes.ErrDb,
+			err:      pkgErrors.ErrDb,
 		},
 	}
 
@@ -340,7 +319,7 @@ func TestDelete(t *testing.T) {
 
 			repo := NewRepository(db, log.New())
 			err = repo.Delete(test.pinId, test.authorId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if err = mock.ExpectationsWereMet(); err != nil {

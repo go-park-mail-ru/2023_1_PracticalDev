@@ -2,10 +2,11 @@ package postgres
 
 import (
 	"database/sql"
-	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 type repository struct {
@@ -23,7 +24,7 @@ const createCmd = `INSERT INTO followings (follower_id, followee_id)
 func (repo *repository) Create(followerId, followeeId int) error {
 	_, err := repo.db.Exec(createCmd, followerId, followeeId)
 	if err != nil {
-		return pkgErrors.ErrDb
+		return errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
 	return nil
@@ -35,7 +36,7 @@ const deleteCmd = `DELETE FROM followings
 func (repo *repository) Delete(followerId, followeeId int) error {
 	_, err := repo.db.Exec(deleteCmd, followerId, followeeId)
 	if err != nil {
-		return pkgErrors.ErrDb
+		return errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
 	return nil
@@ -49,7 +50,7 @@ const getFolloweesCmd = `SELECT u.id, u.username, u.name, u.profile_image, u.web
 func (repo *repository) GetFollowees(userId int) ([]followings.Followee, error) {
 	rows, err := repo.db.Query(getFolloweesCmd, userId)
 	if err != nil {
-		return nil, pkgErrors.ErrDb
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
 	followees := []followings.Followee{}
@@ -59,7 +60,7 @@ func (repo *repository) GetFollowees(userId int) ([]followings.Followee, error) 
 	for rows.Next() {
 		err = rows.Scan(&followee.Id, &followee.Username, &followee.Name, &profileImage, &websiteUrl)
 		if err != nil {
-			return nil, pkgErrors.ErrDb
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
 
 		followee.ProfileImage = profileImage.String
@@ -78,7 +79,7 @@ const getFollowersCmd = `SELECT u.id, u.username, u.name, u.profile_image, u.web
 func (repo *repository) GetFollowers(userId int) ([]followings.Follower, error) {
 	rows, err := repo.db.Query(getFollowersCmd, userId)
 	if err != nil {
-		return nil, pkgErrors.ErrDb
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
 	followees := []followings.Follower{}
@@ -88,7 +89,7 @@ func (repo *repository) GetFollowers(userId int) ([]followings.Follower, error) 
 	for rows.Next() {
 		err = rows.Scan(&followee.Id, &followee.Username, &followee.Name, &profileImage, &websiteUrl)
 		if err != nil {
-			return nil, pkgErrors.ErrDb
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
 
 		followee.ProfileImage = profileImage.String
@@ -109,7 +110,7 @@ func (repo *repository) UserExists(userId int) (bool, error) {
 	var exists bool
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, pkgErrors.ErrDb
+		return false, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	return exists, nil
 }
@@ -124,7 +125,7 @@ func (repo *repository) FollowingExists(followerId, followeeId int) (bool, error
 	var exists bool
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, pkgErrors.ErrDb
+		return false, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	return exists, nil
 }

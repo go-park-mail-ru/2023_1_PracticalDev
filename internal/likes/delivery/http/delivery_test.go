@@ -10,6 +10,7 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
@@ -71,7 +72,7 @@ func TestLike(t *testing.T) {
 			req := httptest.NewRequest(http.MethodPost, "/pins/3/like", nil)
 			rec := httptest.NewRecorder()
 			err := del.like(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 		})
@@ -142,7 +143,7 @@ func TestListByAuthor(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/users/3/likes", nil)
 			rec := httptest.NewRecorder()
 			err := del.listByAuthor(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)
@@ -217,7 +218,7 @@ func TestListByPin(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/pins/3/likes", nil)
 			rec := httptest.NewRecorder()
 			err := del.listByPin(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)
@@ -281,7 +282,7 @@ func TestUnlike(t *testing.T) {
 			req := httptest.NewRequest(http.MethodDelete, "/pins/3/like", nil)
 			rec := httptest.NewRecorder()
 			err := del.unlike(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected:\n%s\nGot:\n%s", test.err, err)
 			}
 		})

@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 type service struct {
@@ -19,7 +20,7 @@ func (serv *service) Like(pinId, authorId int) error {
 		return err
 	}
 	if !exists {
-		return likes.ErrPinNotFound
+		return pkgErrors.ErrPinNotFound
 	}
 
 	exists, err = serv.rep.UserExists(authorId)
@@ -27,7 +28,7 @@ func (serv *service) Like(pinId, authorId int) error {
 		return err
 	}
 	if !exists {
-		return likes.ErrAuthorNotFound
+		return pkgErrors.ErrUserNotFound
 	}
 
 	exists, err = serv.rep.LikeExists(pinId, authorId)
@@ -35,7 +36,7 @@ func (serv *service) Like(pinId, authorId int) error {
 		return err
 	}
 	if exists {
-		return likes.ErrLikeAlreadyExists
+		return pkgErrors.ErrLikeAlreadyExists
 	}
 
 	return serv.rep.Create(pinId, authorId)
@@ -47,7 +48,7 @@ func (serv *service) Unlike(pinId, authorId int) error {
 		return err
 	}
 	if !exists {
-		return likes.ErrPinNotFound
+		return pkgErrors.ErrPinNotFound
 	}
 
 	exists, err = serv.rep.UserExists(authorId)
@@ -55,7 +56,7 @@ func (serv *service) Unlike(pinId, authorId int) error {
 		return err
 	}
 	if !exists {
-		return likes.ErrAuthorNotFound
+		return pkgErrors.ErrUserNotFound
 	}
 
 	exists, err = serv.rep.LikeExists(pinId, authorId)
@@ -63,7 +64,7 @@ func (serv *service) Unlike(pinId, authorId int) error {
 		return err
 	}
 	if !exists {
-		return likes.ErrLikeNotFound
+		return pkgErrors.ErrLikeNotFound
 	}
 
 	return serv.rep.Delete(pinId, authorId)
