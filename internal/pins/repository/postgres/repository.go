@@ -2,11 +2,14 @@ package postgres
 
 import (
 	"database/sql"
+
+	"github.com/pkg/errors"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
-	pkgLikes "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func NewRepository(db *sql.DB, s3Service images.Service, log log.Logger) pkgPins.Repository {
@@ -22,7 +25,7 @@ type repository struct {
 func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error) {
 	url, err := repo.imgServ.UploadImage(&params.MediaSource)
 	if err != nil {
-		return models.Pin{}, err
+		return models.Pin{}, errors.Wrap(pkgErrors.ErrImageService, err.Error())
 	}
 
 	row := repo.db.QueryRow(createCmd,
@@ -36,12 +39,13 @@ func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error)
 	var title, description, mediaSource sql.NullString
 	err = row.Scan(&retrievedPin.Id, &title, &mediaSource, &description, &retrievedPin.Author)
 	if err != nil {
-		err = pkgPins.ErrDb
+		return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
+
 	retrievedPin.Title = title.String
 	retrievedPin.Description = description.String
 	retrievedPin.MediaSource = mediaSource.String
-	return retrievedPin, err
+	return retrievedPin, nil
 }
 
 func (repo *repository) Get(id int) (models.Pin, error) {
@@ -51,55 +55,60 @@ func (repo *repository) Get(id int) (models.Pin, error) {
 	var title, description, mediaSource sql.NullString
 	err := row.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 	if err != nil {
-		err = pkgPins.ErrDb
+		return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
+
 	pin.Title = title.String
 	pin.Description = description.String
 	pin.MediaSource = mediaSource.String
-	return pin, err
+	return pin, nil
 }
 
 func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listByUserCmd, userId, limit, (page-1)*limit)
 	if err != nil {
-		return nil, pkgPins.ErrDb
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
 	var pins []models.Pin
 	pin := models.Pin{}
 	var title, description, mediaSource sql.NullString
+
 	for rows.Next() {
 		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 		if err != nil {
-			return nil, pkgPins.ErrDb
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
 		pin.Title = title.String
 		pin.Description = description.String
 		pin.MediaSource = mediaSource.String
 		pins = append(pins, pin)
 	}
+
 	return pins, nil
 }
 
 func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listCmd, limit, (page-1)*limit)
 	if err != nil {
-		return nil, pkgPins.ErrDb
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
 	pins := []models.Pin{}
 	pin := models.Pin{}
 	var title, description, mediaSource sql.NullString
+
 	for rows.Next() {
 		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 		if err != nil {
-			return nil, pkgPins.ErrDb
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
 		pin.Title = title.String
 		pin.Description = description.String
 		pin.MediaSource = mediaSource.String
 		pins = append(pins, pin)
 	}
+
 	return pins, nil
 }
 
@@ -114,23 +123,21 @@ func (repo *repository) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin
 	var title, description, mediaSource sql.NullString
 	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
 	if err != nil {
-		err = pkgPins.ErrDb
+		return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
+
 	retrievedPin.Title = title.String
 	retrievedPin.Description = description.String
 	retrievedPin.MediaSource = mediaSource.String
-	return retrievedPin, err
+	return retrievedPin, nil
 }
 
 func (repo *repository) Delete(id int) error {
-	res, err := repo.db.Exec(deleteCmd, id)
+	_, err := repo.db.Exec(deleteCmd, id)
 	if err != nil {
-		return err
+		return errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
-	count, err := res.RowsAffected()
-	if err != nil || count < 1 {
-		return err
-	}
+
 	return nil
 }
 
@@ -144,19 +151,19 @@ func (repo *repository) IsLikedByUser(pinId, userId int) (bool, error) {
 	var liked bool
 	err := row.Scan(&liked)
 	if err != nil {
-		return false, pkgLikes.ErrDb
+		return false, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	return liked, nil
 }
 
 func (repo *repository) CheckWriteAccess(userId, pinId string) (bool, error) {
-	row := repo.db.QueryRow(checkWriteCmd,
-		pinId,
-		userId,
-	)
+	row := repo.db.QueryRow(checkWriteCmd, pinId, userId)
 
 	var access bool
 	err := row.Scan(&access)
+	if err != nil {
+		return false, errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
 	return access, err
 }
 

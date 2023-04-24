@@ -8,11 +8,13 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	_pins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func TestCreate(t *testing.T) {
@@ -60,7 +62,7 @@ func TestCreate(t *testing.T) {
 				Author:      12,
 			},
 			pin: models.Pin{},
-			err: _pins.ErrDb,
+			err: pkgErrors.ErrDb,
 		},
 	}
 
@@ -89,7 +91,7 @@ func TestCreate(t *testing.T) {
 			}
 
 			pin, err := repo.Create(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if pin != test.pin {
@@ -146,7 +148,7 @@ func TestList(t *testing.T) {
 			page:  1,
 			limit: 30,
 			pins:  nil,
-			err:   _pins.ErrDb,
+			err:   pkgErrors.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
@@ -159,7 +161,7 @@ func TestList(t *testing.T) {
 			page:  1,
 			limit: 30,
 			pins:  nil,
-			err:   _pins.ErrDb,
+			err:   pkgErrors.ErrDb,
 		},
 	}
 
@@ -188,7 +190,7 @@ func TestList(t *testing.T) {
 			}
 
 			pins, err := repo.List(test.page, test.limit)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(pins, test.pins) {
@@ -248,7 +250,7 @@ func TestListByUser(t *testing.T) {
 			page:   1,
 			limit:  30,
 			pins:   nil,
-			err:    _pins.ErrDb,
+			err:    pkgErrors.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
@@ -262,7 +264,7 @@ func TestListByUser(t *testing.T) {
 			page:   1,
 			limit:  30,
 			pins:   nil,
-			err:    _pins.ErrDb,
+			err:    pkgErrors.ErrDb,
 		},
 	}
 
@@ -291,7 +293,7 @@ func TestListByUser(t *testing.T) {
 			}
 
 			pins, err := repo.ListByAuthor(test.userId, test.page, test.limit)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(pins, test.pins) {
@@ -339,7 +341,7 @@ func TestGet(t *testing.T) {
 			},
 			id:  3,
 			pin: models.Pin{},
-			err: _pins.ErrDb,
+			err: pkgErrors.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
@@ -351,7 +353,7 @@ func TestGet(t *testing.T) {
 			},
 			id:  3,
 			pin: models.Pin{},
-			err: _pins.ErrDb,
+			err: pkgErrors.ErrDb,
 		},
 	}
 
@@ -380,7 +382,7 @@ func TestGet(t *testing.T) {
 			}
 
 			pin, err := repo.Get(test.id)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(pin, test.pin) {

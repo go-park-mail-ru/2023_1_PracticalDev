@@ -71,7 +71,7 @@ func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.
 	}
 	pin, err := del.serv.Create(&params)
 	if err != nil {
-		return pkgErrors.ErrService
+		return err
 	}
 
 	response := newCreateResponse(&pin)
@@ -82,7 +82,10 @@ func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return pkgErrors.ErrCreateResponse
+	}
+	return nil
 }
 
 func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -100,11 +103,7 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 
 	pin, err := del.serv.Get(id, userId)
 	if err != nil {
-		if errors.Is(err, pkgPins.ErrPinNotFound) {
-			return pkgErrors.ErrPinNotFound
-		} else {
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 
 	response := newGetResponse(&pin)
@@ -115,7 +114,10 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return pkgErrors.ErrCreateResponse
+	}
+	return nil
 }
 
 func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -136,9 +138,7 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 	strPage := queryValues.Get("page")
 	if strPage != "" {
 		page, err = strconv.Atoi(strPage)
-		if err != nil {
-			return pkgErrors.ErrInvalidPageParam
-		} else if page < 1 {
+		if err != nil || page < 1 {
 			return pkgErrors.ErrInvalidPageParam
 		}
 	}
@@ -147,16 +147,14 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 	strLimit := queryValues.Get("limit")
 	if strLimit != "" {
 		limit, err = strconv.Atoi(strLimit)
-		if err != nil {
-			return pkgErrors.ErrInvalidLimitParam
-		} else if limit < 0 {
+		if err != nil || limit < 0 {
 			return pkgErrors.ErrInvalidLimitParam
 		}
 	}
 
 	pins, err := del.serv.ListByAuthor(authorId, userId, page, limit)
 	if err != nil {
-		return pkgErrors.ErrService
+		return err
 	}
 
 	response := newListResponse(pins)
@@ -167,7 +165,10 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return pkgErrors.ErrCreateResponse
+	}
+	return nil
 }
 
 func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -182,9 +183,7 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	strPage := queryValues.Get("page")
 	if strPage != "" {
 		page, err = strconv.Atoi(strPage)
-		if err != nil {
-			return pkgErrors.ErrInvalidPageParam
-		} else if page < 1 {
+		if err != nil || page < 1 {
 			return pkgErrors.ErrInvalidPageParam
 		}
 	}
@@ -193,16 +192,14 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	strLimit := queryValues.Get("limit")
 	if strLimit != "" {
 		limit, err = strconv.Atoi(strLimit)
-		if err != nil {
-			return pkgErrors.ErrInvalidLimitParam
-		} else if limit < 0 {
+		if err != nil || limit < 0 {
 			return pkgErrors.ErrInvalidLimitParam
 		}
 	}
 
 	pins, err := del.serv.List(userId, page, limit)
 	if err != nil {
-		return pkgErrors.ErrService
+		return err
 	}
 
 	response := newListResponse(pins)
@@ -213,7 +210,10 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return pkgErrors.ErrCreateResponse
+	}
+	return nil
 }
 
 func (del delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -230,7 +230,7 @@ func (del delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprou
 	}
 	pin, err := del.serv.FullUpdate(&params)
 	if err != nil {
-		return pkgErrors.ErrService
+		return err
 	}
 
 	response := newFullUpdateResponse(&pin)
@@ -241,7 +241,10 @@ func (del delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprou
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return pkgErrors.ErrCreateResponse
+	}
+	return nil
 }
 
 func (del delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -253,11 +256,7 @@ func (del delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.
 
 	err = del.serv.Delete(id)
 	if err != nil {
-		if errors.Is(err, pkgPins.ErrPinNotFound) {
-			return pkgErrors.ErrPinNotFound
-		} else {
-			return pkgErrors.ErrService
-		}
+		return err
 	}
-	return err
+	return pkgErrors.ErrNoContent
 }

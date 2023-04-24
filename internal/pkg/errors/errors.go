@@ -11,7 +11,8 @@ var (
 	ErrMissingFile = errors.New("missing file")
 
 	// Common repository
-	ErrDb = errors.New("db error")
+	ErrDb           = errors.New("db error")
+	ErrImageService = errors.New("image service error")
 
 	// Not found
 	ErrUserNotFound      = errors.New("user not found")
