@@ -43,16 +43,7 @@ func (del *delivery) follow(w http.ResponseWriter, r *http.Request, p httprouter
 
 	err = del.serv.Follow(followerId, followeeId)
 	if err != nil {
-		switch err {
-		case followings.ErrSameUserId:
-			return pkgErrors.ErrSameUserId
-		case followings.ErrFollowingAlreadyExists:
-			return pkgErrors.ErrFollowingAlreadyExists
-		case followings.ErrUserNotFound:
-			return pkgErrors.ErrUserNotFound
-		default:
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 	return pkgErrors.ErrNoContent
 }
@@ -72,16 +63,7 @@ func (del *delivery) unfollow(w http.ResponseWriter, r *http.Request, p httprout
 
 	err = del.serv.Unfollow(followerId, followeeId)
 	if err != nil {
-		switch err {
-		case followings.ErrSameUserId:
-			return pkgErrors.ErrSameUserId
-		case followings.ErrFollowingNotFound:
-			return pkgErrors.ErrFollowingNotFound
-		case followings.ErrUserNotFound:
-			return pkgErrors.ErrUserNotFound
-		default:
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 	return pkgErrors.ErrNoContent
 }
@@ -95,12 +77,7 @@ func (del *delivery) getFollowers(w http.ResponseWriter, r *http.Request, p http
 
 	followers, err := del.serv.GetFollowers(userId)
 	if err != nil {
-		switch err {
-		case followings.ErrUserNotFound:
-			return pkgErrors.ErrUserNotFound
-		default:
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 
 	response := followersResponse{
@@ -128,12 +105,7 @@ func (del *delivery) getFollowees(w http.ResponseWriter, r *http.Request, p http
 
 	followees, err := del.serv.GetFollowees(userId)
 	if err != nil {
-		switch err {
-		case followings.ErrUserNotFound:
-			return pkgErrors.ErrUserNotFound
-		default:
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 
 	response := followeesResponse{

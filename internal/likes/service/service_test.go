@@ -1,15 +1,16 @@
 package service
 
 import (
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"reflect"
 	"testing"
 	"time"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 
-	pkgLikes "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/mocks"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func TestLike(t *testing.T) {
@@ -50,7 +51,7 @@ func TestLike(t *testing.T) {
 			},
 			pinId:    3,
 			authorId: 2,
-			err:      pkgLikes.ErrLikeAlreadyExists,
+			err:      pkgErrors.ErrLikeAlreadyExists,
 		},
 		"db error in Create": {
 			prepare: func(f *fields) {
@@ -58,12 +59,12 @@ func TestLike(t *testing.T) {
 					f.repo.EXPECT().PinExists(f.pinId).Return(true, nil),
 					f.repo.EXPECT().UserExists(f.authorId).Return(true, nil),
 					f.repo.EXPECT().LikeExists(f.pinId, f.authorId).Return(false, nil),
-					f.repo.EXPECT().Create(f.pinId, f.authorId).Return(pkgLikes.ErrDb),
+					f.repo.EXPECT().Create(f.pinId, f.authorId).Return(pkgErrors.ErrDb),
 				)
 			},
 			pinId:    3,
 			authorId: 2,
-			err:      pkgLikes.ErrDb,
+			err:      pkgErrors.ErrDb,
 		},
 	}
 
@@ -82,7 +83,7 @@ func TestLike(t *testing.T) {
 
 			serv := NewService(f.repo)
 			err := serv.Like(test.pinId, test.authorId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 		})
@@ -141,7 +142,7 @@ func TestListByAuthor(t *testing.T) {
 
 			serv := NewService(f.repo)
 			likes, err := serv.ListByAuthor(test.authorId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(likes, test.likes) {
@@ -203,7 +204,7 @@ func TestListByPin(t *testing.T) {
 
 			serv := NewService(f.repo)
 			likes, err := serv.ListByPin(test.pinId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(likes, test.likes) {
@@ -251,7 +252,7 @@ func TestDelete(t *testing.T) {
 			},
 			pinId:    3,
 			authorId: 2,
-			err:      pkgLikes.ErrLikeNotFound,
+			err:      pkgErrors.ErrLikeNotFound,
 		},
 		"db error in Delete": {
 			prepare: func(f *fields) {
@@ -259,12 +260,12 @@ func TestDelete(t *testing.T) {
 					f.repo.EXPECT().PinExists(f.pinId).Return(true, nil),
 					f.repo.EXPECT().UserExists(f.authorId).Return(true, nil),
 					f.repo.EXPECT().LikeExists(f.pinId, f.authorId).Return(true, nil),
-					f.repo.EXPECT().Delete(f.pinId, f.authorId).Return(pkgLikes.ErrDb),
+					f.repo.EXPECT().Delete(f.pinId, f.authorId).Return(pkgErrors.ErrDb),
 				)
 			},
 			pinId:    3,
 			authorId: 2,
-			err:      pkgLikes.ErrDb,
+			err:      pkgErrors.ErrDb,
 		},
 	}
 
@@ -283,7 +284,7 @@ func TestDelete(t *testing.T) {
 
 			serv := NewService(f.repo)
 			err := serv.Unlike(test.pinId, test.authorId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 		})

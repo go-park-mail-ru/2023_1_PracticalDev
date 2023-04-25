@@ -2,9 +2,13 @@ package postgres
 
 import (
 	"database/sql"
+
+	"github.com/pkg/errors"
+
 	pkgLikes "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 type repository struct {
@@ -20,14 +24,11 @@ const createCmd = `INSERT INTO pin_likes (pin_id, author_id)
 				   VALUES ($1, $2);`
 
 func (repo *repository) Create(pinId, authorId int) error {
-	res, err := repo.db.Exec(createCmd, pinId, authorId)
+	_, err := repo.db.Exec(createCmd, pinId, authorId)
 	if err != nil {
-		return pkgLikes.ErrDb
+		return errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
-	rowsAffected, err := res.RowsAffected()
-	if err != nil || rowsAffected < 1 {
-		return pkgLikes.ErrDb
-	}
+
 	return nil
 }
 
@@ -35,14 +36,11 @@ const deleteCmd = `DELETE FROM pin_likes
 					WHERE pin_id = $1 AND author_id = $2;`
 
 func (repo *repository) Delete(pinId, authorId int) error {
-	res, err := repo.db.Exec(deleteCmd, pinId, authorId)
+	_, err := repo.db.Exec(deleteCmd, pinId, authorId)
 	if err != nil {
-		return pkgLikes.ErrDb
+		return errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
-	rowsAffected, err := res.RowsAffected()
-	if err != nil || rowsAffected < 1 {
-		return pkgLikes.ErrDb
-	}
+
 	return nil
 }
 
@@ -54,7 +52,7 @@ const listByAuthorCmd = `SELECT pin_id, author_id, created_at
 func (repo *repository) ListByAuthor(authorId int) ([]models.Like, error) {
 	rows, err := repo.db.Query(listByAuthorCmd, authorId)
 	if err != nil {
-		return nil, pkgLikes.ErrDb
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
 	likes := []models.Like{}
@@ -62,7 +60,7 @@ func (repo *repository) ListByAuthor(authorId int) ([]models.Like, error) {
 	for rows.Next() {
 		err = rows.Scan(&like.PinId, &like.AuthorId, &like.CreatedAt)
 		if err != nil {
-			return nil, pkgLikes.ErrDb
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
 		likes = append(likes, like)
 	}
@@ -77,7 +75,7 @@ const listByPinCmd = `SELECT pin_id, author_id, created_at
 func (repo *repository) ListByPin(pinId int) ([]models.Like, error) {
 	rows, err := repo.db.Query(listByPinCmd, pinId)
 	if err != nil {
-		return nil, pkgLikes.ErrDb
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
 	likes := []models.Like{}
@@ -85,7 +83,7 @@ func (repo *repository) ListByPin(pinId int) ([]models.Like, error) {
 	for rows.Next() {
 		err = rows.Scan(&like.PinId, &like.AuthorId, &like.CreatedAt)
 		if err != nil {
-			return nil, pkgLikes.ErrDb
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
 		likes = append(likes, like)
 	}
@@ -102,7 +100,7 @@ func (repo *repository) PinExists(pinId int) (bool, error) {
 	var exists bool
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, pkgLikes.ErrDb
+		return false, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	return exists, nil
 }
@@ -117,7 +115,7 @@ func (repo *repository) UserExists(userId int) (bool, error) {
 	var exists bool
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, pkgLikes.ErrDb
+		return false, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	return exists, nil
 }
@@ -132,7 +130,7 @@ func (repo *repository) LikeExists(pinId, authorId int) (bool, error) {
 	var exists bool
 	err := row.Scan(&exists)
 	if err != nil {
-		return false, pkgLikes.ErrDb
+		return false, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	return exists, nil
 }

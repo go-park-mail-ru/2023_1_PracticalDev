@@ -5,10 +5,12 @@ import (
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/mocks"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 func TestCreate(t *testing.T) {
@@ -60,7 +62,7 @@ func TestCreate(t *testing.T) {
 			serv := NewService(f.repo)
 
 			pin, err := serv.Create(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if pin != test.pin {
@@ -136,7 +138,7 @@ func TestList(t *testing.T) {
 			serv := NewService(f.repo)
 
 			pins, err := serv.List(test.userId, test.page, test.limit)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(pins, test.pins) {
@@ -215,7 +217,7 @@ func TestListByAuthor(t *testing.T) {
 			serv := NewService(f.repo)
 
 			pins, err := serv.ListByAuthor(test.authorId, test.userId, test.page, test.limit)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if !reflect.DeepEqual(pins, test.pins) {
@@ -259,21 +261,21 @@ func TestGet(t *testing.T) {
 		},
 		"pin not found": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Get(3).Return(models.Pin{}, pkgPins.ErrPinNotFound)
+				f.repo.EXPECT().Get(3).Return(models.Pin{}, pkgErrors.ErrPinNotFound)
 			},
 			id:     3,
 			userId: 12,
 			pin:    pkgPins.Pin{},
-			err:    pkgPins.ErrPinNotFound,
+			err:    pkgErrors.ErrPinNotFound,
 		},
 		"negative pin id param": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Get(-1).Return(models.Pin{}, pkgPins.ErrPinNotFound)
+				f.repo.EXPECT().Get(-1).Return(models.Pin{}, pkgErrors.ErrPinNotFound)
 			},
 			id:     -1,
 			userId: 12,
 			pin:    pkgPins.Pin{},
-			err:    pkgPins.ErrPinNotFound,
+			err:    pkgErrors.ErrPinNotFound,
 		},
 	}
 
@@ -293,7 +295,7 @@ func TestGet(t *testing.T) {
 			serv := NewService(f.repo)
 
 			pin, err := serv.Get(test.id, test.userId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if pin != test.pin {
@@ -324,10 +326,10 @@ func TestDelete(t *testing.T) {
 		},
 		"pin not found": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Delete(3).Return(pkgPins.ErrPinNotFound)
+				f.repo.EXPECT().Delete(3).Return(pkgErrors.ErrPinNotFound)
 			},
 			id:  3,
-			err: pkgPins.ErrPinNotFound,
+			err: pkgErrors.ErrPinNotFound,
 		},
 	}
 
@@ -347,7 +349,7 @@ func TestDelete(t *testing.T) {
 			serv := NewService(f.repo)
 
 			err := serv.Delete(test.id)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 		})
@@ -404,7 +406,7 @@ func TestCheckWriteAccess(t *testing.T) {
 			serv := NewService(f.repo)
 
 			access, err := serv.CheckWriteAccess(test.userId, test.pinId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if access != test.access {
@@ -464,7 +466,7 @@ func TestCheckReadAccess(t *testing.T) {
 			serv := NewService(f.repo)
 
 			access, err := serv.CheckReadAccess(test.userId, test.pinId)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if access != test.access {

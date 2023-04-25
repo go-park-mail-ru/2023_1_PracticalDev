@@ -7,10 +7,12 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 )
 
@@ -53,7 +55,7 @@ func TestGetProfileByUser(t *testing.T) {
 			},
 			id:      3,
 			profile: profile.Profile{},
-			err:     profile.ErrDb,
+			err:     pkgErrors.ErrDb,
 		},
 		"row scan error": {
 			prepare: func(f *fields) {
@@ -65,7 +67,7 @@ func TestGetProfileByUser(t *testing.T) {
 			},
 			id:      3,
 			profile: profile.Profile{},
-			err:     profile.ErrDb,
+			err:     pkgErrors.ErrDb,
 		},
 	}
 
@@ -94,7 +96,7 @@ func TestGetProfileByUser(t *testing.T) {
 			}
 
 			prof, err := repo.GetProfileByUser(test.id)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if prof != test.profile {
@@ -159,7 +161,7 @@ func TestFullUpdate(t *testing.T) {
 				WebsiteUrl:   "wu1",
 			},
 			profile: profile.Profile{},
-			err:     profile.ErrDb,
+			err:     pkgErrors.ErrDb,
 		},
 	}
 
@@ -188,7 +190,7 @@ func TestFullUpdate(t *testing.T) {
 			}
 
 			prof, err := repo.FullUpdate(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if prof != test.profile {
@@ -261,7 +263,7 @@ func TestPartialUpdate(t *testing.T) {
 				UpdateWebsiteUrl:   true,
 			},
 			profile: profile.Profile{},
-			err:     profile.ErrDb,
+			err:     pkgErrors.ErrDb,
 		},
 	}
 
@@ -290,7 +292,7 @@ func TestPartialUpdate(t *testing.T) {
 			}
 
 			prof, err := repo.PartialUpdate(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if prof != test.profile {

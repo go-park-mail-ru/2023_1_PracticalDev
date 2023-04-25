@@ -5,7 +5,13 @@ import (
 )
 
 var httpCodes = map[error]int{
-	ErrMissingFile:         http.StatusBadRequest,
+	// Common delivery
+	ErrMissingFile: http.StatusBadRequest,
+
+	// Common repository
+	ErrDb:           http.StatusInternalServerError,
+	ErrImageService: http.StatusInternalServerError,
+
 	ErrInvalidUserIdParam:  http.StatusBadRequest,
 	ErrInvalidBoardIdParam: http.StatusBadRequest,
 	ErrInvalidPinIdParam:   http.StatusBadRequest,
@@ -30,6 +36,13 @@ var httpCodes = map[error]int{
 	ErrProfileNotFound: http.StatusNotFound,
 	ErrBoardNotFound:   http.StatusNotFound,
 	ErrPinNotFound:     http.StatusNotFound,
+
+	// Profile
+	ErrTooShortUsername:      http.StatusBadRequest,
+	ErrTooLongUsername:       http.StatusBadRequest,
+	ErrEmptyName:             http.StatusBadRequest,
+	ErrTooLongName:           http.StatusBadRequest,
+	ErrUsernameAlreadyExists: http.StatusBadRequest,
 
 	ErrUnauthorized:           http.StatusUnauthorized,
 	ErrNoContent:              http.StatusNoContent,

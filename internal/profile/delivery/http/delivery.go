@@ -41,11 +41,7 @@ func (del *delivery) getProfileByUser(w http.ResponseWriter, r *http.Request, p 
 
 	prof, err := del.serv.GetProfileByUser(userId)
 	if err != nil {
-		if errors.Is(err, profile.ErrProfileNotFound) {
-			return pkgErrors.ErrProfileNotFound
-		} else {
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 
 	response := newGetResponse(&prof)
@@ -56,7 +52,10 @@ func (del *delivery) getProfileByUser(w http.ResponseWriter, r *http.Request, p 
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return pkgErrors.ErrCreateResponse
+	}
+	return nil
 }
 
 func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -101,12 +100,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	}
 	prof, err := del.serv.FullUpdate(&params)
 	if err != nil {
-		switch err.(type) {
-		case profile.ErrBadParams:
-			return pkgErrors.ErrBadParams
-		default:
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 
 	response := newFullUpdateResponse(&prof)
@@ -117,7 +111,10 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return pkgErrors.ErrCreateResponse
+	}
+	return nil
 }
 
 func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -165,12 +162,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 
 	prof, err := del.serv.PartialUpdate(&params)
 	if err != nil {
-		switch err.(type) {
-		case profile.ErrBadParams:
-			return pkgErrors.ErrBadParams
-		default:
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 
 	response := newPartialUpdateResponse(&prof)
@@ -181,5 +173,8 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return pkgErrors.ErrCreateResponse
+	}
+	return nil
 }

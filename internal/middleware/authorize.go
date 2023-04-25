@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
@@ -26,19 +27,19 @@ func NewAuthorizer(serv AuthService, token *tokens.HashToken, log log.Logger) fu
 		return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 			sessionCookie, err := r.Cookie("JSESSIONID")
 			if err != nil {
-				return pkgErrors.ErrUnauthorized
+				return errors.Wrap(pkgErrors.ErrUnauthorized, err.Error())
 			}
 
 			tmp := strings.Split(sessionCookie.Value, "$")
 
 			if len(tmp) != 2 {
-				return pkgErrors.ErrUnauthorized
+				return errors.Wrap(pkgErrors.ErrUnauthorized, "invalid cookie")
 			}
 
 			userId := tmp[0]
 
 			if _, err = serv.CheckAuth(userId, sessionCookie.Value); err != nil {
-				return pkgErrors.ErrUnauthorized
+				return errors.Wrap(pkgErrors.ErrUnauthorized, err.Error())
 			}
 
 			csrfToken := r.Header.Get("X-XSRF-TOKEN")

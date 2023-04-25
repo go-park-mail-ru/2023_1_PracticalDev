@@ -1,9 +1,5 @@
 package followings
 
-import (
-	"github.com/pkg/errors"
-)
-
 type Follower struct {
 	Id           int    `json:"id"`
 	Username     string `json:"username"`
@@ -19,14 +15,6 @@ type Followee struct {
 	ProfileImage string `json:"profile_image"`
 	WebsiteUrl   string `json:"website_url"`
 }
-
-var (
-	ErrDb                     = errors.New("db error")
-	ErrUserNotFound           = errors.New("no such user")
-	ErrSameUserId             = errors.New("same user id: user cannot follow himself")
-	ErrFollowingNotFound      = errors.New("no such following")
-	ErrFollowingAlreadyExists = errors.New("following already exists")
-)
 
 type Repository interface {
 	Create(followerId, followeeId int) error

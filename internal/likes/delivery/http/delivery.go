@@ -43,16 +43,7 @@ func (del *delivery) like(w http.ResponseWriter, r *http.Request, p httprouter.P
 
 	err = del.serv.Like(pinId, userId)
 	if err != nil {
-		switch err {
-		case pkgLikes.ErrLikeAlreadyExists:
-			return pkgErrors.ErrLikeAlreadyExists
-		case pkgLikes.ErrPinNotFound:
-			return pkgErrors.ErrPinNotFound
-		case pkgLikes.ErrAuthorNotFound:
-			return pkgErrors.ErrUserNotFound
-		default:
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 	return pkgErrors.ErrNoContent
 }
@@ -72,16 +63,7 @@ func (del *delivery) unlike(w http.ResponseWriter, r *http.Request, p httprouter
 
 	err = del.serv.Unlike(pinId, userId)
 	if err != nil {
-		switch err {
-		case pkgLikes.ErrLikeNotFound:
-			return pkgErrors.ErrLikeNotFound
-		case pkgLikes.ErrPinNotFound:
-			return pkgErrors.ErrPinNotFound
-		case pkgLikes.ErrAuthorNotFound:
-			return pkgErrors.ErrUserNotFound
-		default:
-			return pkgErrors.ErrService
-		}
+		return err
 	}
 	return pkgErrors.ErrNoContent
 }
@@ -103,7 +85,7 @@ func (del *delivery) listByPin(w http.ResponseWriter, r *http.Request, p httprou
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
-		return err
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -131,7 +113,7 @@ func (del *delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p http
 	}
 	data, err := json.Marshal(response)
 	if err != nil {
-		return err
+		return pkgErrors.ErrCreateResponse
 	}
 
 	w.Header().Set("Content-Type", "application/json")

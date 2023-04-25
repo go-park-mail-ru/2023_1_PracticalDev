@@ -29,7 +29,7 @@ func (accessChecker *AccessChecker) WriteChecker(handler router.Handler) router.
 
 		access, err := accessChecker.serv.CheckWriteAccess(userId, objectId)
 		if err != nil {
-			return pkgErrors.ErrService
+			return err
 		}
 		if !access {
 			return pkgErrors.ErrForbidden
@@ -46,7 +46,7 @@ func (accessChecker *AccessChecker) ReadChecker(handler router.Handler) router.H
 
 		access, err := accessChecker.serv.CheckReadAccess(userId, objectId)
 		if err != nil {
-			return pkgErrors.ErrService
+			return err
 		}
 		if !access {
 			return pkgErrors.ErrForbidden

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/pkg/errors"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -102,7 +103,7 @@ func TestCreate(t *testing.T) {
 			req.Header.Add("Content-Type", contentType)
 			rec := httptest.NewRecorder()
 			err = del.create(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			respBody, _ := io.ReadAll(rec.Body)
@@ -174,7 +175,7 @@ func TestList(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/pins", nil)
 			rec := httptest.NewRecorder()
 			err := del.list(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)
@@ -252,7 +253,7 @@ func TestListByAuthor(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/users/12/pins", nil)
 			rec := httptest.NewRecorder()
 			err := del.listByAuthor(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)
@@ -304,7 +305,7 @@ func TestGet(t *testing.T) {
 		},
 		"pin not found": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Get(3, 12).Return(pins.Pin{}, pins.ErrPinNotFound)
+				f.serv.EXPECT().Get(3, 12).Return(pins.Pin{}, pkgErrors.ErrPinNotFound)
 			},
 			params: []httprouter.Param{
 				{Key: "id", Value: "3"},
@@ -313,16 +314,16 @@ func TestGet(t *testing.T) {
 			response: ``,
 			err:      pkgErrors.ErrPinNotFound,
 		},
-		"service error": {
+		"db error": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Get(3, 12).Return(pins.Pin{}, pins.ErrDb)
+				f.serv.EXPECT().Get(3, 12).Return(pins.Pin{}, pkgErrors.ErrDb)
 			},
 			params: []httprouter.Param{
 				{Key: "id", Value: "3"},
 				{Key: "user-id", Value: "12"},
 			},
 			response: ``,
-			err:      pkgErrors.ErrService,
+			err:      pkgErrors.ErrDb,
 		},
 	}
 
@@ -348,7 +349,7 @@ func TestGet(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/pins/3", nil)
 			rec := httptest.NewRecorder()
 			err := del.get(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)
@@ -430,7 +431,7 @@ func TestFullUpdate(t *testing.T) {
 			req.Header.Add("Content-Type", contentType)
 			rec := httptest.NewRecorder()
 			err = del.fullUpdate(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			respBody, _ := io.ReadAll(rec.Body)
@@ -458,7 +459,7 @@ func TestDelete(t *testing.T) {
 				f.serv.EXPECT().Delete(3).Return(nil)
 			},
 			params: []httprouter.Param{{Key: "id", Value: "3"}},
-			err:    nil,
+			err:    pkgErrors.ErrNoContent,
 		},
 		"invalid pin id param": {
 			prepare: func(f *fields) {},
@@ -472,17 +473,17 @@ func TestDelete(t *testing.T) {
 		},
 		"pin not found": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Delete(3).Return(pins.ErrPinNotFound)
+				f.serv.EXPECT().Delete(3).Return(pkgErrors.ErrPinNotFound)
 			},
 			params: []httprouter.Param{{Key: "id", Value: "3"}},
 			err:    pkgErrors.ErrPinNotFound,
 		},
-		"service error": {
+		"db error": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Delete(3).Return(pins.ErrDb)
+				f.serv.EXPECT().Delete(3).Return(pkgErrors.ErrDb)
 			},
 			params: []httprouter.Param{{Key: "id", Value: "3"}},
-			err:    pkgErrors.ErrService,
+			err:    pkgErrors.ErrDb,
 		},
 	}
 
@@ -508,7 +509,7 @@ func TestDelete(t *testing.T) {
 			req := httptest.NewRequest(http.MethodDelete, "/pins/3", nil)
 			rec := httptest.NewRecorder()
 			err := del.delete(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 		})
