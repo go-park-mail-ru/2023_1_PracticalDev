@@ -33,7 +33,7 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 
 	user, err := del.serv.Get(id)
 	if err != nil {
-		return pkgErrors.ErrService
+		return err
 	}
 
 	data, err := json.Marshal(user)
@@ -43,5 +43,8 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return pkgErrors.ErrCreateResponse
+	}
+	return nil
 }
