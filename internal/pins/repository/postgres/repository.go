@@ -55,7 +55,11 @@ func (repo *repository) Get(id int) (models.Pin, error) {
 	var title, description, mediaSource sql.NullString
 	err := row.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 	if err != nil {
-		return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Pin{}, errors.Wrap(pkgErrors.ErrPinNotFound, err.Error())
+		} else {
+			return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		}
 	}
 
 	pin.Title = title.String
@@ -123,7 +127,11 @@ func (repo *repository) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin
 	var title, description, mediaSource sql.NullString
 	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
 	if err != nil {
-		return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.Pin{}, errors.Wrap(pkgErrors.ErrPinNotFound, err.Error())
+		} else {
+			return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		}
 	}
 
 	retrievedPin.Title = title.String
