@@ -29,9 +29,9 @@ func ErrorHandler(handler func(w http.ResponseWriter, r *http.Request, p httprou
 			w.WriteHeader(httpCode)
 
 			if 200 <= httpCode && httpCode <= 399 {
-				log.Info(err.Error())
+				log.Info("Response Code:", httpCode, "Message:", "\""+err.Error()+"\"")
 			} else {
-				log.Error(err.Error())
+				log.Error("Response Code:", httpCode, "Error Message:", "\""+err.Error()+"\"")
 			}
 
 			if httpCode != http.StatusNoContent {

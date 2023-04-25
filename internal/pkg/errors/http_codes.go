@@ -31,6 +31,13 @@ var httpCodes = map[error]int{
 	ErrBoardNotFound:   http.StatusNotFound,
 	ErrPinNotFound:     http.StatusNotFound,
 
+	// Profile
+	ErrTooShortUsername:      http.StatusBadRequest,
+	ErrTooLongUsername:       http.StatusBadRequest,
+	ErrEmptyName:             http.StatusBadRequest,
+	ErrTooLongName:           http.StatusBadRequest,
+	ErrUsernameAlreadyExists: http.StatusBadRequest,
+
 	ErrUnauthorized:           http.StatusUnauthorized,
 	ErrNoContent:              http.StatusNoContent,
 	ErrForbidden:              http.StatusForbidden,
