@@ -5,7 +5,13 @@ import (
 )
 
 var httpCodes = map[error]int{
-	ErrMissingFile:         http.StatusBadRequest,
+	// Common delivery
+	ErrMissingFile: http.StatusBadRequest,
+
+	// Common repository
+	ErrDb:           http.StatusInternalServerError,
+	ErrImageService: http.StatusInternalServerError,
+
 	ErrInvalidUserIdParam:  http.StatusBadRequest,
 	ErrInvalidBoardIdParam: http.StatusBadRequest,
 	ErrInvalidPinIdParam:   http.StatusBadRequest,
