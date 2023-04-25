@@ -1,12 +1,14 @@
 package service
 
 import (
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/mocks"
 )
 
@@ -38,19 +40,19 @@ func TestGetProfileByUser(t *testing.T) {
 		},
 		"board not found": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().GetProfileByUser(3).Return(profile.Profile{}, profile.ErrProfileNotFound)
+				f.repo.EXPECT().GetProfileByUser(3).Return(profile.Profile{}, pkgErrors.ErrProfileNotFound)
 			},
 			id:      3,
 			profile: profile.Profile{},
-			err:     profile.ErrProfileNotFound,
+			err:     pkgErrors.ErrProfileNotFound,
 		},
 		"negative user id param": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().GetProfileByUser(-1).Return(profile.Profile{}, profile.ErrProfileNotFound)
+				f.repo.EXPECT().GetProfileByUser(-1).Return(profile.Profile{}, pkgErrors.ErrProfileNotFound)
 			},
 			id:      -1,
 			profile: profile.Profile{},
-			err:     profile.ErrProfileNotFound,
+			err:     pkgErrors.ErrProfileNotFound,
 		},
 	}
 
@@ -70,7 +72,7 @@ func TestGetProfileByUser(t *testing.T) {
 			serv := NewProfileService(f.repo)
 
 			prof, err := serv.GetProfileByUser(test.id)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if prof != test.profile {
@@ -130,7 +132,7 @@ func TestFullUpdate(t *testing.T) {
 				WebsiteUrl:   "wu1",
 			},
 			profile: profile.Profile{},
-			err:     profile.ErrBadParams{Err: profile.ErrTooShortUsername},
+			err:     pkgErrors.ErrTooShortUsername,
 		},
 		"too long username": {
 			prepare: func(f *fields) {},
@@ -142,7 +144,7 @@ func TestFullUpdate(t *testing.T) {
 				WebsiteUrl:   "wu1",
 			},
 			profile: profile.Profile{},
-			err:     profile.ErrBadParams{Err: profile.ErrTooLongUsername},
+			err:     pkgErrors.ErrTooLongUsername,
 		},
 	}
 
@@ -162,7 +164,7 @@ func TestFullUpdate(t *testing.T) {
 			serv := NewProfileService(f.repo)
 
 			prof, err := serv.FullUpdate(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if prof != test.profile {
@@ -238,7 +240,7 @@ func TestPartialUpdate(t *testing.T) {
 			serv := NewProfileService(f.repo)
 
 			prof, err := serv.PartialUpdate(&test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			if prof != test.profile {

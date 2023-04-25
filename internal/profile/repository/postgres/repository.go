@@ -3,8 +3,11 @@ package postgres
 import (
 	"database/sql"
 
+	"github.com/pkg/errors"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 )
 
@@ -29,15 +32,16 @@ func (rep *postgresRepository) GetProfileByUser(userId int) (profile.Profile, er
 	var profileImage, websiteUrl sql.NullString
 	err := row.Scan(&prof.Username, &prof.Name, &profileImage, &websiteUrl)
 	if err != nil {
-		if err == sql.ErrNoRows {
-			err = profile.ErrProfileNotFound
+		if errors.Is(err, sql.ErrNoRows) {
+			return profile.Profile{}, errors.Wrap(pkgErrors.ErrProfileNotFound, err.Error())
 		} else {
-			err = profile.ErrDb
+			return profile.Profile{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
 	}
+
 	prof.ProfileImage = profileImage.String
 	prof.WebsiteUrl = websiteUrl.String
-	return prof, err
+	return prof, nil
 }
 
 const fullUpdateCmd = `UPDATE users
@@ -51,7 +55,7 @@ const fullUpdateCmd = `UPDATE users
 func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (profile.Profile, error) {
 	url, err := rep.imgServ.UploadImage(&params.ProfileImage)
 	if err != nil {
-		return profile.Profile{}, err
+		return profile.Profile{}, errors.Wrap(pkgErrors.ErrImageService, err.Error())
 	}
 
 	row := rep.db.QueryRow(fullUpdateCmd,
@@ -66,11 +70,11 @@ func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (pro
 	var profileImage, websiteUrl sql.NullString
 	err = row.Scan(&prof.Username, &prof.Name, &profileImage, &websiteUrl)
 	if err != nil {
-		err = profile.ErrDb
+		return profile.Profile{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	prof.ProfileImage = profileImage.String
 	prof.WebsiteUrl = websiteUrl.String
-	return prof, err
+	return prof, nil
 }
 
 const partialUpdateCmd = `UPDATE users
@@ -87,7 +91,7 @@ func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams
 	if params.UpdateProfileImage {
 		url, err = rep.imgServ.UploadImage(&params.ProfileImage)
 		if err != nil {
-			return profile.Profile{}, profile.ErrS3Service
+			return profile.Profile{}, errors.Wrap(pkgErrors.ErrImageService, err.Error())
 		}
 	}
 
@@ -106,11 +110,11 @@ func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams
 	var profileImage, websiteUrl sql.NullString
 	err = row.Scan(&prof.Username, &prof.Name, &profileImage, &websiteUrl)
 	if err != nil {
-		err = profile.ErrDb
+		return profile.Profile{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	prof.ProfileImage = profileImage.String
 	prof.WebsiteUrl = websiteUrl.String
-	return prof, err
+	return prof, nil
 }
 
 const isUsernameAvailableCmd = `SELECT NOT EXISTS(SELECT id
@@ -123,7 +127,7 @@ func (rep *postgresRepository) IsUsernameAvailable(username string, userId int) 
 	var available bool
 	err := row.Scan(&available)
 	if err != nil {
-		err = profile.ErrDb
+		return false, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
-	return available, err
+	return available, nil
 }

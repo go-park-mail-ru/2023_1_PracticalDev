@@ -1,8 +1,6 @@
 package profile
 
 import (
-	"github.com/pkg/errors"
-
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 
@@ -32,13 +30,6 @@ type PartialUpdateParams struct {
 	WebsiteUrl         string
 	UpdateWebsiteUrl   bool
 }
-
-var (
-	ErrDb                    = errors.New("db error")
-	ErrS3Service             = errors.New("s3 service error")
-	ErrProfileNotFound       = errors.New("profile not found")
-	ErrUsernameAlreadyExists = errors.New("user with such username already exists")
-)
 
 type Repository interface {
 	GetProfileByUser(userId int) (Profile, error)

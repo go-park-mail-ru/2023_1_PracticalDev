@@ -1,7 +1,6 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
 	"io"
 	"net/http"
 	"net/http/httptest"
@@ -10,11 +9,13 @@ import (
 
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/mocks"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
 )
 
 func TestGetProfileByUser(t *testing.T) {
@@ -51,7 +52,7 @@ func TestGetProfileByUser(t *testing.T) {
 		},
 		"profile not found": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().GetProfileByUser(3).Return(profile.Profile{}, profile.ErrProfileNotFound)
+				f.serv.EXPECT().GetProfileByUser(3).Return(profile.Profile{}, pkgErrors.ErrProfileNotFound)
 			},
 			params:   []httprouter.Param{{Key: "id", Value: "3"}},
 			response: ``,
@@ -59,11 +60,11 @@ func TestGetProfileByUser(t *testing.T) {
 		},
 		"service error": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().GetProfileByUser(3).Return(profile.Profile{}, profile.ErrDb)
+				f.serv.EXPECT().GetProfileByUser(3).Return(profile.Profile{}, pkgErrors.ErrDb)
 			},
 			params:   []httprouter.Param{{Key: "id", Value: "3"}},
 			response: ``,
-			err:      pkgErrors.ErrService,
+			err:      pkgErrors.ErrDb,
 		},
 	}
 
@@ -89,7 +90,7 @@ func TestGetProfileByUser(t *testing.T) {
 			req := httptest.NewRequest(http.MethodGet, "/users/3/profile", nil)
 			rec := httptest.NewRecorder()
 			err := del.getProfileByUser(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			body, _ := io.ReadAll(rec.Body)
@@ -197,7 +198,7 @@ func TestFullUpdate(t *testing.T) {
 			req.Header.Add("Content-Type", contentType)
 			rec := httptest.NewRecorder()
 			err = del.fullUpdate(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			respBody, _ := io.ReadAll(rec.Body)
@@ -284,7 +285,7 @@ func TestPartialUpdate(t *testing.T) {
 			req.Header.Add("Content-Type", contentType)
 			rec := httptest.NewRecorder()
 			err = del.partialUpdate(rec, req, test.params)
-			if err != test.err {
+			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
 			respBody, _ := io.ReadAll(rec.Body)
