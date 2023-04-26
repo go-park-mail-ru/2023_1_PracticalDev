@@ -46,7 +46,7 @@ func NewAuthorizer(serv AuthService, token *tokens.HashToken, log log.Logger) fu
 			session := tokens.SessionParams{Token: sessionCookie.Value}
 			check, err := token.Check(&session, csrfToken)
 			if err != nil || !check {
-				log.Warn("Potential CSRF request")
+				log.Warn("Potential CSRF request. X-XSRF-TOKEN:", "\""+csrfToken+"\"")
 				_, err = w.Write([]byte("{}"))
 				return err
 			}
