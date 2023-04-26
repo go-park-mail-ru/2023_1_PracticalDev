@@ -4,7 +4,7 @@ CREATE TYPE privacy AS ENUM ('public', 'secret');
 CREATE TABLE IF NOT EXISTS users
 (
     id              serial       NOT NULL PRIMARY KEY,
-    username        text         NOT NULL UNIQUE,
+    username        text         NOT NULL,
     email           text         NOT NULL UNIQUE,
     hashed_password bytea        NOT NULL,
     name            varchar(256) NOT NULL,

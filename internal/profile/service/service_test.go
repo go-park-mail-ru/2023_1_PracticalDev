@@ -97,8 +97,6 @@ func TestFullUpdate(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().IsUsernameAvailable("username1", 3).Return(true, nil)
-
 				f.repo.EXPECT().FullUpdate(&profile.FullUpdateParams{
 					Id:           3,
 					Username:     "username1",
@@ -189,8 +187,6 @@ func TestPartialUpdate(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().IsUsernameAvailable("username1", 3).Return(true, nil)
-
 				f.repo.EXPECT().PartialUpdate(&profile.PartialUpdateParams{
 					Id:                 3,
 					Username:           "username1",
