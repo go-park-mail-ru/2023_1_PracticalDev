@@ -3,8 +3,8 @@ package ping
 import (
 	"net/http"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/julienschmidt/httprouter"
 )
 

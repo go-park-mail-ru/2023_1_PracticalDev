@@ -10,8 +10,8 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 type s3Repository struct {

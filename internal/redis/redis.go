@@ -4,7 +4,7 @@ import (
 	"context"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/redis/go-redis/v9"
 )
 

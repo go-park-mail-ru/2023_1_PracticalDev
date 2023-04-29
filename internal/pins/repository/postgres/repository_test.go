@@ -11,10 +11,10 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/mocks"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	_pins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 )
 
 func TestCreate(t *testing.T) {
@@ -77,7 +77,7 @@ func TestCreate(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -176,7 +176,7 @@ func TestList(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -279,7 +279,7 @@ func TestListByUser(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -368,7 +368,7 @@ func TestGet(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()

@@ -12,9 +12,9 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	hasherPkg "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/hasher"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 type repository struct {

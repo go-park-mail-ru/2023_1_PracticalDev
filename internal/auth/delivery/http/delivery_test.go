@@ -12,9 +12,9 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	authMocks "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 var (

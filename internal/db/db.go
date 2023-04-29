@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	_ "github.com/lib/pq"
 )
 

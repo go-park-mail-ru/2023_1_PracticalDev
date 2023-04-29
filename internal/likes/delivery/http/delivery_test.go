@@ -13,9 +13,9 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/mocks"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 )
 
 func TestLike(t *testing.T) {
@@ -68,7 +68,7 @@ func TestLike(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			del := delivery{serv: f.serv, log: log.New()}
+			del := delivery{serv: f.serv, log: stdlogger.New()}
 			req := httptest.NewRequest(http.MethodPost, "/pins/3/like", nil)
 			rec := httptest.NewRecorder()
 			err := del.like(rec, req, test.params)
@@ -139,7 +139,7 @@ func TestListByAuthor(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			del := delivery{serv: f.serv, log: log.New()}
+			del := delivery{serv: f.serv, log: stdlogger.New()}
 			req := httptest.NewRequest(http.MethodGet, "/users/3/likes", nil)
 			rec := httptest.NewRecorder()
 			err := del.listByAuthor(rec, req, test.params)
@@ -214,7 +214,7 @@ func TestListByPin(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			del := delivery{serv: f.serv, log: log.New()}
+			del := delivery{serv: f.serv, log: stdlogger.New()}
 			req := httptest.NewRequest(http.MethodGet, "/pins/3/likes", nil)
 			rec := httptest.NewRecorder()
 			err := del.listByPin(rec, req, test.params)
@@ -278,7 +278,7 @@ func TestUnlike(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			del := delivery{serv: f.serv, log: log.New()}
+			del := delivery{serv: f.serv, log: stdlogger.New()}
 			req := httptest.NewRequest(http.MethodDelete, "/pins/3/like", nil)
 			rec := httptest.NewRecorder()
 			err := del.unlike(rec, req, test.params)

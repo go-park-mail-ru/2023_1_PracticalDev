@@ -11,11 +11,11 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/mocks"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
 )
 
@@ -89,7 +89,7 @@ func TestCreate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -166,7 +166,7 @@ func TestList(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -244,7 +244,7 @@ func TestListByAuthor(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -340,7 +340,7 @@ func TestGet(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -417,7 +417,7 @@ func TestFullUpdate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -500,7 +500,7 @@ func TestDelete(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,

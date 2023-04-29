@@ -5,8 +5,8 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 type repository struct {

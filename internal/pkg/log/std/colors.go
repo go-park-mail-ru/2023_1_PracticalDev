@@ -1,4 +1,4 @@
-package log
+package stdlogger
 
 var (
 	colorReset  string = "\033[0m"

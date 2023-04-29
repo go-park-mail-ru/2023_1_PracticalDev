@@ -12,11 +12,11 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv pkgPins.Service) {

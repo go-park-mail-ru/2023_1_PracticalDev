@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 
@@ -42,14 +43,23 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/zap"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/redis"
 )
 
 func main() {
-	logger := log.New()
+	logger, err := zaplogger.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		err = logger.Sync()
+		if err != nil {
+			log.Print(err)
+		}
+	}()
 
 	db, err := pkgDb.New(logger)
 	if err != nil {

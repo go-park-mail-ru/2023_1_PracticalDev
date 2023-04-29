@@ -3,8 +3,9 @@ package middleware
 import (
 	"net/http"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/julienschmidt/httprouter"
+
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 func HandleLogger(handler httprouter.Handle, log log.Logger) httprouter.Handle {

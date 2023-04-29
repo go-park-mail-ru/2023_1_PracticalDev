@@ -10,9 +10,9 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/pkg/errors"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 )
 
 func TestCreate(t *testing.T) {
@@ -70,7 +70,7 @@ func TestCreate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			repo := NewRepository(db, log.New())
+			repo := NewRepository(db, stdlogger.New())
 			err = repo.Create(test.pinId, test.authorId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -157,7 +157,7 @@ func TestListByAuthor(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			repo := NewRepository(db, log.New())
+			repo := NewRepository(db, stdlogger.New())
 			likes, err := repo.ListByAuthor(test.authorId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -247,7 +247,7 @@ func TestListByPin(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			repo := NewRepository(db, log.New())
+			repo := NewRepository(db, stdlogger.New())
 			likes, err := repo.ListByPin(test.pinId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -317,7 +317,7 @@ func TestDelete(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			repo := NewRepository(db, log.New())
+			repo := NewRepository(db, stdlogger.New())
 			err = repo.Delete(test.pinId, test.authorId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)

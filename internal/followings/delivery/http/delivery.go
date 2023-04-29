@@ -8,9 +8,9 @@ import (
 	"github.com/julienschmidt/httprouter"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv followings.Service) {
