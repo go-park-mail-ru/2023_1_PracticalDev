@@ -41,6 +41,10 @@ import (
 	searchService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/delivery/grpc/client"
 	searchDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/delivery/http"
 
+	chatsDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/chats/delivery/http"
+	chatsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/chats/repository/postgres"
+	chatsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/chats/service"
+
 	pkgDb "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
@@ -133,6 +137,9 @@ func main() {
 	followingsRepo := followingsRepository.NewRepository(db, logger)
 	followingsServ := followingsService.NewService(followingsRepo)
 
+	chatsRepo := chatsRepository.NewRepository(db, logger)
+	chatsServ := chatsService.NewService(chatsRepo)
+
 	authDelivery.RegisterHandlers(mux, logger, authServ, token, metricsMiddleware)
 	likesDelivery.RegisterHandlers(mux, logger, authorizer, likesServ, metricsMiddleware)
 	usersDelivery.RegisterHandlers(mux, logger, authorizer, usersServ, metricsMiddleware)
@@ -140,6 +147,7 @@ func main() {
 	followingsDelivery.RegisterHandlers(mux, logger, authorizer, followingsServ, metricsMiddleware)
 	boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ, metricsMiddleware)
 	pinsDelivery.RegisterHandlers(mux, logger, authorizer, middleware.NewAccessChecker(pinsServ), pinsServ, metricsMiddleware)
+	chatsDelivery.RegisterHandlers(mux, logger, authorizer, chatsServ)
 	ping.RegisterHandlers(mux, logger)
 	searchDelivery.RegisterHandlers(mux, logger, authorizer, searchServ)
 

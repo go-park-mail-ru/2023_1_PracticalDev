@@ -12,30 +12,35 @@ var httpCodes = map[error]int{
 	ErrDb:           http.StatusInternalServerError,
 	ErrImageService: http.StatusInternalServerError,
 
+	// Invalid Param
 	ErrInvalidUserIdParam:  http.StatusBadRequest,
 	ErrInvalidBoardIdParam: http.StatusBadRequest,
 	ErrInvalidPinIdParam:   http.StatusBadRequest,
 	ErrInvalidPageParam:    http.StatusBadRequest,
 	ErrInvalidLimitParam:   http.StatusBadRequest,
-	ErrBadParams:           http.StatusBadRequest,
-	ErrBadRequest:          http.StatusBadRequest,
-	ErrBadSessionCookie:    http.StatusBadRequest,
-	ErrBadCsrfTokenCookie:  http.StatusBadRequest,
-	ErrBadTokenTime:        http.StatusBadRequest,
-	ErrBadTokenData:        http.StatusBadRequest,
-	ErrParseForm:           http.StatusBadRequest,
-	ErrParseJson:           http.StatusBadRequest,
-	ErrUserAlreadyExists:   http.StatusBadRequest,
-	ErrSameUserId:          http.StatusBadRequest,
+	ErrInvalidChatIDParam:  http.StatusBadRequest,
+
+	ErrBadParams:          http.StatusBadRequest,
+	ErrBadRequest:         http.StatusBadRequest,
+	ErrBadSessionCookie:   http.StatusBadRequest,
+	ErrBadCsrfTokenCookie: http.StatusBadRequest,
+	ErrBadTokenTime:       http.StatusBadRequest,
+	ErrBadTokenData:       http.StatusBadRequest,
+	ErrParseForm:          http.StatusBadRequest,
+	ErrParseJson:          http.StatusBadRequest,
+	ErrUserAlreadyExists:  http.StatusBadRequest,
+	ErrSameUserId:         http.StatusBadRequest,
 
 	// Auth
 	ErrWrongLoginOrPassword: http.StatusNotFound,
+	ErrUnauthorized:         http.StatusUnauthorized,
 
 	// Not Found
 	ErrUserNotFound:    http.StatusNotFound,
 	ErrProfileNotFound: http.StatusNotFound,
 	ErrBoardNotFound:   http.StatusNotFound,
 	ErrPinNotFound:     http.StatusNotFound,
+	ErrChatNotFound:    http.StatusNotFound,
 
 	// Profile
 	ErrTooShortUsername: http.StatusBadRequest,
@@ -43,14 +48,16 @@ var httpCodes = map[error]int{
 	ErrEmptyName:        http.StatusBadRequest,
 	ErrTooLongName:      http.StatusBadRequest,
 
-	ErrUnauthorized:           http.StatusUnauthorized,
-	ErrNoContent:              http.StatusNoContent,
-	ErrForbidden:              http.StatusForbidden,
-	ErrTokenExpired:           http.StatusForbidden,
+	ErrNoContent:         http.StatusNoContent,
+	ErrForbidden:         http.StatusForbidden,
+	ErrTokenExpired:      http.StatusForbidden,
+	ErrLikeNotFound:      http.StatusConflict,
+	ErrFollowingNotFound: http.StatusConflict,
+
+	// Already exists
 	ErrLikeAlreadyExists:      http.StatusConflict,
 	ErrFollowingAlreadyExists: http.StatusConflict,
-	ErrLikeNotFound:           http.StatusConflict,
-	ErrFollowingNotFound:      http.StatusConflict,
+	ErrChatAlreadyExists:      http.StatusConflict,
 	ErrPinAlreadyAdded:        http.StatusConflict,
 }
 

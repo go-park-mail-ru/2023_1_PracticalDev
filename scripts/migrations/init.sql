@@ -77,10 +77,11 @@ CREATE TABLE IF NOT EXISTS followings
 CREATE TABLE IF NOT EXISTS chats
 (
     id         serial    NOT NULL PRIMARY KEY,
-    user1_id   int       NOT NULL REFERENCES users (id),
-    user2_id   int       NOT NULL REFERENCES users (id),
+    user1_id   int       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user2_id   int       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     created_at timestamp NOT NULL DEFAULT now(),
-    updated_at timestamp NOT NULL DEFAULT now()
+    updated_at timestamp NOT NULL DEFAULT now(),
+    CONSTRAINT chats_user_pair UNIQUE (user1_id, user2_id)
 );
 
 CREATE TABLE IF NOT EXISTS messages
