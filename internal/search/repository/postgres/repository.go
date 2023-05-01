@@ -72,7 +72,7 @@ func (rep repository) Get(query string) (models.SearchRes, error) {
 		users = append(users, user)
 	}
 
-	rows, err = rep.db.Query("SELECT * FROM boards WHERE to_tsquery($1) @@ to_tsvector(boards.name);", query)
+	rows, err = rep.db.Query(getBoardsCmd, query)
 
 	if err != nil {
 		return models.SearchRes{}, errors.Wrap(pkgErrors.ErrDb, err.Error())

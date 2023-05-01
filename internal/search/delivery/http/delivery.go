@@ -32,7 +32,13 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 
 	query := p.ByName("query")
 	res, err := del.Service.Get(userId, query)
+	if err != nil {
+		return err
+	}
 	encoder := json.NewEncoder(w)
-	encoder.Encode(res)
-	return err
+	err = encoder.Encode(res)
+	if err != nil {
+		return pkgErrors.ErrCreateResponse
+	}
+	return nil
 }

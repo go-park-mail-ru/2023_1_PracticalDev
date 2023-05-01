@@ -4,7 +4,7 @@ const getPinsCmd = `SELECT id, title, description, media_source, n_likes, author
                         WHERE to_tsquery($1) @@ to_tsvector(pins.title || pins.description);`
 
 const getBoardsCmd = `SELECT * FROM boards
-                        WHERE to_tsquery($1) @@ to_tsvector(boards.name || boards.description)`
+                        WHERE to_tsquery($1) @@ to_tsvector(boards.name);`
 
 const getUsersCmd = `SELECT id, username, name, profile_image, website_url 
 					    FROM users
