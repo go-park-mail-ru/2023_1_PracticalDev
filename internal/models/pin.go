@@ -6,5 +6,6 @@ type Pin struct {
 	Description string `json:"description"`
 	MediaSource string `json:"media_source"`
 	NumLikes    int    `json:"n_likes"`
+	Liked       bool   `json:"liked"`
 	Author      int    `json:"author_id"`
 }

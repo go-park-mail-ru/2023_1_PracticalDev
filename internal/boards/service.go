@@ -13,7 +13,7 @@ type Service interface {
 	Delete(id int) error
 
 	AddPin(boardId, pinId int) error
-	PinsList(boardId int, page, limit int) ([]models.Pin, error)
+	PinsList(userId, boardId int, page, limit int) ([]models.Pin, error)
 	RemovePin(boardId, pinId int) error
 
 	CheckWriteAccess(userId, boardId string) (bool, error)
