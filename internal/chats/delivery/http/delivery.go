@@ -22,9 +22,10 @@ var connectionsByUserID = map[int][]*websocket.Conn{}
 var connectionsByChatID = map[int][]*websocket.Conn{}
 
 const (
-	chatsUrl  = "/chats"
-	chatUrl   = "/chats/:id"
-	wsChatUrl = "/chat"
+	chatsUrl    = "/chats"
+	chatUrl     = "/chats/:id"
+	messagesUrl = "/chats/:id/messages"
+	wsChatUrl   = "/chat"
 )
 
 var upgrader = websocket.Upgrader{
@@ -37,9 +38,12 @@ var upgrader = websocket.Upgrader{
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv pkgChats.Service) {
 	del := delivery{serv, logger}
+	// chats
 	mux.GET(chatsUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.listByUser)), logger), logger))
 	mux.GET(chatUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.get)), logger), logger))
 
+	// messages
+	mux.GET(messagesUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.messagesList)), logger), logger))
 	mux.GET(wsChatUrl, mw.HandleLogger(mw.ErrorHandler(authorizer(del.chatHandler), logger), logger))
 }
 
@@ -87,7 +91,7 @@ func (del *delivery) NewChatSendToConns(chat models.Chat) {
 	del.log.Debug("New chat was sent to chat participants")
 }
 
-func (del *delivery) listByUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) listByUser(w http.ResponseWriter, _ *http.Request, p httprouter.Params) error {
 	strUserID := p.ByName("user-id")
 	userID, err := strconv.Atoi(strUserID)
 	if err != nil {
@@ -113,7 +117,33 @@ func (del *delivery) listByUser(w http.ResponseWriter, r *http.Request, p httpro
 	return nil
 }
 
-func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) messagesList(w http.ResponseWriter, _ *http.Request, p httprouter.Params) error {
+	strID := p.ByName("id")
+	chatID, err := strconv.Atoi(strID)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrInvalidChatIDParam, err.Error())
+	}
+
+	messages, err := del.serv.MessagesList(chatID)
+	if err != nil {
+		return err
+	}
+
+	response := newMessagesListResponse(messages)
+	data, err := json.Marshal(response)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+	return nil
+}
+
+func (del *delivery) get(w http.ResponseWriter, _ *http.Request, p httprouter.Params) error {
 	strID := p.ByName("id")
 	id, err := strconv.Atoi(strID)
 	if err != nil {

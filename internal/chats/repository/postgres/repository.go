@@ -88,6 +88,30 @@ func (rep *repository) Get(id int) (models.Chat, error) {
 	return chat, nil
 }
 
+const messagesListCmd = `
+		SELECT * 
+		FROM messages
+		WHERE chat_id = $1;`
+
+func (rep *repository) MessagesList(chatID int) ([]models.Message, error) {
+	rows, err := rep.db.Query(messagesListCmd, chatID)
+	if err != nil {
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
+
+	messages := []models.Message{}
+	message := models.Message{}
+	for rows.Next() {
+		err = rows.Scan(&message.ID, &message.AuthorID, &message.ChatID, &message.Text, &message.CreatedAt)
+		if err != nil {
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		}
+
+		messages = append(messages, message)
+	}
+	return messages, nil
+}
+
 const sendMessageCmd = `
 		INSERT INTO messages (author_id, chat_id, text)
 		VALUES ($1, $2, $3)

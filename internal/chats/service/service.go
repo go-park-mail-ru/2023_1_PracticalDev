@@ -30,6 +30,10 @@ func (serv *service) Get(id int) (models.Chat, error) {
 	return serv.repo.Get(id)
 }
 
+func (serv *service) MessagesList(chatID int) ([]models.Message, error) {
+	return serv.repo.MessagesList(chatID)
+}
+
 func (serv *service) SendMessage(params *pkgChats.SendMessageParams) (*models.Message, error) {
 	return serv.repo.SendMessage(params)
 }
