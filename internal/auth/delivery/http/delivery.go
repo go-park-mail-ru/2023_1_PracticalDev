@@ -15,12 +15,12 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv auth.Service, token *tokens.HashToken) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv auth.Service, token *tokens.HashToken, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger, token}
-	mux.POST("/auth/login", mw.HandleLogger(mw.ErrorHandler(del.Authenticate, logger), logger))
-	mux.DELETE("/auth/logout", mw.HandleLogger(mw.ErrorHandler(del.Logout, logger), logger))
-	mux.POST("/auth/signup", mw.HandleLogger(mw.ErrorHandler(del.Register, logger), logger))
-	mux.GET("/auth/me", mw.HandleLogger(mw.ErrorHandler(del.CheckAuth, logger), logger))
+	mux.POST("/auth/login", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.Authenticate, logger), logger), logger))
+	mux.DELETE("/auth/logout", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.Logout, logger), logger), logger))
+	mux.POST("/auth/signup", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.Register, logger), logger), logger))
+	mux.GET("/auth/me", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.CheckAuth, logger), logger), logger))
 }
 
 type delivery struct {
