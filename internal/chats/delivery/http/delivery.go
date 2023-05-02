@@ -22,10 +22,11 @@ var connectionsByUserID = map[int][]*websocket.Conn{}
 var connectionsByChatID = map[int][]*websocket.Conn{}
 
 const (
-	chatsUrl    = "/chats"
-	chatUrl     = "/chats/:id"
-	messagesUrl = "/chats/:id/messages"
-	wsChatUrl   = "/chat"
+	chatsUrl        = "/chats"
+	chatUrl         = "/chats/:id"
+	chatMessagesUrl = "/chats/:id/messages"
+	messagesUrl     = "/messages"
+	wsChatUrl       = "/chat"
 )
 
 var upgrader = websocket.Upgrader{
@@ -43,7 +44,8 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.A
 	mux.GET(chatUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.get)), logger), logger))
 
 	// messages
-	mux.GET(messagesUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.messagesList)), logger), logger))
+	mux.GET(chatMessagesUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.messagesList)), logger), logger))
+	mux.GET(messagesUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.getMessagesByReceiver)), logger), logger))
 	mux.GET(wsChatUrl, mw.HandleLogger(mw.ErrorHandler(authorizer(del.chatHandler), logger), logger))
 }
 
@@ -125,6 +127,43 @@ func (del *delivery) messagesList(w http.ResponseWriter, _ *http.Request, p http
 	}
 
 	messages, err := del.serv.MessagesList(chatID)
+	if err != nil {
+		return err
+	}
+
+	response := newMessagesListResponse(messages)
+	data, err := json.Marshal(response)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+	return nil
+}
+
+func (del *delivery) getMessagesByReceiver(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+	strUserID := p.ByName("user-id")
+	userID, err := strconv.Atoi(strUserID)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrInvalidUserIdParam, err.Error())
+	}
+
+	strReceiverID := r.URL.Query().Get("receiver_id")
+	receiverID, err := strconv.Atoi(strReceiverID)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrInvalidUserIdParam, err.Error())
+	}
+
+	chat, err := del.serv.GetByUsers(userID, receiverID)
+	if err != nil {
+		return err
+	}
+
+	messages, err := del.serv.MessagesList(chat.ID)
 	if err != nil {
 		return err
 	}
