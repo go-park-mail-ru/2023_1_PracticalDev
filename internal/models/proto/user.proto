@@ -1,0 +1,16 @@
+syntax = "proto3";
+
+option go_package = "./;protomodels";
+
+package protomodels;
+
+message User {
+	int64 ID = 1;
+    string Username = 2;
+    string Email = 3;
+    string HashedPassword = 4;
+    string Name = 5;
+    string ProfileImage = 6;
+    string WebsiteUrl = 7;
+    string AccountType = 8;
+}
