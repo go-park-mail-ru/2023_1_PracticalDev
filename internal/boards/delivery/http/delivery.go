@@ -12,19 +12,19 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv pkgBoards.Service, m *mw.HttpMetricsMiddleware) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, access mw.AccessChecker, serv pkgBoards.Service, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger}
 
-	mux.POST("/boards", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.create)), logger), logger), logger))
-	mux.GET("/boards", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.list)), logger), logger), logger))
-	mux.GET("/boards/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.get)), logger), logger), logger))
-	mux.PUT("/boards/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(access.WriteChecker(del.fullUpdate))), logger), logger), logger))
-	mux.PATCH("/boards/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(access.WriteChecker(del.partialUpdate))), logger), logger), logger))
-	mux.DELETE("/boards/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(access.WriteChecker(del.delete))), logger), logger), logger))
+	mux.POST("/boards", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.create))), logger), logger), logger))
+	mux.GET("/boards", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.list))), logger), logger), logger))
+	mux.GET("/boards/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.get))), logger), logger), logger))
+	mux.PUT("/boards/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(access.WriteChecker(del.fullUpdate)))), logger), logger), logger))
+	mux.PATCH("/boards/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(access.WriteChecker(del.partialUpdate)))), logger), logger), logger))
+	mux.DELETE("/boards/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(access.WriteChecker(del.delete)))), logger), logger), logger))
 
-	mux.POST("/boards/:id/pins/:pin_id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(access.WriteChecker(del.addPin))), logger), logger), logger))
-	mux.GET("/boards/:id/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.pinsList)), logger), logger), logger))
-	mux.DELETE("/boards/:id/pins/:pin_id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(access.WriteChecker(del.removePin))), logger), logger), logger))
+	mux.POST("/boards/:id/pins/:pin_id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(access.WriteChecker(del.addPin)))), logger), logger), logger))
+	mux.GET("/boards/:id/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.pinsList))), logger), logger), logger))
+	mux.DELETE("/boards/:id/pins/:pin_id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(access.WriteChecker(del.removePin)))), logger), logger), logger))
 }
 
 type delivery struct {

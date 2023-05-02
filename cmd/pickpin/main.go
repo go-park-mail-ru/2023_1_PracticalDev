@@ -117,7 +117,8 @@ func main() {
 	likesServ := likesService.NewService(likesRepo)
 
 	token := tokens.NewHMACHashToken(config.Get("CSRF_TOKEN_SECRET"))
-	authorizer := middleware.NewAuthorizer(authServ, token, logger)
+	CSRFMiddleware := middleware.NewCSRFMiddleware(token, logger)
+	authorizer := middleware.NewAuthorizer(authServ, logger)
 
 	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
 	pinsServ := pinsService.NewService(pinsRepo)
@@ -139,15 +140,15 @@ func main() {
 
 	chatsRepo := chatsRepository.NewRepository(db, logger)
 	chatsServ := chatsService.NewService(chatsRepo)
-
+	
 	authDelivery.RegisterHandlers(mux, logger, authServ, token, metricsMiddleware)
-	likesDelivery.RegisterHandlers(mux, logger, authorizer, likesServ, metricsMiddleware)
-	usersDelivery.RegisterHandlers(mux, logger, authorizer, usersServ, metricsMiddleware)
-	profileDelivery.RegisterHandlers(mux, logger, authorizer, profileServ, metricsMiddleware)
-	followingsDelivery.RegisterHandlers(mux, logger, authorizer, followingsServ, metricsMiddleware)
-	boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ, metricsMiddleware)
-	pinsDelivery.RegisterHandlers(mux, logger, authorizer, middleware.NewAccessChecker(pinsServ), pinsServ, metricsMiddleware)
-	chatsDelivery.RegisterHandlers(mux, logger, authorizer, chatsServ)
+	likesDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, likesServ, metricsMiddleware)
+	usersDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, usersServ, metricsMiddleware)
+	profileDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, profileServ, metricsMiddleware)
+	followingsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, followingsServ, metricsMiddleware)
+	boardsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, boardsAccessChecker, boardsServ, metricsMiddleware)
+	pinsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, middleware.NewAccessChecker(pinsServ), pinsServ, metricsMiddleware)
+	chatsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, chatsServ)
 	ping.RegisterHandlers(mux, logger)
 	searchDelivery.RegisterHandlers(mux, logger, authorizer, searchServ)
 

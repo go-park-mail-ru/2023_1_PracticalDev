@@ -19,12 +19,12 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv profile.Service, m *mw.HttpMetricsMiddleware) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv profile.Service, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger}
 
-	mux.GET("/users/:id/profile", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.getProfileByUser)), logger), logger), logger))
-	mux.PUT("/profile", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.fullUpdate)), logger), logger), logger))
-	mux.PATCH("/profile", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.partialUpdate)), logger), logger), logger))
+	mux.GET("/users/:id/profile", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.getProfileByUser))), logger), logger), logger))
+	mux.PUT("/profile", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.fullUpdate))), logger), logger), logger))
+	mux.PATCH("/profile", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.partialUpdate))), logger), logger), logger))
 }
 
 type delivery struct {

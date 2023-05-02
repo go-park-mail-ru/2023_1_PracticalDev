@@ -7,6 +7,10 @@ import (
 )
 
 // API requests
+type msgRequest struct {
+	Text       string `json:"text"`
+	ReceiverID int    `json:"receiver_id"`
+}
 
 // API responses
 type listResponse struct {
@@ -41,4 +45,15 @@ func newGetResponse(chat *models.Chat) *getResponse {
 		CreatedAt: chat.CreatedAt,
 		UpdatedAt: chat.UpdatedAt,
 	}
+}
+
+// Chat responses
+type newChatResponse struct {
+	Type string      `json:"type"`
+	Chat models.Chat `json:"chat"`
+}
+
+type newMessageResponse struct {
+	Type    string         `json:"type"`
+	Message models.Message `json:"message"`
 }
