@@ -42,7 +42,13 @@ func NewAuthorizer(serv AuthService, token *tokens.HashToken, log log.Logger) fu
 				return errors.Wrap(pkgErrors.ErrUnauthorized, err.Error())
 			}
 
-			csrfToken := r.Header.Get("X-XSRF-TOKEN")
+			queryValues := r.URL.Query()
+			var csrfToken string
+			if r.URL.Path == "/chat" {
+				csrfToken = queryValues.Get("csrf")
+			} else {
+				csrfToken = r.Header.Get("X-XSRF-TOKEN")
+			}
 			session := tokens.SessionParams{Token: sessionCookie.Value}
 			check, err := token.Check(&session, csrfToken)
 			if err != nil || !check {
