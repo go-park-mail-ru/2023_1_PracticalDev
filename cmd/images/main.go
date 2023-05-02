@@ -1,26 +1,33 @@
 package main
 
 import (
+	"log"
 	"net"
 	"os"
-
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	"strconv"
 
 	proto "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/proto"
 	rep "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/server/repository/s3"
 	serv "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/server/service/grpc"
+	zaplogger "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/zap"
 	"google.golang.org/grpc"
 )
 
-var port = "0.0.0.0:8088"
-
 func main() {
-	logger := log.New()
+	logger, err := zaplogger.New()
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	lis, err := net.Listen("tcp", port)
+	port := os.Getenv("PORT")
+	_, err = strconv.Atoi(port)
+	if port == "" || err != nil {
+		port = "8088"
+	}
+	lis, err := net.Listen("tcp", ":"+port)
 	if err != nil {
 		logger.Error("can't listet port", err)
-		return
+		os.Exit(1)
 	}
 
 	server := grpc.NewServer()
