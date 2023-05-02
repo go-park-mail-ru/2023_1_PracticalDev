@@ -3,11 +3,12 @@ package postgres
 import (
 	"database/sql"
 
+	"github.com/pkg/errors"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search"
-	"github.com/pkg/errors"
 )
 
 func NewRepository(db *sql.DB, log log.Logger) search.Repository {
@@ -19,6 +20,16 @@ type repository struct {
 	log log.Logger
 }
 
+const getPinsCmd = `SELECT id, title, description, media_source, n_likes, author_id FROM pins
+                        WHERE to_tsquery($1) @@ to_tsvector(pins.title || pins.description);`
+
+const getBoardsCmd = `SELECT * FROM boards
+                        WHERE to_tsquery($1) @@ to_tsvector(boards.name);`
+
+const getUsersCmd = `SELECT id, username, name, profile_image, website_url 
+					    FROM users
+                        WHERE to_tsquery($1) @@ to_tsvector(users.username)`
+
 func (rep repository) Get(query string) (models.SearchRes, error) {
 	rows, err := rep.db.Query(getPinsCmd, query)
 	if err != nil {
@@ -29,7 +40,7 @@ func (rep repository) Get(query string) (models.SearchRes, error) {
 	var title, description, mediaSource sql.NullString
 
 	for rows.Next() {
-		err := rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 		if err != nil {
 			return models.SearchRes{}, errors.Wrap(pkgErrors.ErrDb,
 				pkgErrors.ErrRepositoryQuery{

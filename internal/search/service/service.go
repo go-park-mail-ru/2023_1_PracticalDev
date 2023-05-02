@@ -22,12 +22,11 @@ func (serv service) Get(userId int, query string) (models.SearchRes, error) {
 	}
 
 	for i := range res.Pins {
-		pin, err := serv.pinServ.Get(res.Pins[i].Id, userId)
+		err := serv.pinServ.SetLikedField(&res.Pins[i], userId)
 		if err != nil {
 			return res, err
 		}
-
-		res.Pins[i].Liked = pin.Liked
 	}
+
 	return res, nil
 }
