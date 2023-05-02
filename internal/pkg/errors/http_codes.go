@@ -35,6 +35,9 @@ var httpCodes = map[error]int{
 	ErrWrongLoginOrPassword: http.StatusNotFound,
 	ErrUnauthorized:         http.StatusUnauthorized,
 
+	// WebSocket
+	ErrUpgradeToWebSocket: http.StatusBadRequest,
+
 	// Not Found
 	ErrUserNotFound:    http.StatusNotFound,
 	ErrProfileNotFound: http.StatusNotFound,

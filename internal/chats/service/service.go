@@ -29,3 +29,15 @@ func (serv *service) ListByUser(userId int) ([]models.Chat, error) {
 func (serv *service) Get(id int) (models.Chat, error) {
 	return serv.repo.Get(id)
 }
+
+func (serv *service) SendMessage(params *pkgChats.SendMessageParams) (*models.Message, error) {
+	return serv.repo.SendMessage(params)
+}
+
+func (serv *service) ChatExists(user1ID, user2ID int) (bool, error) {
+	return serv.repo.ChatExists(user1ID, user2ID)
+}
+
+func (serv *service) GetByUsers(user1ID, user2ID int) (models.Chat, error) {
+	return serv.repo.GetByUsers(user1ID, user2ID)
+}

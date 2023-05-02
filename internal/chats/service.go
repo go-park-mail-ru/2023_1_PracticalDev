@@ -8,4 +8,9 @@ type Service interface {
 	Create(params *CreateParams) (models.Chat, error)
 	ListByUser(userID int) ([]models.Chat, error)
 	Get(id int) (models.Chat, error)
+
+	SendMessage(params *SendMessageParams) (*models.Message, error)
+
+	ChatExists(user1ID, user2ID int) (bool, error)
+	GetByUsers(user1ID, user2ID int) (models.Chat, error)
 }

@@ -47,6 +47,9 @@ var (
 	ErrInvalidPrivacy      = errors.New("invalid privacy")
 	ErrInvalidChatIDParam  = errors.New("invalid chat id param")
 
+	// WebSocket
+	ErrUpgradeToWebSocket = errors.New("failed to upgrade protocol to websocket")
+
 	ErrBadParams              = errors.New("bad params")
 	ErrBadRequest             = errors.New("bad request")
 	ErrBadSessionCookie       = errors.New("bad session cookie")
