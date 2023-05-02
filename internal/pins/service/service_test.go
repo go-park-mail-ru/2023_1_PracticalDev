@@ -82,7 +82,7 @@ func TestList(t *testing.T) {
 		userId  int
 		page    int
 		limit   int
-		pins    []pkgPins.Pin
+		pins    []models.Pin
 		err     error
 	}
 
@@ -103,7 +103,7 @@ func TestList(t *testing.T) {
 			userId: 12,
 			page:   1,
 			limit:  30,
-			pins: []pkgPins.Pin{
+			pins: []models.Pin{
 				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Liked: true, Author: 12},
 				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Liked: false, Author: 3},
 				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Liked: true, Author: 10},
@@ -117,7 +117,7 @@ func TestList(t *testing.T) {
 			userId: 12,
 			page:   1,
 			limit:  30,
-			pins:   []pkgPins.Pin{},
+			pins:   []models.Pin{},
 			err:    nil,
 		},
 	}
@@ -159,7 +159,7 @@ func TestListByAuthor(t *testing.T) {
 		limit    int
 		authorId int
 		userId   int
-		pins     []pkgPins.Pin
+		pins     []models.Pin
 		err      error
 	}
 
@@ -181,7 +181,7 @@ func TestListByAuthor(t *testing.T) {
 			limit:    30,
 			authorId: 12,
 			userId:   5,
-			pins: []pkgPins.Pin{
+			pins: []models.Pin{
 				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Liked: true, Author: 12},
 				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Liked: false, Author: 12},
 				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Liked: true, Author: 12},
@@ -196,7 +196,7 @@ func TestListByAuthor(t *testing.T) {
 			authorId: 12,
 			page:     1,
 			limit:    30,
-			pins:     []pkgPins.Pin{},
+			pins:     []models.Pin{},
 			err:      nil,
 		},
 	}
@@ -236,7 +236,7 @@ func TestGet(t *testing.T) {
 		prepare func(f *fields)
 		id      int
 		userId  int
-		pin     pkgPins.Pin
+		pin     models.Pin
 		err     error
 	}
 
@@ -256,7 +256,7 @@ func TestGet(t *testing.T) {
 			},
 			id:     3,
 			userId: 12,
-			pin:    pkgPins.Pin{Id: 3, Title: "t1", MediaSource: "ms_url1", Description: "d1", Liked: true, Author: 12},
+			pin:    models.Pin{Id: 3, Title: "t1", MediaSource: "ms_url1", Description: "d1", Liked: true, Author: 12},
 			err:    nil,
 		},
 		"pin not found": {
@@ -265,7 +265,7 @@ func TestGet(t *testing.T) {
 			},
 			id:     3,
 			userId: 12,
-			pin:    pkgPins.Pin{},
+			pin:    models.Pin{},
 			err:    pkgErrors.ErrPinNotFound,
 		},
 		"negative pin id param": {
@@ -274,7 +274,7 @@ func TestGet(t *testing.T) {
 			},
 			id:     -1,
 			userId: 12,
-			pin:    pkgPins.Pin{},
+			pin:    models.Pin{},
 			err:    pkgErrors.ErrPinNotFound,
 		},
 	}

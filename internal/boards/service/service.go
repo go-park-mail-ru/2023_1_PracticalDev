@@ -69,12 +69,10 @@ func (serv *service) PinsList(userId, boardId int, page, limit int) ([]models.Pi
 	}
 
 	for i := range pins {
-		pin, err := serv.pinServ.Get(pins[i].Id, userId)
+		err = serv.pinServ.SetLikedField(&pins[i], userId)
 		if err != nil {
 			return pins, err
 		}
-
-		pins[i].Liked = pin.Liked
 	}
 
 	return pins, err
