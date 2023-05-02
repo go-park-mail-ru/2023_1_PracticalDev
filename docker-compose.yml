@@ -37,12 +37,14 @@ services:
     container_name: backend
     ports:
       - 8080:8080
+      - 9001:9001
     env_file:
       - .env
     depends_on:
       - db
       - redis
       - images
+      - auth
     networks:
       - nginx-network
       - db-network
@@ -57,7 +59,7 @@ services:
   images:
     build:
       context: .
-      dockerfile: images.Dockerfile
+      dockerfile: ./cmd/images/Dockerfile
     container_name: images
     ports:
       - 8088:8088
@@ -70,6 +72,23 @@ services:
         condition: on-failure
     networks:
       - api-network
+    
+  auth:
+    build:
+      context: .
+      dockerfile: ./cmd/auth/Dockerfile
+    container_name: auth
+    ports:
+      - 8087:8087
+    env_file:
+      - .env
+    deploy:
+      restart_policy:
+        condition: on-failure
+    networks:
+      - api-network
+      - db-network
+      - redis-network
 
   docs:
     image: nginx
@@ -115,6 +134,41 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    networks:
+      - api-network
+    environment:
+      TZ: "Europe/Moscow"
+    command: "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - ./configs/:/etc/prometheus/
+    depends_on:
+    - backend
+    - auth
+    - images
+    ports:
+      - "9090:9090"
+
+  grafana:
+    container_name: "grafana"
+    image: grafana/grafana:9.5.1
+    networks:
+        - api-network
+    volumes:
+      - ./configs/grafana/data:/var/lib/grafana
+      - ./configs/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      TZ: "Europe/Moscow"
+      GF_SECURITY_ADMIN_USER: 'admin'
+      GF_SECURITY_ADMIN_PASSWORD: 'password'
+      GF_INSTALL_PLUGINS: 'grafana-clock-panel,grafana-simple-json-datasource,vonage-status-panel'
+    ports:
+      - "3000:3000"
+    depends_on:
+      - prometheus
 
 networks:
   nginx-network:
