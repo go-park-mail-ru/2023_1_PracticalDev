@@ -56,5 +56,9 @@ func main() {
 
 	logger.Info("Starting search service")
 
-	server.Serve(lis)
+	err = server.Serve(lis)
+	if err != nil {
+		logger.Error("Failed to start search server, ", err.Error())
+		return
+	}
 }
