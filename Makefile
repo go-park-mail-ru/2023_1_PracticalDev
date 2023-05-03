@@ -44,10 +44,18 @@ fill-test-data:
 	./scripts/run_migrations.sh
 	./scripts/populate_db.sh
 
-.PHONY: deploy
-deploy:
-	docker compose -f docker-compose.yml up -d --build
-
 .PHONY: mocks
 mocks:
 	./scripts/gen_mocks.sh
+
+.PHONY: metrics-test
+metrics-test:
+	docker compose -f docker-compose.yml up -d node_exporter prometheus grafana
+
+.PHONY: deploy
+deploy:
+	docker compose -f prod/docker-compose.prod.yml up -d --build backend
+
+.PHONY: metrics
+metrics:
+	docker compose -f prod/docker-compose.prod.yml up -d node_exporter prometheus grafana
