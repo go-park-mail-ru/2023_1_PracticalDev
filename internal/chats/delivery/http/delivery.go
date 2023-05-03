@@ -36,7 +36,7 @@ type delivery struct {
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv pkgChats.Service) {
 	del := delivery{
 		serv:        serv,
-		connManager: NewConnectionManager(),
+		connManager: NewConnectionManager(logger),
 		log:         logger,
 		upgrader: ws.Upgrader{
 			ReadBufferSize:  1024,

@@ -15,9 +15,10 @@ type ConnectionManager struct {
 	log         log.Logger
 }
 
-func NewConnectionManager() *ConnectionManager {
+func NewConnectionManager(log log.Logger) *ConnectionManager {
 	return &ConnectionManager{
 		connections: make(map[int][]*ws.Conn),
+		log:         log,
 	}
 }
 
