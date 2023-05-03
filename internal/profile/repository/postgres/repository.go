@@ -1,23 +1,23 @@
 package postgres
 
 import (
+	"context"
 	"database/sql"
 
-	"github.com/pkg/errors"
-
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
+	images "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/client"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
+	"github.com/pkg/errors"
 )
 
 type postgresRepository struct {
 	db      *sql.DB
 	log     log.Logger
-	imgServ images.Service
+	imgServ images.ImageClient
 }
 
-func NewPostgresRepository(db *sql.DB, imgServ images.Service, log log.Logger) profile.Repository {
+func NewPostgresRepository(db *sql.DB, imgServ images.ImageClient, log log.Logger) profile.Repository {
 	return &postgresRepository{db, log, imgServ}
 }
 
@@ -53,7 +53,7 @@ const fullUpdateCmd = `UPDATE users
 						RETURNING username, name, profile_image, website_url;`
 
 func (rep *postgresRepository) FullUpdate(params *profile.FullUpdateParams) (profile.Profile, error) {
-	url, err := rep.imgServ.UploadImage(&params.ProfileImage)
+	url, err := rep.imgServ.UploadImage(context.TODO(), &params.ProfileImage)
 	if err != nil {
 		return profile.Profile{}, errors.Wrap(pkgErrors.ErrImageService, err.Error())
 	}
@@ -89,7 +89,7 @@ func (rep *postgresRepository) PartialUpdate(params *profile.PartialUpdateParams
 	var url string
 	var err error
 	if params.UpdateProfileImage {
-		url, err = rep.imgServ.UploadImage(&params.ProfileImage)
+		url, err = rep.imgServ.UploadImage(context.TODO(), &params.ProfileImage)
 		if err != nil {
 			return profile.Profile{}, errors.Wrap(pkgErrors.ErrImageService, err.Error())
 		}

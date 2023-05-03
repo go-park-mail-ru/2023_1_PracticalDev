@@ -1,16 +1,16 @@
 package main
 
 import (
-	"context"
 	"log"
 	"net/http"
 	"os"
 
 	"github.com/julienschmidt/httprouter"
+	"google.golang.org/grpc"
+	"google.golang.org/grpc/credentials/insecure"
 
+	authService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/delivery/grpc/client"
 	authDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/delivery/http"
-	authRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/repository/postgres"
-	authService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/service"
 
 	likesDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/delivery/http"
 	likesRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/repository/postgres"
@@ -24,8 +24,7 @@ import (
 	boardsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/repository/postgres"
 	boardsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/service"
 
-	imagesRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/repository/s3"
-	imagesService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/service"
+	imagesService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/client"
 
 	usersDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users/delivery/http"
 	usersRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users/repository/postgres"
@@ -49,8 +48,8 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/zap"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/redis"
+	zaplogger "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/zap"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/metrics"
 )
 
 func main() {
@@ -70,16 +69,32 @@ func main() {
 		os.Exit(1)
 	}
 
-	bucket, err := imagesRepository.NewS3Repository(logger)
+	imagesConn, err := grpc.Dial(
+		"images:8088",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
+		logger.Error("cant connect to images service")
 		os.Exit(1)
 	}
-	imagesServ := imagesService.NewS3Service(bucket)
+	imagesServ := imagesService.NewImageUploaderClient(imagesConn)
 
-	ctx := context.Background()
-	rdb, err := redis.NewRedisClient(logger, ctx)
+	authConn, err := grpc.Dial(
+		"auth:8087",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
 	if err != nil {
-		logger.Warn(err)
+		logger.Error("cant connect to images service")
+		os.Exit(1)
+	}
+	authServ := authService.NewAuthenficatorClient(authConn)
+
+	mt := metrics.NewPrometheusMetrics("pickpin")
+	err = mt.SetupMetrics()
+	metricsMiddleware := middleware.NewHttpMetricsMiddleware(mt)
+
+	if err != nil {
+		logger.Error("failed to setup prometheus, ", err)
 		os.Exit(1)
 	}
 
@@ -90,8 +105,6 @@ func main() {
 	likesServ := likesService.NewService(likesRepo)
 
 	token := tokens.NewHMACHashToken(config.Get("CSRF_TOKEN_SECRET"))
-	authRepo := authRepository.NewRepository(db, rdb, ctx, logger)
-	authServ := authService.NewService(authRepo)
 	authorizer := middleware.NewAuthorizer(authServ, token, logger)
 
 	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
@@ -113,13 +126,13 @@ func main() {
 	searchRepo := searchRepository.NewRepository(db, logger)
 	searchServ := searchService.NewService(searchRepo, pinsServ)
 
-	authDelivery.RegisterHandlers(mux, logger, authServ, token)
-	likesDelivery.RegisterHandlers(mux, logger, authorizer, likesServ)
-	usersDelivery.RegisterHandlers(mux, logger, authorizer, usersServ)
-	profileDelivery.RegisterHandlers(mux, logger, authorizer, profileServ)
-	followingsDelivery.RegisterHandlers(mux, logger, authorizer, followingsServ)
-	boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ)
-	pinsDelivery.RegisterHandlers(mux, logger, authorizer, middleware.NewAccessChecker(pinsServ), pinsServ)
+	authDelivery.RegisterHandlers(mux, logger, authServ, token, metricsMiddleware)
+	likesDelivery.RegisterHandlers(mux, logger, authorizer, likesServ, metricsMiddleware)
+	usersDelivery.RegisterHandlers(mux, logger, authorizer, usersServ, metricsMiddleware)
+	profileDelivery.RegisterHandlers(mux, logger, authorizer, profileServ, metricsMiddleware)
+	followingsDelivery.RegisterHandlers(mux, logger, authorizer, followingsServ, metricsMiddleware)
+	boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ, metricsMiddleware)
+	pinsDelivery.RegisterHandlers(mux, logger, authorizer, middleware.NewAccessChecker(pinsServ), pinsServ, metricsMiddleware)
 	ping.RegisterHandlers(mux, logger)
 	searchDelivery.RegisterHandlers(mux, logger, authorizer, searchServ)
 
@@ -127,6 +140,10 @@ func main() {
 		Addr:    "0.0.0.0:8080",
 		Handler: mux,
 	}
+
+	logger.Info("Starting metrics...")
+
+	go metrics.ServePrometheusHTTP("0.0.0.0:9001")
 
 	logger.Info("Starting server...")
 	err = server.ListenAndServe()

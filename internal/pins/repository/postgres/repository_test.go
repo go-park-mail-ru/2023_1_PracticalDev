@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"fmt"
 	"reflect"
 	"regexp"
@@ -10,17 +11,17 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/mocks"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/client/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	_pins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
+	stdlogger "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 )
 
 func TestCreate(t *testing.T) {
 	type fields struct {
 		mock   sqlmock.Sqlmock
-		s3mock *mocks.MockService
+		s3mock *mocks.MockImageClient
 	}
 
 	type testCase struct {
@@ -33,7 +34,7 @@ func TestCreate(t *testing.T) {
 	tests := map[string]testCase{
 		"good query": {
 			prepare: func(f *fields) {
-				f.s3mock.EXPECT().UploadImage(&models.Image{}).Return("ms_url", nil)
+				f.s3mock.EXPECT().UploadImage(context.Background(), &models.Image{}).Return("ms_url", nil)
 
 				rows := sqlmock.NewRows([]string{"id", "title", "media_source", "description", "author_id"})
 				rows = rows.AddRow(1, "t1", "ms_url", "d1", 12)
@@ -48,7 +49,7 @@ func TestCreate(t *testing.T) {
 		},
 		"query error": {
 			prepare: func(f *fields) {
-				f.s3mock.EXPECT().UploadImage(&models.Image{}).Return("ms_url", nil)
+				f.s3mock.EXPECT().UploadImage(context.Background(), &models.Image{}).Return("ms_url", nil)
 
 				f.mock.
 					ExpectQuery(regexp.QuoteMeta(createCmd)).
@@ -81,7 +82,7 @@ func TestCreate(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			s3Serv := mocks.NewMockService(ctrl)
+			s3Serv := mocks.NewMockImageClient(ctrl)
 
 			repo := NewRepository(db, s3Serv, logger)
 
@@ -180,7 +181,7 @@ func TestList(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			s3Serv := mocks.NewMockService(ctrl)
+			s3Serv := mocks.NewMockImageClient(ctrl)
 
 			repo := NewRepository(db, s3Serv, logger)
 
@@ -283,7 +284,7 @@ func TestListByUser(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			s3Serv := mocks.NewMockService(ctrl)
+			s3Serv := mocks.NewMockImageClient(ctrl)
 
 			repo := NewRepository(db, s3Serv, logger)
 
@@ -372,7 +373,7 @@ func TestGet(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			s3Serv := mocks.NewMockService(ctrl)
+			s3Serv := mocks.NewMockImageClient(ctrl)
 
 			repo := NewRepository(db, s3Serv, logger)
 

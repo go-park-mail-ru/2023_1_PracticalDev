@@ -13,14 +13,14 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv pkgLikes.Service) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv pkgLikes.Service, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger}
 
-	mux.POST("/pins/:id/like", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.like)), logger), logger))
-	mux.DELETE("/pins/:id/like", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.unlike)), logger), logger))
+	mux.POST("/pins/:id/like", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.like)), logger), logger), logger))
+	mux.DELETE("/pins/:id/like", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.unlike)), logger), logger), logger))
 
-	mux.GET("/pins/:id/likes", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.listByPin)), logger), logger))
-	mux.GET("/users/:id/likes", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.listByAuthor)), logger), logger))
+	mux.GET("/pins/:id/likes", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.listByPin)), logger), logger), logger))
+	mux.GET("/users/:id/likes", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.listByAuthor)), logger), logger), logger))
 }
 
 type delivery struct {

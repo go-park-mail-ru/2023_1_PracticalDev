@@ -1,6 +1,7 @@
 package postgres
 
 import (
+	"context"
 	"fmt"
 	"regexp"
 	"testing"
@@ -9,10 +10,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/mocks"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/client/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
+	stdlogger "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 )
 
@@ -86,7 +87,7 @@ func TestGetProfileByUser(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			s3Serv := mocks.NewMockService(ctrl)
+			s3Serv := mocks.NewMockImageClient(ctrl)
 
 			repo := NewPostgresRepository(db, s3Serv, logger)
 
@@ -112,7 +113,7 @@ func TestGetProfileByUser(t *testing.T) {
 func TestFullUpdate(t *testing.T) {
 	type fields struct {
 		mock   sqlmock.Sqlmock
-		s3mock *mocks.MockService
+		s3mock *mocks.MockImageClient
 	}
 
 	type testCase struct {
@@ -125,7 +126,7 @@ func TestFullUpdate(t *testing.T) {
 	tests := map[string]testCase{
 		"good query": {
 			prepare: func(f *fields) {
-				f.s3mock.EXPECT().UploadImage(&models.Image{}).Return("pi_url", nil)
+				f.s3mock.EXPECT().UploadImage(context.Background(), &models.Image{}).Return("pi_url", nil)
 
 				rows := sqlmock.NewRows([]string{"username", "name", "profile_image", "website_url"})
 				rows = rows.AddRow("un1", "n1", "pi_url", "wu1")
@@ -146,7 +147,7 @@ func TestFullUpdate(t *testing.T) {
 		},
 		"query error": {
 			prepare: func(f *fields) {
-				f.s3mock.EXPECT().UploadImage(&models.Image{}).Return("pi_url", nil)
+				f.s3mock.EXPECT().UploadImage(context.Background(), &models.Image{}).Return("pi_url", nil)
 
 				f.mock.
 					ExpectQuery(regexp.QuoteMeta(fullUpdateCmd)).
@@ -180,7 +181,7 @@ func TestFullUpdate(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			s3Serv := mocks.NewMockService(ctrl)
+			s3Serv := mocks.NewMockImageClient(ctrl)
 
 			repo := NewPostgresRepository(db, s3Serv, logger)
 
@@ -206,7 +207,7 @@ func TestFullUpdate(t *testing.T) {
 func TestPartialUpdate(t *testing.T) {
 	type fields struct {
 		mock   sqlmock.Sqlmock
-		s3mock *mocks.MockService
+		s3mock *mocks.MockImageClient
 	}
 
 	type testCase struct {
@@ -219,7 +220,7 @@ func TestPartialUpdate(t *testing.T) {
 	tests := map[string]testCase{
 		"good query": {
 			prepare: func(f *fields) {
-				f.s3mock.EXPECT().UploadImage(&models.Image{}).Return("pi_url", nil)
+				f.s3mock.EXPECT().UploadImage(context.Background(), &models.Image{}).Return("pi_url", nil)
 
 				rows := sqlmock.NewRows([]string{"username", "name", "profile_image", "website_url"})
 				rows = rows.AddRow("un1", "n1", "pi_url", "wu1")
@@ -244,7 +245,7 @@ func TestPartialUpdate(t *testing.T) {
 		},
 		"query error": {
 			prepare: func(f *fields) {
-				f.s3mock.EXPECT().UploadImage(&models.Image{}).Return("pi_url", nil)
+				f.s3mock.EXPECT().UploadImage(context.Background(), &models.Image{}).Return("pi_url", nil)
 
 				f.mock.
 					ExpectQuery(regexp.QuoteMeta(partialUpdateCmd)).
@@ -282,7 +283,7 @@ func TestPartialUpdate(t *testing.T) {
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
-			s3Serv := mocks.NewMockService(ctrl)
+			s3Serv := mocks.NewMockImageClient(ctrl)
 
 			repo := NewPostgresRepository(db, s3Serv, logger)
 

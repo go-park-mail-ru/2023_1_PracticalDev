@@ -1,0 +1,71 @@
+syntax = "proto3";
+
+// PATH="${PATH}:${HOME}/go/bin" protoc --go_out=. --go-grpc_out=. --go-grpc_opt=paths=source_relative --go_opt=paths=source_relative *.proto
+option go_package = "./;auth";
+
+package auth;
+
+message User {
+	int64 ID = 1;
+    string Username = 2;
+    string Email = 3;
+    string HashedPassword = 4;
+    string Name = 5;
+    string ProfileImage = 6;
+    string WebsiteUrl = 7;
+    string AccountType = 8;
+}
+
+message LoginParams {
+    string Email = 1;
+    string Password = 2;
+}
+
+message RegisterParams {
+    string Email = 1;
+    string Password = 2;
+    string Username = 3;
+    string Name = 4;
+}
+
+message SessionParams {
+    string Token = 1;
+    int64 LivingTime = 2;
+}
+
+message SessionParamsWithUser {
+    SessionParams params = 1;
+    User user = 2;
+}
+
+message SessionCheckParams {
+	string userId = 1;
+    string sessionId = 2;
+}
+
+message Nothing {
+    bool dummy = 1;
+}
+
+message Session {
+	int64 UserId = 1;
+	string UserEmail = 2;
+}
+
+message SessionSetParams {
+	string token = 1;
+    Session session = 2;
+    int64 Experation = 3;
+}
+
+message UserId {
+    int64 UserId = 1;
+}
+
+service Authenficator {
+    rpc Authenticate (LoginParams) returns (User) {}
+    rpc Register (User) returns (LoginParams) {}
+    rpc SetSession (SessionSetParams) returns (Nothing) {}
+    rpc CheckAuth (SessionCheckParams) returns (User) {}
+    rpc DeleteSession (SessionCheckParams) returns (Nothing) {}
+}

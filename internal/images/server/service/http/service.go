@@ -1,7 +1,7 @@
 package service
 
 import (
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images"
+	images "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/server"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 

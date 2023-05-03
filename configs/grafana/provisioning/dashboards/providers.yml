@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: 'default'
+    folder: 'pickpin'
+    type: file
+    allowUiUpdates: true
+    updateIntervalSeconds: 20
+    options:
+      path: /etc/grafana/provisioning/dashboards
+      foldersFromFilesStructure: true
