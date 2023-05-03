@@ -11,8 +11,7 @@ interface_files=(
   internal/likes/repository.go
   internal/profile/service.go
   internal/profile/repository.go
-  internal/images/service.go
-  internal/images/repository.go
+  internal/images/client/client.go
 )
 
 echo "Generating mocks..."
