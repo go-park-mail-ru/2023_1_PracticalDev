@@ -30,7 +30,7 @@ func (serv *server) Authenticate(ctx context.Context, loginParams *proto.LoginPa
 func (serv *server) Register(ctx context.Context, user *proto.User) (*proto.LoginParams, error) {
 	err := serv.rep.Register(protomodels.NewUser(user))
 
-	return &proto.LoginParams{Email: user.GetUsername(), Password: user.GetHashedPassword()}, err
+	return &proto.LoginParams{Email: user.GetEmail(), Password: user.GetHashedPassword()}, err
 }
 
 func (serv *server) SetSession(ctx context.Context, params *proto.SessionSetParams) (*proto.Nothing, error) {
