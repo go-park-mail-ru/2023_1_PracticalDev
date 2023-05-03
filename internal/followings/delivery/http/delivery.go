@@ -13,14 +13,14 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv followings.Service, m *mw.HttpMetricsMiddleware) {
+func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv followings.Service, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger}
 
-	mux.POST("/users/:id/following", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.follow)), logger), logger), logger))
-	mux.DELETE("/users/:id/following", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.unfollow)), logger), logger), logger))
+	mux.POST("/users/:id/following", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.follow))), logger), logger), logger))
+	mux.DELETE("/users/:id/following", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.unfollow))), logger), logger), logger))
 
-	mux.GET("/users/:id/followers", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.getFollowers)), logger), logger), logger))
-	mux.GET("/users/:id/followees", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.getFollowees)), logger), logger), logger))
+	mux.GET("/users/:id/followers", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.getFollowers))), logger), logger), logger))
+	mux.GET("/users/:id/followees", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.getFollowees))), logger), logger), logger))
 }
 
 type delivery struct {

@@ -27,6 +27,7 @@ var (
 	ErrPinNotFound       = errors.New("pin not found")
 	ErrLikeNotFound      = errors.New("no such like")
 	ErrFollowingNotFound = errors.New("no such following")
+	ErrChatNotFound      = errors.New("chat not found")
 
 	// CSRF
 	ErrBadCsrfTokenCookie = errors.New("bad csrf token cookie")
@@ -37,12 +38,17 @@ var (
 	ErrWrongLoginOrPassword = errors.New("wrong login or password")
 	ErrUserAlreadyExists    = errors.New("user already exists")
 
+	// Invalid Param
 	ErrInvalidUserIdParam  = errors.New("invalid user id param")
 	ErrInvalidBoardIdParam = errors.New("invalid board id param")
 	ErrInvalidPinIdParam   = errors.New("invalid pin id param")
 	ErrInvalidPageParam    = errors.New("invalid page param")
 	ErrInvalidLimitParam   = errors.New("invalid limit param")
 	ErrInvalidPrivacy      = errors.New("invalid privacy")
+	ErrInvalidChatIDParam  = errors.New("invalid chat id param")
+
+	// WebSocket
+	ErrUpgradeToWebSocket = errors.New("failed to upgrade protocol to websocket")
 
 	ErrBadParams              = errors.New("bad params")
 	ErrBadRequest             = errors.New("bad request")
@@ -50,7 +56,7 @@ var (
 	ErrFileCopy               = errors.New("file copy error")
 	ErrParseForm              = errors.New("parse form error")
 	ErrParseJson              = errors.New("parse json error")
-	ErrSameUserId             = errors.New("same user id: user cannot follow himself")
+	ErrSameUserId             = errors.New("same user id")
 	ErrService                = errors.New("service error")
 	ErrCreateResponse         = errors.New("create response error")
 	ErrCreateCsrfToken        = errors.New("create csrf token error")
@@ -61,6 +67,7 @@ var (
 	ErrLikeAlreadyExists      = errors.New("like already exists")
 	ErrFollowingAlreadyExists = errors.New("following already exists")
 	ErrPinAlreadyAdded        = errors.New("pin already added")
+	ErrChatAlreadyExists      = errors.New("chat already exists")
 )
 
 type ErrRepositoryQuery struct {

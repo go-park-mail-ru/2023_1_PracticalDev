@@ -74,6 +74,25 @@ CREATE TABLE IF NOT EXISTS followings
     PRIMARY KEY (followee_id, follower_id)
 );
 
+CREATE TABLE IF NOT EXISTS chats
+(
+    id         serial    NOT NULL PRIMARY KEY,
+    user1_id   int       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    user2_id   int       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    created_at timestamp NOT NULL DEFAULT now(),
+    updated_at timestamp NOT NULL DEFAULT now(),
+    CONSTRAINT chats_user_pair UNIQUE (user1_id, user2_id)
+);
+
+CREATE TABLE IF NOT EXISTS messages
+(
+    id         serial    NOT NULL PRIMARY KEY,
+    author_id  int       NOT NULL REFERENCES users (id),
+    chat_id    int       NOT NULL REFERENCES chats (id) ON DELETE CASCADE,
+    text       text      NOT NULL,
+    created_at timestamp NOT NULL DEFAULT now()
+);
+
 -- Обработка создания лайка
 CREATE OR REPLACE FUNCTION on_pin_like() RETURNS TRIGGER AS
 $$

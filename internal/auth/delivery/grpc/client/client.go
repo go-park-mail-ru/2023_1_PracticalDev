@@ -118,5 +118,5 @@ func (client *client) Register(user *auth.RegisterParams) (models.User, auth.Ses
 		return models.User{}, auth.SessionParams{}, errors.Wrap(err, "Register")
 	}
 
-	return client.Authenticate(usr.GetEmail(), usr.GetPassword())
+	return client.Authenticate(usr.GetEmail(), user.Password)
 }

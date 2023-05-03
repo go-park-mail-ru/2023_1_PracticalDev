@@ -6,6 +6,7 @@ import (
 	"encoding/hex"
 	"fmt"
 	"github.com/pkg/errors"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -51,6 +52,7 @@ func (tk *HashToken) Check(s *SessionParams, inputToken string) (bool, error) {
 	}
 
 	if tokenExp < time.Now().Unix() {
+		log.Printf("token expired error: token_expired_time=%v, now=%v", tokenExp, time.Now().Unix())
 		return false, ErrTokenExpired
 	}
 

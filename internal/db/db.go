@@ -3,8 +3,6 @@ package db
 import (
 	"database/sql"
 	"fmt"
-	"time"
-
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	_ "github.com/lib/pq"
@@ -20,9 +18,6 @@ func New(logger log.Logger) (*sql.DB, error) {
 		logger.Error("Failed to create DB connection, ", err.Error())
 		return nil, err
 	}
-	db.SetMaxOpenConns(30)
-	db.SetMaxIdleConns(30)
-	db.SetConnMaxLifetime(10 * time.Minute)
 
 	err = db.Ping()
 	if err != nil {
