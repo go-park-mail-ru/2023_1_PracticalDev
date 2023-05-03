@@ -9,6 +9,7 @@ services:
       POSTGRES_DB: "${POSTGRES_DB}"
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+      POSTGRES_MAX_CONNECTIONS: 1000
     networks:
       - db-network
     deploy:
@@ -53,6 +54,8 @@ services:
       context: .
       dockerfile: ./cmd/images/Dockerfile
     container_name: images
+    volumes:
+      - ./.aws/credentials:/root/.aws/credentials
     env_file:
       - .env
     deploy:
@@ -60,7 +63,7 @@ services:
         condition: on-failure
     networks:
       - api-network
-    
+
   auth:
     build:
       context: .
@@ -105,7 +108,7 @@ services:
         condition: on-failure
   
   frontend:
-    build: 
+    build:
       context: https://github.com/frontend-park-mail-ru/2023_1_PracticalDev.git#main
       dockerfile: Dockerfile.prod
     container_name: frontend
@@ -160,16 +163,16 @@ services:
     volumes:
       - ./configs/:/etc/prometheus/
     depends_on:
-    - backend
-    - auth
-    - images
+      - backend
+      - auth
+      - images
 
   grafana:
     container_name: "grafana"
     image: grafana/grafana:9.5.1
     networks:
-        - api-network
-        - grafana-network
+      - api-network
+      - grafana-network
     volumes:
       - ./configs/grafana/data:/var/lib/grafana
       - ./configs/grafana/provisioning:/etc/grafana/provisioning
