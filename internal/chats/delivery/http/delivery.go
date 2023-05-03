@@ -3,20 +3,19 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+	"strconv"
+
+	ws "github.com/gorilla/websocket"
+	"github.com/julienschmidt/httprouter"
+	"github.com/pkg/errors"
+
 	pkgChats "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/chats"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
-	ws "github.com/gorilla/websocket"
-	"github.com/julienschmidt/httprouter"
-	"github.com/pkg/errors"
-	"net/http"
-	"strconv"
 )
-
-// UserID: Conn
-var connectionsByUserID = map[int][]*ws.Conn{}
 
 const (
 	chatsUrl = "/chats"
@@ -28,22 +27,25 @@ const (
 )
 
 type delivery struct {
-	serv     pkgChats.Service
-	log      log.Logger
-	upgrader ws.Upgrader
+	serv        pkgChats.Service
+	connManager *ConnectionManager
+	log         log.Logger
+	upgrader    ws.Upgrader
 }
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv pkgChats.Service) {
 	del := delivery{
-		serv,
-		logger,
-		ws.Upgrader{
+		serv:        serv,
+		connManager: NewConnectionManager(),
+		log:         logger,
+		upgrader: ws.Upgrader{
 			ReadBufferSize:  1024,
 			WriteBufferSize: 1024,
 			CheckOrigin: func(r *http.Request) bool {
 				return true
 			},
 		}}
+
 	// chats
 	mux.GET(chatsUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(csrf(del.listByUser))), logger), logger))
 	mux.GET(chatUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(csrf(del.get))), logger), logger))
@@ -171,24 +173,6 @@ func (del *delivery) get(w http.ResponseWriter, _ *http.Request, p httprouter.Pa
 	return nil
 }
 
-func (del *delivery) sendResponseToUser(response any, userID int) error {
-	conns, ok := connectionsByUserID[userID]
-	if ok {
-		for _, conn := range conns {
-			del.log.Debug(fmt.Sprintf("New response %v for sending to userID=%d, conn=%p:", response, userID, conn))
-			err := conn.WriteJSON(response)
-			if err != nil {
-				del.log.Error("sendResponseToUser: error: %v", err)
-				return err
-			}
-		}
-	} else {
-		del.log.Debug("There are no connections for userID=", userID)
-	}
-
-	return nil
-}
-
 func (del *delivery) sendNewChatToChatMembers(chat models.Chat) error {
 	del.log.Debug("New chat for sending:", chat)
 	newChat := newChatResponse{
@@ -198,11 +182,11 @@ func (del *delivery) sendNewChatToChatMembers(chat models.Chat) error {
 
 	// Необходимо разослать всем соединениям с User1ID и User2ID
 	// по веб-сокету сообщение о том, что был создан новый чат
-	err := del.sendResponseToUser(newChat, chat.User1ID)
+	err := del.connManager.Broadcast(newChat, chat.User1ID)
 	if err != nil {
 		return err
 	}
-	err = del.sendResponseToUser(newChat, chat.User2ID)
+	err = del.connManager.Broadcast(newChat, chat.User2ID)
 	if err != nil {
 		return err
 	}
@@ -220,11 +204,11 @@ func (del *delivery) sendMessageToChatMembers(message models.Message, user1ID, u
 
 	// Необходимо разослать всем соединениям с user1ID и user2ID
 	// по веб-сокету сообщение о том, что было создано новое сообщение
-	err := del.sendResponseToUser(newMessage, user1ID)
+	err := del.connManager.Broadcast(newMessage, user1ID)
 	if err != nil {
 		return err
 	}
-	err = del.sendResponseToUser(newMessage, user2ID)
+	err = del.connManager.Broadcast(newMessage, user2ID)
 	if err != nil {
 		return err
 	}
@@ -255,25 +239,16 @@ func (del *delivery) chatHandler(w http.ResponseWriter, r *http.Request, p httpr
 	del.log.Debug(fmt.Sprintf("Websocket connected: connection=%p, userID=%d", conn, userID))
 
 	// Добавляем соединение в список соединений пользователя
-	connectionsByUserID[userID] = append(connectionsByUserID[userID], conn)
+	del.connManager.AddConnection(userID, conn)
 
 	// Считываем сообщения пользователя
 	for {
 		del.log.Debug(fmt.Sprintf("Start reading new messages from connection %p...", conn))
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			del.log.Debug(fmt.Sprintf("error reading message from connection=%p: err=%v", conn, err))
+			del.log.Debug(fmt.Sprintf("Error reading message from connection=%p: err=%v", conn, err))
 			// соединение перестало работать (клиент мог отключиться), нужно удалить его из списка
-			conns := connectionsByUserID[userID]
-
-			var i int
-			for i = range conns {
-				if conns[i] == conn {
-					break
-				}
-			}
-			conns[i] = conns[len(conns)-1]
-			connectionsByUserID[userID] = conns[:len(conns)-1]
+			del.connManager.RemoveConnection(userID, conn)
 			del.log.Debug(fmt.Sprintf("Connection %p was deleted from connections list", conn))
 
 			return nil
@@ -332,6 +307,4 @@ func (del *delivery) chatHandler(w http.ResponseWriter, r *http.Request, p httpr
 			}
 		}()
 	}
-
-	return nil
 }
