@@ -54,8 +54,14 @@ metrics-test:
 
 .PHONY: deploy
 deploy:
-	docker compose -f prod/docker-compose.prod.yml up -d --build backend
+	cp docker-compose.yml docker-compose.yml.old
+	cp prod/docker-compose.prod.yml docker-compose.yml
+	docker compose -f docker-compose.yml up -d --build backend
+	cp docker-compose.yml.old docker-compose.yml
 
 .PHONY: metrics
 metrics:
-	docker compose -f prod/docker-compose.prod.yml up -d node_exporter prometheus grafana
+	cp docker-compose.yml docker-compose.yml.old
+	cp prod/docker-compose.prod.yml docker-compose.yml
+	docker compose -f docker-compose.yml up -d node_exporter prometheus grafana
+	cp docker-compose.yml.old docker-compose.yml

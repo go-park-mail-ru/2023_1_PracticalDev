@@ -169,14 +169,13 @@ services:
     - backend
     - auth
     - images
-    ports:
-      - "9090:9090"
 
   grafana:
     container_name: "grafana"
     image: grafana/grafana:9.5.1
     networks:
         - api-network
+        - grafana-network
     volumes:
       - ./configs/grafana/data:/var/lib/grafana
       - ./configs/grafana/provisioning:/etc/grafana/provisioning
@@ -187,13 +186,14 @@ services:
       GF_INSTALL_PLUGINS: 'grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel'
     ports:
       - "3000:3000"
-    depends_on:
-      - prometheus
 
 networks:
   nginx-network:
     driver: bridge
     name: nginx_network
+  grafana-network:
+    driver: bridge
+    name: grafana_network
   db-network:
     driver: bridge
     name: db_network

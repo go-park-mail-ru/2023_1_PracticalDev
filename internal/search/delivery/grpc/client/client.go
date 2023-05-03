@@ -17,9 +17,10 @@ type client struct {
 	pinServ pkgPins.Service
 }
 
-func NewSearchClient(con *grpc.ClientConn) search.Service {
+func NewSearchClient(con *grpc.ClientConn, pinServ pkgPins.Service) search.Service {
 	return &client{
 		searchClient: proto.NewSearchEngineClient(con),
+		pinServ:      pinServ,
 	}
 }
 

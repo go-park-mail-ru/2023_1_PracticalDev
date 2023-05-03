@@ -96,7 +96,6 @@ func main() {
 		logger.Error("cant connect to search service")
 		os.Exit(1)
 	}
-	searchServ := searchService.NewSearchClient(searchConn)
 
 	mt := metrics.NewPrometheusMetrics("pickpin")
 	err = mt.SetupMetrics()
@@ -118,6 +117,8 @@ func main() {
 
 	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
 	pinsServ := pinsService.NewService(pinsRepo)
+
+	searchServ := searchService.NewSearchClient(searchConn, pinsServ)
 
 	boardsRepo := boardsRepository.NewPostgresRepository(db, logger)
 	boardsServ := boardsService.NewBoardsService(boardsRepo, pinsServ)
