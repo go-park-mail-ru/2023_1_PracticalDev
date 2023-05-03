@@ -6,7 +6,7 @@ import (
 
 	ws "github.com/gorilla/websocket"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 type ConnectionManager struct {
