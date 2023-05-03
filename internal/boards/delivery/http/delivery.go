@@ -14,7 +14,7 @@ import (
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, access mw.AccessChecker, serv pkgBoards.Service, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger}
-	
+
 	mux.POST("/boards", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.create)), logger), logger), logger))
 	mux.GET("/boards", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.list)), logger), logger), logger))
 	mux.GET("/boards/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(del.get)), logger), logger), logger))

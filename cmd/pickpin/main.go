@@ -38,9 +38,8 @@ import (
 	followingsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings/repository/postgres"
 	followingsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings/service"
 
+	searchService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/delivery/grpc/client"
 	searchDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/delivery/http"
-	searchRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/repository/postgres"
-	searchService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/service"
 
 	pkgDb "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 
@@ -89,6 +88,16 @@ func main() {
 	}
 	authServ := authService.NewAuthenficatorClient(authConn)
 
+	searchConn, err := grpc.Dial(
+		"search:8089",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		logger.Error("cant connect to search service")
+		os.Exit(1)
+	}
+	searchServ := searchService.NewSearchClient(searchConn)
+
 	mt := metrics.NewPrometheusMetrics("pickpin")
 	err = mt.SetupMetrics()
 	metricsMiddleware := middleware.NewHttpMetricsMiddleware(mt)
@@ -122,9 +131,6 @@ func main() {
 
 	followingsRepo := followingsRepository.NewRepository(db, logger)
 	followingsServ := followingsService.NewService(followingsRepo)
-
-	searchRepo := searchRepository.NewRepository(db, logger)
-	searchServ := searchService.NewService(searchRepo, pinsServ)
 
 	authDelivery.RegisterHandlers(mux, logger, authServ, token, metricsMiddleware)
 	likesDelivery.RegisterHandlers(mux, logger, authorizer, likesServ, metricsMiddleware)
