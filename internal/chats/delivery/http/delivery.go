@@ -180,8 +180,6 @@ func (del *delivery) sendNewChatToChatMembers(chat models.Chat) error {
 		Chat: chat,
 	}
 
-	// Необходимо разослать всем соединениям с User1ID и User2ID
-	// по веб-сокету сообщение о том, что был создан новый чат
 	err := del.connManager.Broadcast(newChat, chat.User1ID)
 	if err != nil {
 		return err
@@ -202,8 +200,6 @@ func (del *delivery) sendMessageToChatMembers(message models.Message, user1ID, u
 		Message: message,
 	}
 
-	// Необходимо разослать всем соединениям с user1ID и user2ID
-	// по веб-сокету сообщение о том, что было создано новое сообщение
 	err := del.connManager.Broadcast(newMessage, user1ID)
 	if err != nil {
 		return err
@@ -242,27 +238,31 @@ func (del *delivery) chatHandler(w http.ResponseWriter, r *http.Request, p httpr
 }
 
 func (del *delivery) handleConnection(conn *ws.Conn, userID int) error {
-	// Добавляем соединение в список соединений пользователя
 	del.connManager.AddConnection(userID, conn)
 
-	// Считываем сообщения пользователя
 	for {
 		del.log.Debug(fmt.Sprintf("Start reading new messages from connection %p...", conn))
 		_, message, err := conn.ReadMessage()
 		if err != nil {
 			del.log.Debug(fmt.Sprintf("Error reading message from connection=%p: err=%v", conn, err))
-			// соединение перестало работать (клиент мог отключиться), нужно удалить его из списка
 			del.connManager.RemoveConnection(userID, conn)
-			del.log.Debug(fmt.Sprintf("Connection %p was deleted from connections list", conn))
-
 			return nil
 		}
 
 		msgReq := msgRequest{}
 		err = json.Unmarshal(message, &msgReq)
 		if err != nil {
-			del.log.Error(err)
-			return err
+			del.log.Debug(fmt.Sprintf("Error unmarshal message from connection=%p: err=%v", conn, err))
+			errResp := errorResponse{
+				Type:    "error",
+				ErrMsg:  "invalid json",
+				ErrCode: 1,
+			}
+			err = conn.WriteJSON(errResp)
+			if err != nil {
+				del.connManager.RemoveConnection(userID, conn)
+				return nil
+			}
 		}
 		del.log.Debug(fmt.Sprintf("Got message (conn=%p; userID=%d): receiverID=%d; text=%s",
 			conn, userID, msgReq.ReceiverID, msgReq.Text))
@@ -272,7 +272,6 @@ func (del *delivery) handleConnection(conn *ws.Conn, userID int) error {
 		if err != nil {
 			if errors.Is(err, pkgErrors.ErrChatNotFound) {
 				del.log.Debug(fmt.Sprintf("Not found chat for (user1ID=%d; user2ID=%d)", userID, msgReq.ReceiverID))
-				// чата нет, нужно создать чат
 				params := pkgChats.CreateParams{User1ID: userID, User2ID: msgReq.ReceiverID}
 				createdChat, err := del.serv.Create(&params)
 				if err != nil {
@@ -285,25 +284,19 @@ func (del *delivery) handleConnection(conn *ws.Conn, userID int) error {
 			}
 		}
 
-		// 1. Сохранить сообщение в БД
 		params := pkgChats.SendMessageParams{AuthorID: userID, ChatID: chat.ID, Text: msgReq.Text}
 		createdMessage, err := del.serv.SendMessage(&params)
 		if err != nil {
 			return err
 		}
 
-		// 2. Рассылаем новый чат только при успешной записи первого сообщения в БД
 		if sendNewChat {
-			// Разослать всем соединениям, пользователи которых состоят в
-			// новом чате, сообщение о том, что был создан чат
 			err = del.sendNewChatToChatMembers(chat)
 			if err != nil {
 				return err
 			}
 		}
 
-		// 3. Разослать всем соединениям, пользователи которых состоят в данном чате,
-		// созданное сообщение
 		go func() {
 			err := del.sendMessageToChatMembers(*createdMessage, chat.User1ID, chat.User2ID)
 			if err != nil {

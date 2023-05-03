@@ -57,3 +57,9 @@ type newMessageResponse struct {
 	Type    string         `json:"type"`
 	Message models.Message `json:"message"`
 }
+
+type errorResponse struct {
+	Type    string `json:"type"`
+	ErrMsg  string `json:"err_msg"`
+	ErrCode int    `json:"err_code"`
+}

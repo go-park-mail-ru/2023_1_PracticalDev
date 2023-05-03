@@ -40,6 +40,7 @@ func (cm *ConnectionManager) RemoveConnection(userID int, conn *ws.Conn) {
 	conns[idx] = conns[len(conns)-1]
 	cm.connections[userID] = conns[:len(conns)-1]
 	cm.mu.Unlock()
+	cm.log.Debug(fmt.Sprintf("Connection %p was deleted from connections list", conn))
 }
 
 // Broadcast отправляет сообщение всем соединениям пользователя
