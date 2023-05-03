@@ -172,11 +172,11 @@ func (del *delivery) get(w http.ResponseWriter, _ *http.Request, p httprouter.Pa
 }
 
 func (del *delivery) sendResponseToUser(response any, userID int) error {
-	del.log.Debug(fmt.Sprintf("New response %v for sending to userID=%d:", response, userID))
 	conns, ok := connectionsByUserID[userID]
 	if ok {
-		for _, con := range conns {
-			err := con.WriteJSON(response)
+		for _, conn := range conns {
+			del.log.Debug(fmt.Sprintf("New response %v for sending to userID=%d, conn=%p:", response, userID, conn))
+			err := conn.WriteJSON(response)
 			if err != nil {
 				del.log.Error("sendResponseToUser: error: %v", err)
 				return err
@@ -262,8 +262,21 @@ func (del *delivery) chatHandler(w http.ResponseWriter, r *http.Request, p httpr
 		del.log.Debug(fmt.Sprintf("Start reading new messages from connection %p...", conn))
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			del.log.Error("error reading message from websocket: %v", err)
-			return err
+			del.log.Debug(fmt.Sprintf("error reading message from connection=%p: err=%v", conn, err))
+			// соединение перестало работать (клиент мог отключиться), нужно удалить его из списка
+			conns := connectionsByUserID[userID]
+
+			var i int
+			for i = range conns {
+				if conns[i] == conn {
+					break
+				}
+			}
+			conns[i] = conns[len(conns)-1]
+			connectionsByUserID[userID] = conns[:len(conns)-1]
+			del.log.Debug(fmt.Sprintf("Connection %p was deleted from connections list", conn))
+
+			return nil
 		}
 
 		msgReq := msgRequest{}
