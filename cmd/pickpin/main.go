@@ -140,7 +140,7 @@ func main() {
 
 	chatsRepo := chatsRepository.NewRepository(db, logger)
 	chatsServ := chatsService.NewService(chatsRepo)
-	
+
 	authDelivery.RegisterHandlers(mux, logger, authServ, token, metricsMiddleware)
 	likesDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, likesServ, metricsMiddleware)
 	usersDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, usersServ, metricsMiddleware)
