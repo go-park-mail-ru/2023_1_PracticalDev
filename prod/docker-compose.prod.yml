@@ -53,8 +53,6 @@ services:
       context: .
       dockerfile: ./cmd/images/Dockerfile
     container_name: images
-    ports:
-      - 8088:8088
     env_file:
       - .env
     deploy:
@@ -68,8 +66,6 @@ services:
       context: .
       dockerfile: ./cmd/auth/Dockerfile
     container_name: auth
-    ports:
-      - 8087:8087
     env_file:
       - .env
     deploy:
@@ -85,8 +81,6 @@ services:
       context: .
       dockerfile: ./cmd/search/Dockerfile
     container_name: search
-    ports:
-      - 8089:8089
     env_file:
       - .env
     deploy:
