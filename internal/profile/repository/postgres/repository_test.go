@@ -10,9 +10,9 @@ import (
 	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/mocks"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 )
 
@@ -82,7 +82,7 @@ func TestGetProfileByUser(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -176,7 +176,7 @@ func TestFullUpdate(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -278,7 +278,7 @@ func TestPartialUpdate(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()

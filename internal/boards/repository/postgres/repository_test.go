@@ -11,9 +11,9 @@ import (
 	"github.com/pkg/errors"
 
 	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 )
 
 func TestCreate(t *testing.T) {
@@ -80,7 +80,7 @@ func TestCreate(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 			repo := NewPostgresRepository(db, logger)
 
 			f := fields{mock: mock}
@@ -179,7 +179,7 @@ func TestList(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 			repo := NewPostgresRepository(db, logger)
 
 			f := fields{mock: mock}
@@ -267,7 +267,7 @@ func TestGet(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 			repo := NewPostgresRepository(db, logger)
 
 			f := fields{mock: mock}
@@ -362,7 +362,7 @@ func TestFullUpdate(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 			repo := NewPostgresRepository(db, logger)
 
 			f := fields{mock: mock}
@@ -463,7 +463,7 @@ func TestPartialUpdate(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 			repo := NewPostgresRepository(db, logger)
 
 			f := fields{mock: mock}
@@ -533,7 +533,7 @@ func TestDelete(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 			repo := NewPostgresRepository(db, logger)
 
 			f := fields{mock: mock}
@@ -628,7 +628,7 @@ func TestPinsList(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -710,7 +710,7 @@ func TestCheckWriteAccess(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 			repo := NewPostgresRepository(db, logger)
 
 			f := fields{mock: mock}
@@ -788,7 +788,7 @@ func TestCheckReadAccess(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := log.New()
+			logger := stdlogger.New()
 			repo := NewPostgresRepository(db, logger)
 
 			f := fields{mock: mock}

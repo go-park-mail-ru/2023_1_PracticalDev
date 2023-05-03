@@ -15,11 +15,10 @@ var (
 	ErrImageService = errors.New("image service error")
 
 	// Profile
-	ErrTooShortUsername      = errors.New("username must be at least 4 characters")
-	ErrTooLongUsername       = errors.New("username must be no more than 30 characters")
-	ErrEmptyName             = errors.New("name must not be empty")
-	ErrTooLongName           = errors.New("name must be no more than 60 characters")
-	ErrUsernameAlreadyExists = errors.New("user with such username already exists")
+	ErrTooShortUsername = errors.New("username must be at least 4 characters")
+	ErrTooLongUsername  = errors.New("username must be no more than 30 characters")
+	ErrEmptyName        = errors.New("name must not be empty")
+	ErrTooLongName      = errors.New("name must be no more than 60 characters")
 
 	// Not found
 	ErrUserNotFound      = errors.New("user not found")

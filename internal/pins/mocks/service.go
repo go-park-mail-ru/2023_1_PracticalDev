@@ -110,10 +110,10 @@ func (mr *MockServiceMockRecorder) FullUpdate(params interface{}) *gomock.Call {
 }
 
 // Get mocks base method.
-func (m *MockService) Get(id, userId int) (pins.Pin, error) {
+func (m *MockService) Get(id, userId int) (models.Pin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "Get", id, userId)
-	ret0, _ := ret[0].(pins.Pin)
+	ret0, _ := ret[0].(models.Pin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -125,10 +125,10 @@ func (mr *MockServiceMockRecorder) Get(id, userId interface{}) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockService) List(userId, page, limit int) ([]pins.Pin, error) {
+func (m *MockService) List(userId, page, limit int) ([]models.Pin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "List", userId, page, limit)
-	ret0, _ := ret[0].([]pins.Pin)
+	ret0, _ := ret[0].([]models.Pin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -140,10 +140,10 @@ func (mr *MockServiceMockRecorder) List(userId, page, limit interface{}) *gomock
 }
 
 // ListByAuthor mocks base method.
-func (m *MockService) ListByAuthor(authorId, userId, page, limit int) ([]pins.Pin, error) {
+func (m *MockService) ListByAuthor(authorId, userId, page, limit int) ([]models.Pin, error) {
 	m.ctrl.T.Helper()
 	ret := m.ctrl.Call(m, "ListByAuthor", authorId, userId, page, limit)
-	ret0, _ := ret[0].([]pins.Pin)
+	ret0, _ := ret[0].([]models.Pin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
@@ -152,4 +152,18 @@ func (m *MockService) ListByAuthor(authorId, userId, page, limit int) ([]pins.Pi
 func (mr *MockServiceMockRecorder) ListByAuthor(authorId, userId, page, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByAuthor", reflect.TypeOf((*MockService)(nil).ListByAuthor), authorId, userId, page, limit)
+}
+
+// SetLikedField mocks base method.
+func (m *MockService) SetLikedField(pin *models.Pin, userId int) error {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "SetLikedField", pin, userId)
+	ret0, _ := ret[0].(error)
+	return ret0
+}
+
+// SetLikedField indicates an expected call of SetLikedField.
+func (mr *MockServiceMockRecorder) SetLikedField(pin, userId interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "SetLikedField", reflect.TypeOf((*MockService)(nil).SetLikedField), pin, userId)
 }

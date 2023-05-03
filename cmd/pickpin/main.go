@@ -2,6 +2,7 @@ package main
 
 import (
 	"context"
+	"log"
 	"net/http"
 	"os"
 
@@ -38,18 +39,31 @@ import (
 	followingsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings/repository/postgres"
 	followingsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings/service"
 
+	searchDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/delivery/http"
+	searchRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/repository/postgres"
+	searchService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/service"
+
 	pkgDb "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/zap"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/redis"
 )
 
 func main() {
-	logger := log.New()
+	logger, err := zaplogger.New()
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer func() {
+		err = logger.Sync()
+		if err != nil {
+			log.Print(err)
+		}
+	}()
 
 	db, err := pkgDb.New(logger)
 	if err != nil {
@@ -72,10 +86,6 @@ func main() {
 	mux := httprouter.New()
 	mux.GlobalOPTIONS = middleware.HandlerFuncLogger(middleware.OptionsHandler, logger)
 
-	boardsRepo := boardsRepository.NewPostgresRepository(db, logger)
-	boardsServ := boardsService.NewBoardsService(boardsRepo)
-	boardsAccessChecker := middleware.NewAccessChecker(boardsServ)
-
 	likesRepo := likesRepository.NewRepository(db, logger)
 	likesServ := likesService.NewService(likesRepo)
 
@@ -87,6 +97,10 @@ func main() {
 	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
 	pinsServ := pinsService.NewService(pinsRepo)
 
+	boardsRepo := boardsRepository.NewPostgresRepository(db, logger)
+	boardsServ := boardsService.NewBoardsService(boardsRepo, pinsServ)
+	boardsAccessChecker := middleware.NewAccessChecker(boardsServ)
+
 	usersRepo := usersRepository.NewRepository(db, logger)
 	usersServ := usersService.NewService(usersRepo)
 
@@ -96,6 +110,9 @@ func main() {
 	followingsRepo := followingsRepository.NewRepository(db, logger)
 	followingsServ := followingsService.NewService(followingsRepo)
 
+	searchRepo := searchRepository.NewRepository(db, logger)
+	searchServ := searchService.NewService(searchRepo, pinsServ)
+
 	authDelivery.RegisterHandlers(mux, logger, authServ, token)
 	likesDelivery.RegisterHandlers(mux, logger, authorizer, likesServ)
 	usersDelivery.RegisterHandlers(mux, logger, authorizer, usersServ)
@@ -104,6 +121,7 @@ func main() {
 	boardsDelivery.RegisterHandlers(mux, logger, authorizer, boardsAccessChecker, boardsServ)
 	pinsDelivery.RegisterHandlers(mux, logger, authorizer, middleware.NewAccessChecker(pinsServ), pinsServ)
 	ping.RegisterHandlers(mux, logger)
+	searchDelivery.RegisterHandlers(mux, logger, authorizer, searchServ)
 
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",

@@ -6,9 +6,9 @@ import (
 	"github.com/pkg/errors"
 
 	pkgLikes "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 type repository struct {

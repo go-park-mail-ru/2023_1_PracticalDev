@@ -17,48 +17,50 @@ func (serv *service) Create(params *pkgPins.CreateParams) (models.Pin, error) {
 	return serv.rep.Create(params)
 }
 
-func (serv *service) Get(id, userId int) (pkgPins.Pin, error) {
+func (serv *service) Get(id, userId int) (models.Pin, error) {
 	pin, err := serv.rep.Get(id)
 	if err != nil {
-		return pkgPins.Pin{}, err
+		return models.Pin{}, err
 	}
-	likedPin, err := serv.addLikedField(&pin, userId)
+
+	err = serv.SetLikedField(&pin, userId)
 	if err != nil {
-		return pkgPins.Pin{}, err
+		return models.Pin{}, err
 	}
-	return likedPin, nil
+
+	return pin, nil
 }
 
-func (serv *service) ListByAuthor(authorId, userId, page, limit int) ([]pkgPins.Pin, error) {
+func (serv *service) ListByAuthor(authorId, userId, page, limit int) ([]models.Pin, error) {
 	pins, err := serv.rep.ListByAuthor(authorId, page, limit)
 	if err != nil {
-		return []pkgPins.Pin{}, err
+		return []models.Pin{}, err
 	}
-	likedPins := []pkgPins.Pin{}
-	for _, pin := range pins {
-		likedPin, err := serv.addLikedField(&pin, userId)
+
+	for i := range pins {
+		err = serv.SetLikedField(&pins[i], userId)
 		if err != nil {
-			return []pkgPins.Pin{}, err
+			return []models.Pin{}, err
 		}
-		likedPins = append(likedPins, likedPin)
 	}
-	return likedPins, nil
+
+	return pins, nil
 }
 
-func (serv *service) List(userId, page, limit int) ([]pkgPins.Pin, error) {
+func (serv *service) List(userId, page, limit int) ([]models.Pin, error) {
 	pins, err := serv.rep.List(page, limit)
 	if err != nil {
-		return []pkgPins.Pin{}, err
+		return []models.Pin{}, err
 	}
-	likedPins := []pkgPins.Pin{}
-	for _, pin := range pins {
-		likedPin, err := serv.addLikedField(&pin, userId)
+
+	for i := range pins {
+		err = serv.SetLikedField(&pins[i], userId)
 		if err != nil {
-			return []pkgPins.Pin{}, err
+			return []models.Pin{}, err
 		}
-		likedPins = append(likedPins, likedPin)
 	}
-	return likedPins, nil
+
+	return pins, nil
 }
 
 func (serv *service) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin, error) {
@@ -77,18 +79,11 @@ func (serv *service) CheckReadAccess(userId, pinId string) (bool, error) {
 	return serv.rep.CheckReadAccess(userId, pinId)
 }
 
-func (serv *service) addLikedField(pin *models.Pin, userId int) (pkgPins.Pin, error) {
+func (serv *service) SetLikedField(pin *models.Pin, userId int) error {
 	liked, err := serv.rep.IsLikedByUser(pin.Id, userId)
 	if err != nil {
-		return pkgPins.Pin{}, err
+		return err
 	}
-	return pkgPins.Pin{
-		Id:          pin.Id,
-		Title:       pin.Title,
-		Description: pin.Description,
-		MediaSource: pin.MediaSource,
-		NumLikes:    pin.NumLikes,
-		Liked:       liked,
-		Author:      pin.Author,
-	}, nil
+	pin.Liked = liked
+	return nil
 }

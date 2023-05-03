@@ -11,11 +11,10 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/mocks"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
 )
 
@@ -89,7 +88,7 @@ func TestCreate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -129,7 +128,7 @@ func TestList(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().List(12, 1, 30).Return([]pins.Pin{
+				f.serv.EXPECT().List(12, 1, 30).Return([]models.Pin{
 					{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
 					{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 3},
 					{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 10},
@@ -145,7 +144,7 @@ func TestList(t *testing.T) {
 		},
 		"no pins": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().List(12, 1, 30).Return([]pins.Pin{}, nil)
+				f.serv.EXPECT().List(12, 1, 30).Return([]models.Pin{}, nil)
 			},
 			params:   []httprouter.Param{{Key: "user-id", Value: "12"}},
 			response: `{"pins":[]}`,
@@ -166,7 +165,7 @@ func TestList(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -201,7 +200,7 @@ func TestListByAuthor(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().ListByAuthor(12, 5, 1, 30).Return([]pins.Pin{
+				f.serv.EXPECT().ListByAuthor(12, 5, 1, 30).Return([]models.Pin{
 					{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
 					{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
 					{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
@@ -218,7 +217,7 @@ func TestListByAuthor(t *testing.T) {
 		},
 		"no pins": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().ListByAuthor(12, 5, 1, 30).Return([]pins.Pin{}, nil)
+				f.serv.EXPECT().ListByAuthor(12, 5, 1, 30).Return([]models.Pin{}, nil)
 			},
 			params: []httprouter.Param{
 				{Key: "page", Value: "1"},
@@ -244,7 +243,7 @@ func TestListByAuthor(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -279,7 +278,7 @@ func TestGet(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Get(3, 12).Return(pins.Pin{
+				f.serv.EXPECT().Get(3, 12).Return(models.Pin{
 					Id:          3,
 					Title:       "t1",
 					MediaSource: "ms_url1",
@@ -305,7 +304,7 @@ func TestGet(t *testing.T) {
 		},
 		"pin not found": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Get(3, 12).Return(pins.Pin{}, pkgErrors.ErrPinNotFound)
+				f.serv.EXPECT().Get(3, 12).Return(models.Pin{}, pkgErrors.ErrPinNotFound)
 			},
 			params: []httprouter.Param{
 				{Key: "id", Value: "3"},
@@ -316,7 +315,7 @@ func TestGet(t *testing.T) {
 		},
 		"db error": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().Get(3, 12).Return(pins.Pin{}, pkgErrors.ErrDb)
+				f.serv.EXPECT().Get(3, 12).Return(models.Pin{}, pkgErrors.ErrDb)
 			},
 			params: []httprouter.Param{
 				{Key: "id", Value: "3"},
@@ -340,7 +339,7 @@ func TestGet(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -417,7 +416,7 @@ func TestFullUpdate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -500,7 +499,7 @@ func TestDelete(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,

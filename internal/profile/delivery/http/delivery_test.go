@@ -11,8 +11,8 @@ import (
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
@@ -81,7 +81,7 @@ func TestGetProfileByUser(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -184,7 +184,7 @@ func TestFullUpdate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -271,7 +271,7 @@ func TestPartialUpdate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := log.New()
+			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,

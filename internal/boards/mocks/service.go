@@ -169,18 +169,18 @@ func (mr *MockServiceMockRecorder) PartialUpdate(params interface{}) *gomock.Cal
 }
 
 // PinsList mocks base method.
-func (m *MockService) PinsList(boardId, page, limit int) ([]models.Pin, error) {
+func (m *MockService) PinsList(userId, boardId, page, limit int) ([]models.Pin, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "PinsList", boardId, page, limit)
+	ret := m.ctrl.Call(m, "PinsList", userId, boardId, page, limit)
 	ret0, _ := ret[0].([]models.Pin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // PinsList indicates an expected call of PinsList.
-func (mr *MockServiceMockRecorder) PinsList(boardId, page, limit interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) PinsList(userId, boardId, page, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PinsList", reflect.TypeOf((*MockService)(nil).PinsList), boardId, page, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "PinsList", reflect.TypeOf((*MockService)(nil).PinsList), userId, boardId, page, limit)
 }
 
 // RemovePin mocks base method.

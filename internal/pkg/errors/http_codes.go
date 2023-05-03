@@ -29,7 +29,7 @@ var httpCodes = map[error]int{
 	ErrSameUserId:          http.StatusBadRequest,
 
 	// Auth
-	ErrWrongLoginOrPassword: http.StatusBadRequest,
+	ErrWrongLoginOrPassword: http.StatusNotFound,
 
 	// Not Found
 	ErrUserNotFound:    http.StatusNotFound,
@@ -38,11 +38,10 @@ var httpCodes = map[error]int{
 	ErrPinNotFound:     http.StatusNotFound,
 
 	// Profile
-	ErrTooShortUsername:      http.StatusBadRequest,
-	ErrTooLongUsername:       http.StatusBadRequest,
-	ErrEmptyName:             http.StatusBadRequest,
-	ErrTooLongName:           http.StatusBadRequest,
-	ErrUsernameAlreadyExists: http.StatusBadRequest,
+	ErrTooShortUsername: http.StatusBadRequest,
+	ErrTooLongUsername:  http.StatusBadRequest,
+	ErrEmptyName:        http.StatusBadRequest,
+	ErrTooLongName:      http.StatusBadRequest,
 
 	ErrUnauthorized:           http.StatusUnauthorized,
 	ErrNoContent:              http.StatusNoContent,

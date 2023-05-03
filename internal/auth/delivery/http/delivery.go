@@ -10,9 +10,9 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv auth.Service, token *tokens.HashToken) {
@@ -164,8 +164,17 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 
 	cookie := createSessionCookie(sessionParams)
 	http.SetCookie(w, cookie)
-	w.Header().Set("Content-Type", "application/json")
 
+	token, err := del.token.Create(&tokens.SessionParams{Token: sessionParams.Token}, time.Now().Add(sessionParams.LivingTime).Unix())
+	if err != nil {
+		del.log.Error("csrf token creation error:", err)
+		return pkgErrors.ErrCreateCsrfToken
+	}
+
+	csrfCookie := createCsrfTokenCookie(token)
+	http.SetCookie(w, csrfCookie)
+
+	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	if err = encoder.Encode(user); err != nil {
 		return pkgErrors.ErrCreateResponse

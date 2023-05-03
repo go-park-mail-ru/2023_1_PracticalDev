@@ -10,6 +10,7 @@ import (
 	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pinsMock "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/mocks"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
@@ -59,8 +60,7 @@ func TestCreate(t *testing.T) {
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
-
-			serv := NewBoardsService(f.repo)
+			serv := NewBoardsService(f.repo, pinsMock.NewMockService(ctrl))
 
 			board, err := serv.Create(&test.params)
 			if !errors.Is(err, test.err) {
@@ -125,7 +125,7 @@ func TestList(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			serv := NewBoardsService(f.repo)
+			serv := NewBoardsService(f.repo, pinsMock.NewMockService(ctrl))
 
 			boards, err := serv.List(test.userId)
 			if !errors.Is(err, test.err) {
@@ -202,7 +202,7 @@ func TestGet(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			serv := NewBoardsService(f.repo)
+			serv := NewBoardsService(f.repo, pinsMock.NewMockService(ctrl))
 
 			board, err := serv.Get(test.id)
 			if !errors.Is(err, test.err) {
@@ -262,7 +262,7 @@ func TestFullUpdate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			serv := NewBoardsService(f.repo)
+			serv := NewBoardsService(f.repo, pinsMock.NewMockService(ctrl))
 
 			board, err := serv.FullUpdate(&test.params)
 			if !errors.Is(err, test.err) {
@@ -333,7 +333,7 @@ func TestPartialUpdate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			serv := NewBoardsService(f.repo)
+			serv := NewBoardsService(f.repo, pinsMock.NewMockService(ctrl))
 
 			board, err := serv.PartialUpdate(&test.params)
 			if !errors.Is(err, test.err) {
@@ -387,7 +387,7 @@ func TestDelete(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			serv := NewBoardsService(f.repo)
+			serv := NewBoardsService(f.repo, pinsMock.NewMockService(ctrl))
 
 			err := serv.Delete(test.id)
 			if !errors.Is(err, test.err) {
@@ -399,7 +399,8 @@ func TestDelete(t *testing.T) {
 
 func TestPinsList(t *testing.T) {
 	type fields struct {
-		repo *mocks.MockRepository
+		repo     *mocks.MockRepository
+		pinsServ *pinsMock.MockService
 	}
 
 	type testCase struct {
@@ -407,6 +408,7 @@ func TestPinsList(t *testing.T) {
 		page    int
 		limit   int
 		boardId int
+		userId  int
 		pins    []models.Pin
 		err     error
 	}
@@ -414,15 +416,19 @@ func TestPinsList(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().PinsList(3, 1, 30).Return([]models.Pin{
-					{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
-					{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
-					{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
-				}, nil)
+				gomock.InOrder(
+					f.repo.EXPECT().PinsList(3, 1, 30).Return([]models.Pin{
+						{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
+						{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
+						{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
+					}, nil),
+					f.pinsServ.EXPECT().SetLikedField(gomock.Any(), 10).Return(nil).Times(3),
+				)
 			},
 			page:    1,
 			limit:   30,
 			boardId: 3,
+			userId:  10,
 			pins: []models.Pin{
 				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
 				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
@@ -435,6 +441,7 @@ func TestPinsList(t *testing.T) {
 				f.repo.EXPECT().PinsList(3, 1, 30).Return([]models.Pin{}, nil)
 			},
 			boardId: 3,
+			userId:  10,
 			page:    1,
 			limit:   30,
 			pins:    []models.Pin{},
@@ -450,14 +457,14 @@ func TestPinsList(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			f := fields{repo: mocks.NewMockRepository(ctrl), pinsServ: pinsMock.NewMockService(ctrl)}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewBoardsService(f.repo)
+			serv := NewBoardsService(f.repo, f.pinsServ)
 
-			pins, err := serv.PinsList(test.boardId, test.page, test.limit)
+			pins, err := serv.PinsList(test.userId, test.boardId, test.page, test.limit)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
@@ -515,7 +522,7 @@ func TestCheckWriteAccess(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			serv := NewBoardsService(f.repo)
+			serv := NewBoardsService(f.repo, pinsMock.NewMockService(ctrl))
 
 			access, err := serv.CheckWriteAccess(test.userId, test.boardId)
 			if !errors.Is(err, test.err) {
@@ -575,7 +582,7 @@ func TestCheckReadAccess(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			serv := NewBoardsService(f.repo)
+			serv := NewBoardsService(f.repo, pinsMock.NewMockService(ctrl))
 
 			access, err := serv.CheckReadAccess(test.userId, test.boardId)
 			if !errors.Is(err, test.err) {

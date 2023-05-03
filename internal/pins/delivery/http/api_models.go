@@ -2,7 +2,6 @@ package http
 
 import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/xss"
 )
 
@@ -26,10 +25,10 @@ func newCreateResponse(pin *models.Pin) *createResponse {
 }
 
 type listResponse struct {
-	Pins []pkgPins.Pin `json:"pins"`
+	Pins []models.Pin `json:"pins"`
 }
 
-func newListResponse(pins []pkgPins.Pin) *listResponse {
+func newListResponse(pins []models.Pin) *listResponse {
 	for i := range pins {
 		pins[i].Title = xss.Sanitize(pins[i].Title)
 		pins[i].Description = xss.Sanitize(pins[i].Description)
@@ -50,7 +49,7 @@ type getResponse struct {
 	Author      int    `json:"author_id"`
 }
 
-func newGetResponse(pin *pkgPins.Pin) *getResponse {
+func newGetResponse(pin *models.Pin) *getResponse {
 	return &getResponse{
 		Id:          pin.Id,
 		Title:       xss.Sanitize(pin.Title),

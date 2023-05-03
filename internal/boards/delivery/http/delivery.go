@@ -6,9 +6,9 @@ import (
 	"strconv"
 
 	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/log"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/julienschmidt/httprouter"
 )
 
@@ -17,13 +17,13 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.A
 
 	mux.POST("/boards", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.create)), logger), logger))
 	mux.GET("/boards", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.list)), logger), logger))
-	mux.GET("/boards/:id", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(access.ReadChecker(del.get))), logger), logger))
+	mux.GET("/boards/:id", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(del.get)), logger), logger))
 	mux.PUT("/boards/:id", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(access.WriteChecker(del.fullUpdate))), logger), logger))
 	mux.PATCH("/boards/:id", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(access.WriteChecker(del.partialUpdate))), logger), logger))
 	mux.DELETE("/boards/:id", mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(access.WriteChecker(del.delete))), logger), logger))
 
 	mux.POST("/boards/:id/pins/:pin_id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.WriteChecker(del.addPin))), logger), logger))
-	mux.GET("/boards/:id/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.ReadChecker(del.pinsList))), logger), logger))
+	mux.GET("/boards/:id/pins", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.pinsList)), logger), logger))
 	mux.DELETE("/boards/:id/pins/:pin_id", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(access.WriteChecker(del.removePin))), logger), logger))
 }
 
@@ -240,6 +240,11 @@ func (del *delivery) pinsList(w http.ResponseWriter, r *http.Request, p httprout
 		return pkgErrors.ErrInvalidBoardIdParam
 	}
 
+	strUserId := p.ByName("user-id")
+	userId, err := strconv.Atoi(strUserId)
+	if err != nil {
+		return pkgErrors.ErrInvalidUserIdParam
+	}
 	queryValues := r.URL.Query()
 	page := 1
 	strPage := queryValues.Get("page")
@@ -263,7 +268,7 @@ func (del *delivery) pinsList(w http.ResponseWriter, r *http.Request, p httprout
 		}
 	}
 
-	pins, err := del.serv.PinsList(boardId, page, limit)
+	pins, err := del.serv.PinsList(userId, boardId, page, limit)
 	if err != nil {
 		return pkgErrors.ErrService
 	}

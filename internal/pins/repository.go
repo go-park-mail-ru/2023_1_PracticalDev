@@ -2,7 +2,6 @@ package pins
 
 import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
-	"github.com/pkg/errors"
 )
 
 type CreateParams struct {
@@ -17,11 +16,6 @@ type FullUpdateParams struct {
 	Title       string
 	Description string
 }
-
-var (
-	ErrDb          = errors.New("db error")
-	ErrPinNotFound = errors.New("pin not found")
-)
 
 type Repository interface {
 	Create(params *CreateParams) (models.Pin, error)
