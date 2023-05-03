@@ -238,6 +238,10 @@ func (del *delivery) chatHandler(w http.ResponseWriter, r *http.Request, p httpr
 	}()
 	del.log.Debug(fmt.Sprintf("Websocket connected: connection=%p, userID=%d", conn, userID))
 
+	return del.handleConnection(conn, userID)
+}
+
+func (del *delivery) handleConnection(conn *ws.Conn, userID int) error {
 	// Добавляем соединение в список соединений пользователя
 	del.connManager.AddConnection(userID, conn)
 
