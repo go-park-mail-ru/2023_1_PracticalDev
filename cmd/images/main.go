@@ -57,5 +57,9 @@ func main() {
 
 	logger.Info("Starting images service")
 
-	server.Serve(lis)
+	err = server.Serve(lis)
+	if err != nil {
+		logger.Error("Failed to start image server, ", err.Error())
+		return
+	}
 }
