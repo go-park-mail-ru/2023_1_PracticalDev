@@ -37,7 +37,6 @@ services:
     container_name: backend
     ports:
       - 8080:8080
-      - 9001:9001
     env_file:
       - .env
     depends_on:
@@ -50,8 +49,6 @@ services:
       - db-network
       - redis-network
       - api-network
-    volumes:
-      - ./.aws/credentials:/root/.aws/credentials
     deploy:
       restart_policy:
         condition: on-failure
@@ -65,8 +62,6 @@ services:
       - 8088:8088
     env_file:
       - .env
-    volumes:
-      - ./.aws/credentials:/root/.aws/credentials
     deploy:
       restart_policy:
         condition: on-failure

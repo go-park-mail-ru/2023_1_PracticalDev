@@ -10,6 +10,7 @@ import (
 	serv "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/delivery/grpc/server"
 	rep "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/repository/postgres"
 	pkgDb "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	zaplogger "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/zap"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/metrics"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/redis"
@@ -42,19 +43,25 @@ func main() {
 		os.Exit(1)
 	}
 
-	server := grpc.NewServer()
-
 	authRepo := rep.NewRepository(db, rdb, ctx, logger)
 	authServ := serv.NewAuthServer(authRepo)
 
-	ms := metrics.NewPrometheusMetrics("Auth")
+	ms := metrics.NewPrometheusMetrics("auth")
 	err = ms.SetupMetrics()
 	if err != nil {
 		logger.Error(err)
 		os.Exit(1)
 	}
 
+	mw := middleware.NewGRPCMetricsMiddleware(ms)
+
+	server := grpc.NewServer(
+		grpc.ChainUnaryInterceptor(mw.MetricsInterceptor),
+	)
+
 	proto.RegisterAuthenficatorServer(server, authServ)
+
+	go metrics.ServePrometheusHTTP("0.0.0.0:9003")
 
 	logger.Info("Starting auth service")
 
