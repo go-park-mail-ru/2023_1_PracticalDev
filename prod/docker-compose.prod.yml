@@ -22,8 +22,6 @@ services:
     environment:
       REDIS_PASSWORD: "${REDIS_PASSWORD}"
     command: redis-server --requirepass "${REDIS_PASSWORD}"
-    ports:
-      - "${REDIS_PORT}:6379"
     networks:
       - redis-network
     deploy:
@@ -33,18 +31,64 @@ services:
   backend:
     build: "."
     container_name: backend
-    ports:
-      - ${API_PORT}:8080
     env_file:
       - .env
     depends_on:
       - db
+      - redis
+      - images
+      - auth
+      - search
     networks:
       - nginx-network
       - db-network
+      - redis-network
+      - api-network
     deploy:
       restart_policy:
         condition: on-failure
+
+  images:
+    build:
+      context: .
+      dockerfile: ./cmd/images/Dockerfile
+    container_name: images
+    env_file:
+      - .env
+    deploy:
+      restart_policy:
+        condition: on-failure
+    networks:
+      - api-network
+    
+  auth:
+    build:
+      context: .
+      dockerfile: ./cmd/auth/Dockerfile
+    container_name: auth
+    env_file:
+      - .env
+    deploy:
+      restart_policy:
+        condition: on-failure
+    networks:
+      - api-network
+      - db-network
+      - redis-network
+
+  search:
+    build:
+      context: .
+      dockerfile: ./cmd/search/Dockerfile
+    container_name: search
+    env_file:
+      - .env
+    deploy:
+      restart_policy:
+        condition: on-failure
+    networks:
+      - api-network
+      - db-network
 
   docs:
     image: nginx
@@ -62,12 +106,10 @@ services:
   
   frontend:
     build: 
-      context: https://github.com/frontend-park-mail-ru/2023_1_PracticalDev.git#setup
+      context: https://github.com/frontend-park-mail-ru/2023_1_PracticalDev.git#main
       dockerfile: Dockerfile.prod
     container_name: frontend
     command: npm run server
-    ports:
-      - ${SITE_PORT}:8000
     networks:
       - nginx-network
     deploy:
@@ -90,9 +132,68 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+  
+  node_exporter:
+    image: prom/node-exporter:latest
+    container_name: node-exporter
+    restart: unless-stopped
+    volumes:
+      - /proc:/host/proc:ro
+      - /sys:/host/sys:ro
+      - /:/rootfs:ro
+    command:
+      - '--path.procfs=/host/proc'
+      - '--path.rootfs=/rootfs'
+      - '--path.sysfs=/host/sys'
+      # - '--collector.filesystem.mount-points-exclude=^/(sys|proc|dev|host|etc)($$|/)'
+    networks:
+      - api-network
+
+  prometheus:
+    image: prom/prometheus
+    container_name: prometheus
+    networks:
+      - api-network
+    environment:
+      TZ: "Europe/Moscow"
+    command: "--config.file=/etc/prometheus/prometheus.yml"
+    volumes:
+      - ./configs/:/etc/prometheus/
+    depends_on:
+    - backend
+    - auth
+    - images
+
+  grafana:
+    container_name: "grafana"
+    image: grafana/grafana:9.5.1
+    networks:
+        - api-network
+        - grafana-network
+    volumes:
+      - ./configs/grafana/data:/var/lib/grafana
+      - ./configs/grafana/provisioning:/etc/grafana/provisioning
+    environment:
+      TZ: "Europe/Moscow"
+      GF_SECURITY_ADMIN_USER: 'admin'
+      GF_SECURITY_ADMIN_PASSWORD: 'password'
+      GF_INSTALL_PLUGINS: 'grafana-clock-panel,grafana-simple-json-datasource,grafana-piechart-panel'
+    ports:
+      - "3000:3000"
 
 networks:
   nginx-network:
     driver: bridge
+    name: nginx_network
+  grafana-network:
+    driver: bridge
+    name: grafana_network
   db-network:
     driver: bridge
+    name: db_network
+  redis-network:
+    driver: bridge
+    name: redis_network
+  api-network:
+    driver: bridge
+    name: api_network

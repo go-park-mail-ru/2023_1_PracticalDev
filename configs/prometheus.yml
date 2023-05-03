@@ -21,6 +21,12 @@ scrape_configs:
     static_configs:
       - targets: [ 'auth:9003' ]
 
+  - job_name: search
+    scrape_interval: 5s
+    metrics_path: '/prometheus'
+    static_configs:
+      - targets: [ 'search:9004' ]
+
   - job_name: 'node'
     static_configs:
       - targets: ['node-exporter:9100']

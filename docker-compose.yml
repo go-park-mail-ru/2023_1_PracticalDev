@@ -44,6 +44,7 @@ services:
       - redis
       - images
       - auth
+      - search
     networks:
       - nginx-network
       - db-network
@@ -84,6 +85,22 @@ services:
       - api-network
       - db-network
       - redis-network
+
+  search:
+    build:
+      context: .
+      dockerfile: ./cmd/search/Dockerfile
+    container_name: search
+    ports:
+      - 8089:8089
+    env_file:
+      - .env
+    deploy:
+      restart_policy:
+        condition: on-failure
+    networks:
+      - api-network
+      - db-network
 
   docs:
     image: nginx
