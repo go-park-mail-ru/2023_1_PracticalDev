@@ -3,6 +3,7 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -16,10 +17,9 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, access mw.AccessChecker, serv pkgPins.Service, m *mw.HttpMetricsMiddleware) {
+func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, access mw.AccessChecker, serv pkgPins.Service, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger}
 
 	mux.POST("/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.create))), logger), logger), logger))
@@ -32,7 +32,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.A
 
 type delivery struct {
 	serv pkgPins.Service
-	log  log.Logger
+	log  *zap.Logger
 }
 
 func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {

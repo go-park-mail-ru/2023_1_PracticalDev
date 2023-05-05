@@ -5,9 +5,11 @@ import (
 	"net"
 	"os"
 
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
+
 	pkgDb "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
-	zaplogger "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/zap"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/metrics"
 	proto "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/delivery/grpc/proto"
 	serv "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/delivery/grpc/server"
@@ -18,14 +20,35 @@ import (
 var port = "0.0.0.0:8089"
 
 func main() {
-	logger, err := zaplogger.New()
-
-	if err != nil {
-		log.Fatal(err)
+	// Zap logger configuration
+	consoleCfg := zapcore.EncoderConfig{
+		TimeKey:        "time",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		MessageKey:     "msg",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
+
+	// Zap logger
+	consoleEncoder := zapcore.NewConsoleEncoder(consoleCfg)
+	consoleCore := zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel)
+	logger := zap.New(consoleCore)
+	defer func() {
+		err := logger.Sync()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
+
 	lis, err := net.Listen("tcp", port)
 	if err != nil {
-		logger.Error("can't listet port", err)
+		logger.Error("can't listet port", zap.Error(err))
 		return
 	}
 
@@ -40,7 +63,7 @@ func main() {
 	ms := metrics.NewPrometheusMetrics("search")
 	err = ms.SetupMetrics()
 	if err != nil {
-		logger.Error(err)
+		logger.Error("Failed to setup metrics", zap.Error(err))
 		os.Exit(1)
 	}
 
@@ -58,7 +81,7 @@ func main() {
 
 	err = server.Serve(lis)
 	if err != nil {
-		logger.Error("Failed to start search server, ", err.Error())
+		logger.Error("Failed to start search server, ", zap.Error(err))
 		return
 	}
 }

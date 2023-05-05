@@ -4,21 +4,22 @@ import (
 	"context"
 	"database/sql"
 
+	"github.com/pkg/errors"
+	"go.uber.org/zap"
+
 	images "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/client"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
-	"github.com/pkg/errors"
 )
 
-func NewRepository(db *sql.DB, s3Service images.ImageClient, log log.Logger) pkgPins.Repository {
+func NewRepository(db *sql.DB, s3Service images.ImageClient, log *zap.Logger) pkgPins.Repository {
 	return &repository{db, log, s3Service}
 }
 
 type repository struct {
 	db      *sql.DB
-	log     log.Logger
+	log     *zap.Logger
 	imgServ images.ImageClient
 }
 

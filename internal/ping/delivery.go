@@ -3,12 +3,13 @@ package ping
 import (
 	"net/http"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/julienschmidt/httprouter"
+	"go.uber.org/zap"
+
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger) {
+func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger) {
 	del := delivery{logger}
 
 	mux.GET("/ping", middleware.HandleLogger(middleware.ErrorHandler(middleware.Cors(del.Ping), logger), logger))
@@ -17,7 +18,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger) {
 }
 
 type delivery struct {
-	log log.Logger
+	log *zap.Logger
 }
 
 func (del *delivery) Ping(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {

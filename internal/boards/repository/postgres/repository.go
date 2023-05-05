@@ -2,21 +2,21 @@ package postgres
 
 import (
 	"database/sql"
+	"go.uber.org/zap"
 
 	"github.com/pkg/errors"
 
 	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 type repository struct {
 	db  *sql.DB
-	log log.Logger
+	log *zap.Logger
 }
 
-func NewPostgresRepository(db *sql.DB, log log.Logger) pkgBoards.Repository {
+func NewPostgresRepository(db *sql.DB, log *zap.Logger) pkgBoards.Repository {
 	return &repository{db, log}
 }
 

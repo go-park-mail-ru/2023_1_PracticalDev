@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 
@@ -10,18 +11,17 @@ import (
 
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	serv "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, serv serv.Service) {
+func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.Authorizer, serv serv.Service) {
 	del := delivery{serv, logger}
 	mux.GET("/search/:query", mw.HandleLogger(mw.ErrorHandler(authorizer(mw.Cors(del.get)), logger), logger))
 }
 
 type delivery struct {
 	serv.Service
-	log log.Logger
+	log *zap.Logger
 }
 
 func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {

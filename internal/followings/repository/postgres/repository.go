@@ -3,18 +3,18 @@ package postgres
 import (
 	"database/sql"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 type repository struct {
 	db  *sql.DB
-	log log.Logger
+	log *zap.Logger
 }
 
-func NewRepository(db *sql.DB, log log.Logger) followings.Repository {
+func NewRepository(db *sql.DB, log *zap.Logger) followings.Repository {
 	return &repository{db, log}
 }
 

@@ -3,6 +3,8 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"go.uber.org/zap"
+	"log"
 	"reflect"
 	"regexp"
 	"testing"
@@ -15,8 +17,17 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	_pins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	stdlogger "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 )
+
+var err error
+var logger *zap.Logger
+
+func init() {
+	logger, err = zap.NewDevelopment()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func TestCreate(t *testing.T) {
 	type fields struct {
@@ -77,8 +88,6 @@ func TestCreate(t *testing.T) {
 				t.Fatalf("can't create mock: %s", err)
 			}
 			defer db.Close()
-
-			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -176,8 +185,6 @@ func TestList(t *testing.T) {
 				t.Fatalf("can't create mock: %s", err)
 			}
 			defer db.Close()
-
-			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -280,8 +287,6 @@ func TestListByUser(t *testing.T) {
 			}
 			defer db.Close()
 
-			logger := stdlogger.New()
-
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 			s3Serv := mocks.NewMockImageClient(ctrl)
@@ -368,8 +373,6 @@ func TestGet(t *testing.T) {
 				t.Fatalf("can't create mock: %s", err)
 			}
 			defer db.Close()
-
-			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()

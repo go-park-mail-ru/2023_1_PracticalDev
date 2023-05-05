@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"fmt"
+	"log"
 	"reflect"
 	"regexp"
 	"testing"
@@ -9,11 +10,21 @@ import (
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 )
+
+var err error
+var logger *zap.Logger
+
+func init() {
+	logger, err = zap.NewDevelopment()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func TestCreate(t *testing.T) {
 	type fields struct {
@@ -70,7 +81,7 @@ func TestCreate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			repo := NewRepository(db, stdlogger.New())
+			repo := NewRepository(db, logger)
 			err = repo.Create(test.pinId, test.authorId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -157,7 +168,7 @@ func TestListByAuthor(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			repo := NewRepository(db, stdlogger.New())
+			repo := NewRepository(db, logger)
 			likes, err := repo.ListByAuthor(test.authorId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -247,7 +258,7 @@ func TestListByPin(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			repo := NewRepository(db, stdlogger.New())
+			repo := NewRepository(db, logger)
 			likes, err := repo.ListByPin(test.pinId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -317,7 +328,7 @@ func TestDelete(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			repo := NewRepository(db, stdlogger.New())
+			repo := NewRepository(db, logger)
 			err = repo.Delete(test.pinId, test.authorId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)

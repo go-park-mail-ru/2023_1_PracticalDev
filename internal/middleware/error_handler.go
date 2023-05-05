@@ -5,16 +5,16 @@ import (
 
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
-func ErrorHandler(handler func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error, log log.Logger) httprouter.Handle {
+func ErrorHandler(handler func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error, log *zap.Logger) httprouter.Handle {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) {
 		defer func() {
 			if err := recover(); err != nil {
-				log.Error("after recover: ", err)
+				log.Error("after recover: ", zap.Any("error", err))
 			}
 		}()
 
@@ -28,10 +28,10 @@ func ErrorHandler(handler func(w http.ResponseWriter, r *http.Request, p httprou
 			}
 			w.WriteHeader(httpCode)
 
-			if 200 <= httpCode && httpCode <= 399 {
-				log.Info("Response Code:", httpCode, "Message:", "\""+err.Error()+"\"")
+			if httpCode >= 500 {
+				log.Error("Internal Server Error", zap.Int("http_code", httpCode), zap.String("error", err.Error()))
 			} else {
-				log.Error("Response Code:", httpCode, "Error Message:", "\""+err.Error()+"\"")
+				log.Info("Response", zap.Int("http_code", httpCode), zap.String("message", errCause.Error()))
 			}
 
 			if httpCode != http.StatusNoContent {

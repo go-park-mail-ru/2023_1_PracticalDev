@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"go.uber.org/zap"
 	"strconv"
 	"time"
 
@@ -14,17 +15,16 @@ import (
 	hasherPkg "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/hasher"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 type repository struct {
 	db  *sql.DB
 	rdb *redis.Client
 	ctx context.Context
-	log log.Logger
+	log *zap.Logger
 }
 
-func NewRepository(db *sql.DB, rdb *redis.Client, ctx context.Context, log log.Logger) auth.Repository {
+func NewRepository(db *sql.DB, rdb *redis.Client, ctx context.Context, log *zap.Logger) auth.Repository {
 	return &repository{db, rdb, ctx, log}
 }
 

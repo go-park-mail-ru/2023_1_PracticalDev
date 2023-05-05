@@ -3,18 +3,19 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	"net/http"
 	"strconv"
 
 	ws "github.com/gorilla/websocket"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	pkgChats "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/chats"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 const (
@@ -29,11 +30,11 @@ const (
 type delivery struct {
 	serv        pkgChats.Service
 	connManager *ConnectionManager
-	log         log.Logger
+	log         *zap.Logger
 	upgrader    ws.Upgrader
 }
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv pkgChats.Service) {
+func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv pkgChats.Service) {
 	del := delivery{
 		serv:        serv,
 		connManager: NewConnectionManager(logger),
@@ -174,7 +175,7 @@ func (del *delivery) get(w http.ResponseWriter, _ *http.Request, p httprouter.Pa
 }
 
 func (del *delivery) sendNewChatToChatMembers(chat models.Chat) error {
-	del.log.Debug("New chat for sending:", chat)
+	del.log.Debug("New chat for sending", zap.Any("chat", chat))
 	newChat := newChatResponse{
 		Type: "new_chat",
 		Chat: chat,
@@ -194,7 +195,7 @@ func (del *delivery) sendNewChatToChatMembers(chat models.Chat) error {
 }
 
 func (del *delivery) sendMessageToChatMembers(message models.Message, user1ID, user2ID int) error {
-	del.log.Debug("New message for sending:", message)
+	del.log.Debug("New message for sending", zap.Any("message", message))
 	newMessage := newMessageResponse{
 		Type:    "message",
 		Message: message,
@@ -219,7 +220,7 @@ func (del *delivery) chatHandler(w http.ResponseWriter, r *http.Request, p httpr
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrInvalidUserIdParam, err.Error())
 	}
-	del.log.Debug("Handle new websocket request, userID =", userID)
+	del.log.Debug("Handle new websocket request", zap.Int("user_id", userID))
 
 	conn, err := del.upgrader.Upgrade(w, r, nil)
 	if err != nil {
@@ -229,7 +230,7 @@ func (del *delivery) chatHandler(w http.ResponseWriter, r *http.Request, p httpr
 		del.log.Debug(fmt.Sprintf("Close websocket connection=%p, userID=%d", conn, userID))
 		err = conn.Close()
 		if err != nil {
-			del.log.Error(err)
+			del.log.Error(constants.FailedCloseConnection, zap.Error(err))
 		}
 	}()
 	del.log.Debug(fmt.Sprintf("Websocket connected: connection=%p, userID=%d", conn, userID))
@@ -300,7 +301,7 @@ func (del *delivery) handleConnection(conn *ws.Conn, userID int) error {
 		go func() {
 			err := del.sendMessageToChatMembers(*createdMessage, chat.User1ID, chat.User2ID)
 			if err != nil {
-				del.log.Error(err)
+				del.log.Error(constants.FailedSendMessageToChatMembers, zap.Error(err))
 			}
 		}()
 	}

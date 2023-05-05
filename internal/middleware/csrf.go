@@ -3,16 +3,16 @@ package middleware
 import (
 	"fmt"
 	"github.com/julienschmidt/httprouter"
+	"go.uber.org/zap"
 	"net/http"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/router"
 )
 
 type CSRFMiddleware func(h router.Handler) router.Handler
 
-func NewCSRFMiddleware(token *tokens.HashToken, log log.Logger) CSRFMiddleware {
+func NewCSRFMiddleware(token *tokens.HashToken, log *zap.Logger) CSRFMiddleware {
 	return func(handler router.Handler) router.Handler {
 		return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 			sessionCookie, _ := r.Cookie("JSESSIONID")

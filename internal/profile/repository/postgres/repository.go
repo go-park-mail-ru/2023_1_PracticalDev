@@ -3,21 +3,21 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"go.uber.org/zap"
 
 	images "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/client"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 	"github.com/pkg/errors"
 )
 
 type postgresRepository struct {
 	db      *sql.DB
-	log     log.Logger
+	log     *zap.Logger
 	imgServ images.ImageClient
 }
 
-func NewPostgresRepository(db *sql.DB, imgServ images.ImageClient, log log.Logger) profile.Repository {
+func NewPostgresRepository(db *sql.DB, imgServ images.ImageClient, log *zap.Logger) profile.Repository {
 	return &postgresRepository{db, log, imgServ}
 }
 
