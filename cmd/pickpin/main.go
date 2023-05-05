@@ -75,7 +75,7 @@ func main() {
 	// Zap logger
 	consoleEncoder := zapcore.NewConsoleEncoder(consoleCfg)
 	consoleCore := zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel)
-	logger := zap.New(consoleCore)
+	logger := zap.New(consoleCore, zap.AddCaller())
 	defer func() {
 		err := logger.Sync()
 		if err != nil {
