@@ -2,6 +2,7 @@ package http
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -10,13 +11,23 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	_boards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 )
+
+var err error
+var logger *zap.Logger
+
+func init() {
+	logger, err = zap.NewDevelopment()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func TestCreate(t *testing.T) {
 	type fields struct {
@@ -78,7 +89,6 @@ func TestCreate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := stdlogger.New()
 			del := delivery{serv: f.serv, log: logger}
 
 			req := httptest.NewRequest(http.MethodPost, "/boards", strings.NewReader(test.request))
@@ -155,7 +165,6 @@ func TestList(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -237,7 +246,6 @@ func TestGet(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -317,7 +325,6 @@ func TestFullUpdate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -400,7 +407,6 @@ func TestPartialUpdate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -471,7 +477,6 @@ func TestDelete(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -551,7 +556,6 @@ func TestAddPin(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -625,7 +629,6 @@ func TestPinsList(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,

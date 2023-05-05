@@ -2,20 +2,20 @@ package http
 
 import (
 	"fmt"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	"sync"
 
 	ws "github.com/gorilla/websocket"
-
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
+	"go.uber.org/zap"
 )
 
 type ConnectionManager struct {
 	connections map[int][]*ws.Conn // UserID -> []Conn
 	mu          sync.Mutex
-	log         log.Logger
+	log         *zap.Logger
 }
 
-func NewConnectionManager(log log.Logger) *ConnectionManager {
+func NewConnectionManager(log *zap.Logger) *ConnectionManager {
 	return &ConnectionManager{
 		connections: make(map[int][]*ws.Conn),
 		log:         log,
@@ -55,12 +55,12 @@ func (cm *ConnectionManager) Broadcast(response any, userID int) error {
 			cm.log.Debug(fmt.Sprintf("New response %v for sending to userID=%d, conn=%p:", response, userID, conn))
 			err = conn.WriteJSON(response)
 			if err != nil {
-				cm.log.Error("Broadcast: error: %v", err)
+				cm.log.Error(constants.FailedWriteJSONResponse, zap.Error(err))
 				return err
 			}
 		}
 	} else {
-		cm.log.Debug("There are no connections for userID=", userID)
+		cm.log.Debug("There are no connections for user", zap.Int("user_id", userID))
 	}
 
 	return nil

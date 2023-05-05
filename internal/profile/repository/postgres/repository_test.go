@@ -3,19 +3,30 @@ package postgres
 import (
 	"context"
 	"fmt"
+	"log"
 	"regexp"
 	"testing"
 
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/client/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	stdlogger "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 )
+
+var err error
+var logger *zap.Logger
+
+func init() {
+	logger, err = zap.NewDevelopment()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func TestGetProfileByUser(t *testing.T) {
 	type fields struct {
@@ -82,8 +93,6 @@ func TestGetProfileByUser(t *testing.T) {
 				t.Fatalf("can't create mock: %s", err)
 			}
 			defer db.Close()
-
-			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -176,8 +185,6 @@ func TestFullUpdate(t *testing.T) {
 				t.Fatalf("can't create mock: %s", err)
 			}
 			defer db.Close()
-
-			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -278,8 +285,6 @@ func TestPartialUpdate(t *testing.T) {
 				t.Fatalf("can't create mock: %s", err)
 			}
 			defer db.Close()
-
-			logger := stdlogger.New()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()

@@ -2,17 +2,18 @@ package http
 
 import (
 	"encoding/json"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
+	"go.uber.org/zap"
 	"net/http"
 	"strconv"
 
 	pkgBoards "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/boards"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/julienschmidt/httprouter"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, access mw.AccessChecker, serv pkgBoards.Service, m *mw.HttpMetricsMiddleware) {
+func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, access mw.AccessChecker, serv pkgBoards.Service, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger}
 
 	mux.POST("/boards", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.create))), logger), logger), logger))
@@ -29,7 +30,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.A
 
 type delivery struct {
 	serv pkgBoards.Service
-	log  log.Logger
+	log  *zap.Logger
 }
 
 func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -44,7 +45,7 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 	defer func() {
 		err = r.Body.Close()
 		if err != nil {
-			del.log.Error(err)
+			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
 		}
 	}()
 	if err = decoder.Decode(&request); err != nil {
@@ -134,7 +135,7 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	defer func() {
 		err = r.Body.Close()
 		if err != nil {
-			del.log.Error(err)
+			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
 		}
 	}()
 	if err = decoder.Decode(&request); err != nil {
@@ -179,7 +180,7 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	defer func() {
 		err = r.Body.Close()
 		if err != nil {
-			del.log.Error(err)
+			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
 		}
 	}()
 	if err = decoder.Decode(&request); err != nil {

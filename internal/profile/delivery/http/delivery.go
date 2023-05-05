@@ -3,6 +3,8 @@ package http
 import (
 	"bytes"
 	"encoding/json"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
+	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -15,11 +17,10 @@ import (
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv profile.Service, m *mw.HttpMetricsMiddleware) {
+func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv profile.Service, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger}
 
 	mux.GET("/users/:id/profile", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.getProfileByUser))), logger), logger), logger))
@@ -29,7 +30,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, authorizer mw.A
 
 type delivery struct {
 	serv profile.Service
-	log  log.Logger
+	log  *zap.Logger
 }
 
 func (del *delivery) getProfileByUser(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -74,9 +75,9 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		}
 	}
 	defer func() {
-		err = file.Close()
+		err := file.Close()
 		if err != nil {
-			del.log.Error(err)
+			del.log.Error(constants.FailedCloseFile, zap.Error(err))
 		}
 	}()
 

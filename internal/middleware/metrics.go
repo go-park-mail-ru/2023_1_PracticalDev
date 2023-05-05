@@ -5,11 +5,12 @@ import (
 	"strconv"
 	"time"
 
-	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/metrics"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
+
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/metrics"
 )
 
 type HttpMetricsMiddleware struct {
@@ -22,7 +23,7 @@ func NewHttpMetricsMiddleware(mt metrics.PrometheusMetrics) *HttpMetricsMiddlewa
 	}
 }
 
-func (m *HttpMetricsMiddleware) MetricsMiddleware(handler func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error, log log.Logger) func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (m *HttpMetricsMiddleware) MetricsMiddleware(handler func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error, log *zap.Logger) func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 		begin := time.Now()
 		err := handler(w, r, p)

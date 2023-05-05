@@ -2,25 +2,31 @@ package http
 
 import (
 	"encoding/json"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
 	"testing"
 
 	"github.com/golang/mock/gomock"
+	"go.uber.org/zap"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	authMocks "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
-var (
-	logger log.Logger
-	err    error
-)
+var err error
+var logger *zap.Logger
+
+func init() {
+	logger, err = zap.NewDevelopment()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 var existingUsers []auth.LoginParams = []auth.LoginParams{
 	{

@@ -4,20 +4,20 @@ import (
 	"database/sql"
 
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search"
 )
 
-func NewRepository(db *sql.DB, log log.Logger) search.Repository {
+func NewRepository(db *sql.DB, log *zap.Logger) search.Repository {
 	return &repository{db, log}
 }
 
 type repository struct {
 	db  *sql.DB
-	log log.Logger
+	log *zap.Logger
 }
 
 const getPinsCmd = `SELECT id, title, description, media_source, n_likes, author_id FROM pins

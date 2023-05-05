@@ -2,22 +2,22 @@ package postgres
 
 import (
 	"database/sql"
+	"go.uber.org/zap"
 
 	"github.com/pkg/errors"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/users"
 )
 
-func NewRepository(db *sql.DB, log log.Logger) users.Repository {
+func NewRepository(db *sql.DB, log *zap.Logger) users.Repository {
 	return &repository{db, log}
 }
 
 type repository struct {
 	db  *sql.DB
-	log log.Logger
+	log *zap.Logger
 }
 
 func (rep *repository) Get(id int) (models.User, error) {

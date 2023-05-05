@@ -2,6 +2,7 @@ package http
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -11,12 +12,22 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 )
+
+var err error
+var logger *zap.Logger
+
+func init() {
+	logger, err = zap.NewDevelopment()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func TestLike(t *testing.T) {
 	type fields struct {
@@ -68,7 +79,7 @@ func TestLike(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			del := delivery{serv: f.serv, log: stdlogger.New()}
+			del := delivery{serv: f.serv, log: logger}
 			req := httptest.NewRequest(http.MethodPost, "/pins/3/like", nil)
 			rec := httptest.NewRecorder()
 			err := del.like(rec, req, test.params)
@@ -139,7 +150,7 @@ func TestListByAuthor(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			del := delivery{serv: f.serv, log: stdlogger.New()}
+			del := delivery{serv: f.serv, log: logger}
 			req := httptest.NewRequest(http.MethodGet, "/users/3/likes", nil)
 			rec := httptest.NewRecorder()
 			err := del.listByAuthor(rec, req, test.params)
@@ -214,7 +225,7 @@ func TestListByPin(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			del := delivery{serv: f.serv, log: stdlogger.New()}
+			del := delivery{serv: f.serv, log: logger}
 			req := httptest.NewRequest(http.MethodGet, "/pins/3/likes", nil)
 			rec := httptest.NewRecorder()
 			err := del.listByPin(rec, req, test.params)
@@ -278,7 +289,7 @@ func TestUnlike(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			del := delivery{serv: f.serv, log: stdlogger.New()}
+			del := delivery{serv: f.serv, log: logger}
 			req := httptest.NewRequest(http.MethodDelete, "/pins/3/like", nil)
 			rec := httptest.NewRecorder()
 			err := del.unlike(rec, req, test.params)

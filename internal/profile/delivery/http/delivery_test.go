@@ -2,6 +2,7 @@ package http
 
 import (
 	"io"
+	"log"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -10,13 +11,23 @@ import (
 	"github.com/golang/mock/gomock"
 	"github.com/julienschmidt/httprouter"
 	"github.com/pkg/errors"
+	"go.uber.org/zap"
 
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/std"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile/mocks"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
 )
+
+var err error
+var logger *zap.Logger
+
+func init() {
+	logger, err = zap.NewDevelopment()
+	if err != nil {
+		log.Fatal(err)
+	}
+}
 
 func TestGetProfileByUser(t *testing.T) {
 	type fields struct {
@@ -81,7 +92,6 @@ func TestGetProfileByUser(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -184,7 +194,6 @@ func TestFullUpdate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,
@@ -271,7 +280,6 @@ func TestPartialUpdate(t *testing.T) {
 				test.prepare(&f)
 			}
 
-			logger := stdlogger.New()
 			del := delivery{
 				serv: f.serv,
 				log:  logger,

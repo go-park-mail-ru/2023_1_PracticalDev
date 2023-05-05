@@ -7,15 +7,16 @@ import (
 	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"go.uber.org/zap"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
-func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv auth.Service, token *tokens.HashToken, m *mw.HttpMetricsMiddleware) {
+func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, serv auth.Service, token *tokens.HashToken, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger, token}
 	mux.POST("/auth/login", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.Authenticate, logger), logger), logger))
 	mux.DELETE("/auth/logout", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.Logout, logger), logger), logger))
@@ -25,7 +26,7 @@ func RegisterHandlers(mux *httprouter.Router, logger log.Logger, serv auth.Servi
 
 type delivery struct {
 	serv  auth.Service
-	log   log.Logger
+	log   *zap.Logger
 	token *tokens.HashToken
 }
 
@@ -60,7 +61,13 @@ func createCsrfTokenCookie(token string) *http.Cookie {
 
 func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	decoder := json.NewDecoder(r.Body)
-	defer r.Body.Close()
+	defer func() {
+		err := r.Body.Close()
+		if err != nil {
+			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
+		}
+	}()
+
 	data := auth.LoginParams{}
 	if err := decoder.Decode(&data); err != nil {
 		return pkgErrors.ErrBadRequest
@@ -76,7 +83,7 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 
 	token, err := del.token.Create(&tokens.SessionParams{Token: session.Token}, time.Now().Add(session.LivingTime).Unix())
 	if err != nil {
-		del.log.Error("csrf token creation error:", err)
+		del.log.Error("csrf token creation error:", zap.Error(err))
 		return pkgErrors.ErrCreateCsrfToken
 	}
 
@@ -148,7 +155,7 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 	defer func() {
 		err := r.Body.Close()
 		if err != nil {
-			del.log.Error(err)
+			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
 		}
 	}()
 	params := auth.RegisterParams{}
@@ -167,7 +174,7 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 
 	token, err := del.token.Create(&tokens.SessionParams{Token: sessionParams.Token}, time.Now().Add(sessionParams.LivingTime).Unix())
 	if err != nil {
-		del.log.Error("csrf token creation error:", err)
+		del.log.Error("csrf token creation error:", zap.Error(err))
 		return pkgErrors.ErrCreateCsrfToken
 	}
 

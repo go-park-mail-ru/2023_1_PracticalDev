@@ -6,6 +6,8 @@ import (
 	"os"
 
 	"github.com/julienschmidt/httprouter"
+	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
@@ -51,19 +53,33 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
-	zaplogger "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/zap"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/metrics"
 )
 
 func main() {
-	logger, err := zaplogger.New()
-	if err != nil {
-		log.Fatal(err)
+	// Zap logger configuration
+	consoleCfg := zapcore.EncoderConfig{
+		TimeKey:        "time",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		MessageKey:     "msg",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
 	}
+
+	// Zap logger
+	consoleEncoder := zapcore.NewConsoleEncoder(consoleCfg)
+	consoleCore := zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel)
+	logger := zap.New(consoleCore)
 	defer func() {
-		err = logger.Sync()
+		err := logger.Sync()
 		if err != nil {
-			log.Print(err)
+			log.Println(err)
 		}
 	}()
 
@@ -106,7 +122,7 @@ func main() {
 	metricsMiddleware := middleware.NewHttpMetricsMiddleware(mt)
 
 	if err != nil {
-		logger.Error("failed to setup prometheus, ", err)
+		logger.Error("failed to setup prometheus", zap.Error(err))
 		os.Exit(1)
 	}
 
@@ -164,6 +180,6 @@ func main() {
 	logger.Info("Starting server...")
 	err = server.ListenAndServe()
 	if err != nil {
-		logger.Error("Failed to start server, ", err.Error())
+		logger.Error("Failed to start server", zap.Error(err))
 	}
 }

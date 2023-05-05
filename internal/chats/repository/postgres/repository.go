@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"go.uber.org/zap"
 
 	"github.com/lib/pq"
 	"github.com/pkg/errors"
@@ -9,15 +10,14 @@ import (
 	pkgChats "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/chats"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 type repository struct {
 	db  *sql.DB
-	log log.Logger
+	log *zap.Logger
 }
 
-func NewRepository(db *sql.DB, log log.Logger) pkgChats.Repository {
+func NewRepository(db *sql.DB, log *zap.Logger) pkgChats.Repository {
 	return &repository{db, log}
 }
 
