@@ -12,7 +12,7 @@ import (
 	"testing"
 )
 
-func TestCreate(t *testing.T) {
+func TestRepository_Create(t *testing.T) {
 	type fields struct {
 		mock       sqlmock.Sqlmock
 		followerID int
@@ -85,7 +85,7 @@ func TestCreate(t *testing.T) {
 	}
 }
 
-func TestDelete(t *testing.T) {
+func TestRepository_Delete(t *testing.T) {
 	type fields struct {
 		mock       sqlmock.Sqlmock
 		followerID int
@@ -158,7 +158,7 @@ func TestDelete(t *testing.T) {
 	}
 }
 
-func TestGetFollowees(t *testing.T) {
+func TestRepository_GetFollowees(t *testing.T) {
 	type fields struct {
 		mock      sqlmock.Sqlmock
 		userID    int
@@ -255,7 +255,7 @@ func TestGetFollowees(t *testing.T) {
 	}
 }
 
-func TestGetFollowers(t *testing.T) {
+func TestRepository_GetFollowers(t *testing.T) {
 	type fields struct {
 		mock      sqlmock.Sqlmock
 		userID    int
