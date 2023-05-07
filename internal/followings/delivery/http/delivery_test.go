@@ -61,7 +61,6 @@ func TestDelivery_Follow(t *testing.T) {
 			if err != nil {
 				t.Fatalf("can't create logger: %s", err)
 			}
-			defer logger.Sync()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -128,7 +127,6 @@ func TestDelivery_Unfollow(t *testing.T) {
 			if err != nil {
 				t.Fatalf("can't create logger: %s", err)
 			}
-			defer logger.Sync()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -205,7 +203,6 @@ func TestDelivery_GetFollowers(t *testing.T) {
 			if err != nil {
 				t.Fatalf("can't create logger: %s", err)
 			}
-			defer logger.Sync()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
@@ -286,7 +283,6 @@ func TestDelivery_GetFollowees(t *testing.T) {
 			if err != nil {
 				t.Fatalf("can't create logger: %s", err)
 			}
-			defer logger.Sync()
 
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()

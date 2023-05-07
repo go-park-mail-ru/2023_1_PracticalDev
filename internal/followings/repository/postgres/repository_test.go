@@ -60,7 +60,6 @@ func TestRepository_Create(t *testing.T) {
 			if err != nil {
 				t.Fatalf("can't create logger: %s", err)
 			}
-			defer logger.Sync()
 
 			db, mock, err := sqlmock.New()
 			if err != nil {
@@ -133,7 +132,6 @@ func TestRepository_Delete(t *testing.T) {
 			if err != nil {
 				t.Fatalf("can't create logger: %s", err)
 			}
-			defer logger.Sync()
 
 			db, mock, err := sqlmock.New()
 			if err != nil {
@@ -227,7 +225,6 @@ func TestRepository_GetFollowees(t *testing.T) {
 			if err != nil {
 				t.Fatalf("can't create logger: %s", err)
 			}
-			defer logger.Sync()
 
 			db, mock, err := sqlmock.New()
 			if err != nil {
@@ -324,7 +321,6 @@ func TestRepository_GetFollowers(t *testing.T) {
 			if err != nil {
 				t.Fatalf("can't create logger: %s", err)
 			}
-			defer logger.Sync()
 
 			db, mock, err := sqlmock.New()
 			if err != nil {
