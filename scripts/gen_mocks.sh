@@ -9,6 +9,8 @@ interface_files=(
   internal/pins/repository.go
   internal/likes/service.go
   internal/likes/repository.go
+  internal/followings/service.go
+  internal/followings/repository.go
   internal/profile/service.go
   internal/profile/repository.go
   internal/images/client/client.go
