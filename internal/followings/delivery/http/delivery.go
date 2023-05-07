@@ -16,11 +16,11 @@ import (
 func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv followings.Service, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger}
 
-	mux.POST("/users/:id/following", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.follow))), logger), logger), logger))
-	mux.DELETE("/users/:id/following", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.unfollow))), logger), logger), logger))
+	mux.POST("/users/:id/following", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.Follow))), logger), logger), logger))
+	mux.DELETE("/users/:id/following", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.Unfollow))), logger), logger), logger))
 
-	mux.GET("/users/:id/followers", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.getFollowers))), logger), logger), logger))
-	mux.GET("/users/:id/followees", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.getFollowees))), logger), logger), logger))
+	mux.GET("/users/:id/followers", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.GetFollowers))), logger), logger), logger))
+	mux.GET("/users/:id/followees", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.GetFollowees))), logger), logger), logger))
 }
 
 type delivery struct {
@@ -28,7 +28,7 @@ type delivery struct {
 	log  *zap.Logger
 }
 
-func (del *delivery) follow(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) Follow(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strFollowerId := p.ByName("user-id")
 	followerId, err := strconv.Atoi(strFollowerId)
 	if err != nil {
@@ -48,7 +48,7 @@ func (del *delivery) follow(w http.ResponseWriter, r *http.Request, p httprouter
 	return pkgErrors.ErrNoContent
 }
 
-func (del *delivery) unfollow(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) Unfollow(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strFollowerId := p.ByName("user-id")
 	followerId, err := strconv.Atoi(strFollowerId)
 	if err != nil {
@@ -68,7 +68,7 @@ func (del *delivery) unfollow(w http.ResponseWriter, r *http.Request, p httprout
 	return pkgErrors.ErrNoContent
 }
 
-func (del *delivery) getFollowers(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) GetFollowers(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	userId, err := strconv.Atoi(strId)
 	if err != nil {
@@ -96,7 +96,7 @@ func (del *delivery) getFollowers(w http.ResponseWriter, r *http.Request, p http
 	return nil
 }
 
-func (del *delivery) getFollowees(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) GetFollowees(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	userId, err := strconv.Atoi(strId)
 	if err != nil {
