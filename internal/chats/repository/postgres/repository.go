@@ -112,15 +112,14 @@ func (rep *repository) MessagesList(chatID int) ([]models.Message, error) {
 	return messages, nil
 }
 
-const sendMessageCmd = `
+const createMessageCmd = `
 		INSERT INTO messages (author_id, chat_id, text)
 		VALUES ($1, $2, $3)
 		RETURNING *;
 	`
 
-func (rep *repository) SendMessage(params *pkgChats.SendMessageParams) (*models.Message, error) {
-
-	row := rep.db.QueryRow(sendMessageCmd, params.AuthorID, params.ChatID, params.Text)
+func (rep *repository) CreateMessage(params *pkgChats.CreateMessageParams) (*models.Message, error) {
+	row := rep.db.QueryRow(createMessageCmd, params.AuthorID, params.ChatID, params.Text)
 
 	var msg models.Message
 	err := row.Scan(&msg.ID, &msg.AuthorID, &msg.ChatID, &msg.Text, &msg.CreatedAt)

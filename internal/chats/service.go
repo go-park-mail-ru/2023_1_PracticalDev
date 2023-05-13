@@ -10,7 +10,7 @@ type Service interface {
 	Get(id int) (models.Chat, error)
 
 	MessagesList(chatID int) ([]models.Message, error)
-	SendMessage(params *SendMessageParams) (*models.Message, error)
+	CreateMessage(params *CreateMessageParams) (*models.Message, error)
 
 	ChatExists(user1ID, user2ID int) (bool, error)
 	GetByUsers(user1ID, user2ID int) (models.Chat, error)

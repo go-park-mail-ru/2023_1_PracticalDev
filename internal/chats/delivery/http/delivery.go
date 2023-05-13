@@ -285,8 +285,8 @@ func (del *delivery) handleConnection(conn *ws.Conn, userID int) error {
 			}
 		}
 
-		params := pkgChats.SendMessageParams{AuthorID: userID, ChatID: chat.ID, Text: msgReq.Text}
-		createdMessage, err := del.serv.SendMessage(&params)
+		params := pkgChats.CreateMessageParams{AuthorID: userID, ChatID: chat.ID, Text: msgReq.Text}
+		createdMessage, err := del.serv.CreateMessage(&params)
 		if err != nil {
 			return err
 		}
