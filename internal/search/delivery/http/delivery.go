@@ -24,7 +24,7 @@ type delivery struct {
 	log *zap.Logger
 }
 
-func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del delivery) get(w http.ResponseWriter, _ *http.Request, p httprouter.Params) error {
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
 	if err != nil {
@@ -37,6 +37,7 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 		return err
 	}
 
+	w.Header().Set("Content-Type", "application/json")
 	encoder := json.NewEncoder(w)
 	err = encoder.Encode(res)
 	if err != nil {
