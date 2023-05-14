@@ -51,11 +51,11 @@ CREATE TABLE IF NOT EXISTS boards_pins
 
 CREATE TABLE IF NOT EXISTS comments
 (
-    id          serial    NOT NULL PRIMARY KEY,
-    description text,
-    created_at  timestamp NOT NULL DEFAULT now(),
-    pin_id      int       NOT NULL REFERENCES pins (id) ON DELETE CASCADE,
-    user_id     int       NOT NULL REFERENCES users (id) ON DELETE CASCADE
+    id         serial    NOT NULL PRIMARY KEY,
+    author_id  int       NOT NULL REFERENCES users (id),
+    pin_id     int       NOT NULL REFERENCES pins (id) ON DELETE CASCADE,
+    text       text      NOT NULL,
+    created_at timestamp NOT NULL DEFAULT now()
 );
 
 CREATE TABLE IF NOT EXISTS comment_likes
