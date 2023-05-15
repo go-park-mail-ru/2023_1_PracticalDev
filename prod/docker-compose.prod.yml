@@ -119,7 +119,6 @@ services:
     networks:
       - api-network
       - db-network
-      - nginx-network
   
   shortener:
     build:
@@ -137,6 +136,7 @@ services:
     networks:
       - api-network
       - db-network
+      - nginx-network
 
   docs:
     image: nginx

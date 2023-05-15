@@ -149,6 +149,7 @@ services:
     networks:
       - api-network
       - db-network
+      - nginx-network
 
   docs:
     image: nginx
