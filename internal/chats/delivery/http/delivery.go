@@ -48,18 +48,18 @@ func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.
 		}}
 
 	// chats
-	mux.GET(chatsUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(csrf(del.listByUser))), logger), logger))
-	mux.GET(chatUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(csrf(del.get))), logger), logger))
+	mux.GET(chatsUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(csrf(del.ListByUser))), logger), logger))
+	mux.GET(chatUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(csrf(del.Get))), logger), logger))
 
 	// messages
-	mux.GET(chatMessagesUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(csrf(del.messagesList))), logger), logger))
-	mux.GET(messagesUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(csrf(del.getMessagesByReceiver))), logger), logger))
+	mux.GET(chatMessagesUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(csrf(del.MessagesList))), logger), logger))
+	mux.GET(messagesUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(csrf(del.GetMessagesByReceiver))), logger), logger))
 
 	// connect to websocket
 	mux.GET(wsChatUrl, mw.HandleLogger(mw.ErrorHandler(authorizer(del.chatHandler), logger), logger))
 }
 
-func (del *delivery) listByUser(w http.ResponseWriter, _ *http.Request, p httprouter.Params) error {
+func (del *delivery) ListByUser(w http.ResponseWriter, _ *http.Request, p httprouter.Params) error {
 	strUserID := p.ByName("user-id")
 	userID, err := strconv.Atoi(strUserID)
 	if err != nil {
@@ -85,7 +85,7 @@ func (del *delivery) listByUser(w http.ResponseWriter, _ *http.Request, p httpro
 	return nil
 }
 
-func (del *delivery) messagesList(w http.ResponseWriter, _ *http.Request, p httprouter.Params) error {
+func (del *delivery) MessagesList(w http.ResponseWriter, _ *http.Request, p httprouter.Params) error {
 	strID := p.ByName("id")
 	chatID, err := strconv.Atoi(strID)
 	if err != nil {
@@ -111,7 +111,7 @@ func (del *delivery) messagesList(w http.ResponseWriter, _ *http.Request, p http
 	return nil
 }
 
-func (del *delivery) getMessagesByReceiver(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) GetMessagesByReceiver(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strUserID := p.ByName("user-id")
 	userID, err := strconv.Atoi(strUserID)
 	if err != nil {
@@ -148,7 +148,7 @@ func (del *delivery) getMessagesByReceiver(w http.ResponseWriter, r *http.Reques
 	return nil
 }
 
-func (del *delivery) get(w http.ResponseWriter, _ *http.Request, p httprouter.Params) error {
+func (del *delivery) Get(w http.ResponseWriter, _ *http.Request, p httprouter.Params) error {
 	strID := p.ByName("id")
 	id, err := strconv.Atoi(strID)
 	if err != nil {
@@ -285,8 +285,8 @@ func (del *delivery) handleConnection(conn *ws.Conn, userID int) error {
 			}
 		}
 
-		params := pkgChats.SendMessageParams{AuthorID: userID, ChatID: chat.ID, Text: msgReq.Text}
-		createdMessage, err := del.serv.SendMessage(&params)
+		params := pkgChats.CreateMessageParams{AuthorID: userID, ChatID: chat.ID, Text: msgReq.Text}
+		createdMessage, err := del.serv.CreateMessage(&params)
 		if err != nil {
 			return err
 		}

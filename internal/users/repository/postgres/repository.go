@@ -20,10 +20,14 @@ type repository struct {
 	log *zap.Logger
 }
 
+const getCmd = `
+	SELECT id, username, email, hashed_password, name, profile_image, website_url, account_type
+	FROM users
+	WHERE id = $1;`
+
 func (rep *repository) Get(id int) (models.User, error) {
-	authCommand := "SELECT * FROM users WHERE id = $1"
 	var profileImage, websiteUrl sql.NullString
-	rows, err := rep.db.Query(authCommand, id)
+	rows, err := rep.db.Query(getCmd, id)
 	if err != nil {
 		return models.User{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}

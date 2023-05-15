@@ -16,7 +16,7 @@ import (
 func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv users.Service, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger}
 
-	mux.GET("/users/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.get))), logger), logger), logger))
+	mux.GET("/users/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.Get))), logger), logger), logger))
 }
 
 type delivery struct {
@@ -24,7 +24,7 @@ type delivery struct {
 	log  *zap.Logger
 }
 
-func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
+func (del *delivery) Get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
