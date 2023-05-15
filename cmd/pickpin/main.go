@@ -52,6 +52,8 @@ import (
 	commentsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/comments/service"
 
 	pkgDb "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
+	shortenerService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener/delivery/grpc/client"
+	shortenerDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener/delivery/http"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
@@ -121,6 +123,15 @@ func main() {
 		os.Exit(1)
 	}
 
+	shortenerConn, err := grpc.Dial(
+		"shortener:8090",
+		grpc.WithTransportCredentials(insecure.NewCredentials()),
+	)
+	if err != nil {
+		logger.Error("cant connect to shortener service")
+		os.Exit(1)
+	}
+
 	mt := metrics.NewPrometheusMetrics("pickpin")
 	err = mt.SetupMetrics()
 	metricsMiddleware := middleware.NewHttpMetricsMiddleware(mt)
@@ -164,6 +175,8 @@ func main() {
 	commentsRepo := commentsRepository.NewRepository(db, logger)
 	commentsServ := commentsService.NewService(commentsRepo)
 
+	shortServ := shortenerService.NewShortenerClient(shortenerConn)
+
 	authDelivery.RegisterHandlers(mux, logger, authServ, token, metricsMiddleware)
 	likesDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, likesServ, metricsMiddleware)
 	usersDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, usersServ, metricsMiddleware)
@@ -175,6 +188,7 @@ func main() {
 	commentsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, commentsServ, metricsMiddleware)
 	ping.RegisterHandlers(mux, logger)
 	searchDelivery.RegisterHandlers(mux, logger, authorizer, searchServ)
+	shortenerDelivery.RegisterPostHandler(mux, logger, authorizer, CSRFMiddleware, shortServ, metricsMiddleware)
 
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",

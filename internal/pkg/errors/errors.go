@@ -28,6 +28,7 @@ var (
 	ErrLikeNotFound      = errors.New("no such like")
 	ErrFollowingNotFound = errors.New("no such following")
 	ErrChatNotFound      = errors.New("chat not found")
+	ErrLinkNotFound      = errors.New("link not found")
 
 	// CSRF
 	ErrBadCsrfTokenCookie = errors.New("bad csrf token cookie")
@@ -46,6 +47,7 @@ var (
 	ErrInvalidLimitParam   = errors.New("invalid limit param")
 	ErrInvalidPrivacy      = errors.New("invalid privacy")
 	ErrInvalidChatIDParam  = errors.New("invalid chat id param")
+	ErrInvalidLinkIDParam  = errors.New("invalid link param")
 
 	// WebSocket
 	ErrUpgradeToWebSocket = errors.New("failed to upgrade protocol to websocket")

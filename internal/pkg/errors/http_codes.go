@@ -19,6 +19,7 @@ var httpCodes = map[error]int{
 	ErrInvalidPageParam:    http.StatusBadRequest,
 	ErrInvalidLimitParam:   http.StatusBadRequest,
 	ErrInvalidChatIDParam:  http.StatusBadRequest,
+	ErrInvalidLinkIDParam:  http.StatusBadRequest,
 
 	ErrBadParams:          http.StatusBadRequest,
 	ErrBadRequest:         http.StatusBadRequest,
@@ -44,6 +45,7 @@ var httpCodes = map[error]int{
 	ErrBoardNotFound:   http.StatusNotFound,
 	ErrPinNotFound:     http.StatusNotFound,
 	ErrChatNotFound:    http.StatusNotFound,
+	ErrLinkNotFound:    http.StatusNotFound,
 
 	// Profile
 	ErrTooShortUsername: http.StatusBadRequest,
