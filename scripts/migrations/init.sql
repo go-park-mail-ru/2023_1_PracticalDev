@@ -100,6 +100,7 @@ CREATE TABLE IF NOT EXISTS notifications
     id         serial            NOT NULL PRIMARY KEY,
     user_id    int               NOT NULL REFERENCES users (id),
     type       notification_type NOT NULL,
+    message    text,
     is_read    boolean           NOT NULL DEFAULT false,
     created_at timestamp         NOT NULL DEFAULT now()
 );
