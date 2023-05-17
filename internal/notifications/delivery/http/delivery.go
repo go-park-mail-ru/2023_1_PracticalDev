@@ -1,7 +1,8 @@
 package http
 
 import (
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications"
+	"encoding/json"
+	pkgNotifications "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	ws "github.com/gorilla/websocket"
@@ -15,17 +16,18 @@ import (
 )
 
 const (
-	wsNotificationsUrl = "/notifications"
+	notificationsUrl   = "/notifications"
+	wsNotificationsUrl = "/ws/notifications"
 )
 
 type delivery struct {
-	serv     notifications.Service
+	serv     pkgNotifications.Service
 	log      *zap.Logger
 	upgrader ws.Upgrader
 }
 
-func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.Authorizer, serv notifications.Service,
-	m *mw.HttpMetricsMiddleware) {
+func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware,
+	serv pkgNotifications.Service, m *mw.HttpMetricsMiddleware) {
 	del := delivery{
 		serv: serv,
 		log:  logger,
@@ -37,9 +39,39 @@ func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.
 			},
 		}}
 
+	// notifications
+	mux.GET(notificationsUrl, mw.HandleLogger(mw.ErrorHandler(mw.Cors(authorizer(csrf(del.ListUnreadByUser))), logger),
+		logger))
+
 	// connect to websocket
 	mux.GET(wsNotificationsUrl, mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(
 		del.notificationsHandler), logger), logger), logger))
+}
+
+func (del *delivery) ListUnreadByUser(w http.ResponseWriter, _ *http.Request, p httprouter.Params) error {
+	strUserID := p.ByName("user-id")
+	userID, err := strconv.Atoi(strUserID)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrInvalidUserIdParam, err.Error())
+	}
+
+	notifications, err := del.serv.ListUnreadByUser(userID)
+	if err != nil {
+		return err
+	}
+
+	response := newListResponse(notifications)
+	data, err := json.Marshal(response)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+	return nil
 }
 
 func (del *delivery) notificationsHandler(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {

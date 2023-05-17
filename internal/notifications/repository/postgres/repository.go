@@ -43,10 +43,7 @@ func (rep *repository) Create(userID int, notificationType string, data interfac
 		return 0, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	defer func() {
-		err := tx.Rollback()
-		if err != nil {
-			rep.log.Error("DB Rollback failed", zap.Error(err))
-		}
+		_ = tx.Rollback()
 	}()
 
 	var notificationID int
@@ -119,4 +116,68 @@ func (rep *repository) Get(notificationID int) (*models.Notification, error) {
 	}
 
 	return notification, nil
+}
+
+const listUnreadByUserCmd = `
+		SELECT n.id, n.user_id, n.created_at, n.is_read, n.type,
+			np.pin_id,
+			nl.pin_id, nl.author_id,
+			nc.comment_id
+		FROM notifications n
+		LEFT JOIN new_pin_notifications np ON n.id = np.notification_id
+		LEFT JOIN new_like_notifications nl ON n.id = nl.notification_id
+		LEFT JOIN new_comment_notifications nc ON n.id = nc.notification_id
+		WHERE n.user_id = $1 AND n.is_read = false;`
+
+func (rep *repository) ListUnreadByUser(userID int) ([]models.Notification, error) {
+	rows, err := rep.db.Query(listUnreadByUserCmd, userID)
+	if err != nil {
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
+
+	var pinID1, pinID2, authorID, commentID sql.NullInt32
+	notifications := []models.Notification{}
+	notification := models.Notification{}
+	for rows.Next() {
+		err = rows.Scan(&notification.ID, &notification.UserID, &notification.CreatedAt, &notification.IsRead,
+			&notification.Type, &pinID1, &pinID2, &authorID, &commentID)
+		if err != nil {
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		}
+
+		switch notification.Type {
+		case constants.NewPin:
+			if pinID1.Valid {
+				notification.Data = models.NewPinNotification{PinID: int(pinID1.Int32)}
+			}
+		case constants.NewLike:
+			if pinID2.Valid && authorID.Valid {
+				notification.Data = models.NewLikeNotification{PinID: int(pinID2.Int32), AuthorID: int(authorID.Int32)}
+			}
+		case constants.NewComment:
+			if commentID.Valid {
+				notification.Data = models.NewCommentNotification{CommentID: int(commentID.Int32)}
+			}
+		}
+
+		notifications = append(notifications, notification)
+	}
+
+	return notifications, nil
+}
+
+const MarkAsReadCmd = `
+		UPDATE notifications 
+		SET is_read = true 
+		WHERE id = $1;`
+
+func (rep *repository) MarkAsRead(notificationID int) error {
+	_, err := rep.db.Exec(MarkAsReadCmd, notificationID)
+	if err != nil {
+		rep.log.Error(constants.DBQueryError, zap.Error(err), zap.String("sql_query", MarkAsReadCmd),
+			zap.Int("notification_id", notificationID))
+
+		return errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
+	return nil
 }

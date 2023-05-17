@@ -196,7 +196,8 @@ func main() {
 	ping.RegisterHandlers(mux, logger)
 	searchDelivery.RegisterHandlers(mux, logger, authorizer, searchServ)
 	shortenerDelivery.RegisterPostHandler(mux, logger, authorizer, CSRFMiddleware, shortServ, metricsMiddleware)
-	notificationsDelivery.RegisterHandlers(mux, logger, authorizer, notificationsServ, metricsMiddleware)
+	notificationsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, notificationsServ,
+		metricsMiddleware)
 
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
