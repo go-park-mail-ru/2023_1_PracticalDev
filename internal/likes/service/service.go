@@ -3,19 +3,24 @@ package service
 import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 type service struct {
-	rep likes.Repository
+	rep               likes.Repository
+	notificationsServ notifications.Service
+	pinsRep           pins.Repository
 }
 
-func NewService(rep likes.Repository) likes.Service {
-	return &service{rep}
+func NewService(rep likes.Repository, notificationsServ notifications.Service, pinsRep pins.Repository) likes.Service {
+	return &service{rep: rep, notificationsServ: notificationsServ, pinsRep: pinsRep}
 }
 
-func (serv *service) Like(pinId, authorId int) error {
-	exists, err := serv.rep.PinExists(pinId)
+func (serv *service) Like(pinID, authorID int) error {
+	exists, err := serv.rep.PinExists(pinID)
 	if err != nil {
 		return err
 	}
@@ -23,7 +28,7 @@ func (serv *service) Like(pinId, authorId int) error {
 		return pkgErrors.ErrPinNotFound
 	}
 
-	exists, err = serv.rep.UserExists(authorId)
+	exists, err = serv.rep.UserExists(authorID)
 	if err != nil {
 		return err
 	}
@@ -31,7 +36,7 @@ func (serv *service) Like(pinId, authorId int) error {
 		return pkgErrors.ErrUserNotFound
 	}
 
-	exists, err = serv.rep.LikeExists(pinId, authorId)
+	exists, err = serv.rep.LikeExists(pinID, authorID)
 	if err != nil {
 		return err
 	}
@@ -39,7 +44,26 @@ func (serv *service) Like(pinId, authorId int) error {
 		return pkgErrors.ErrLikeAlreadyExists
 	}
 
-	return serv.rep.Create(pinId, authorId)
+	err = serv.rep.Create(pinID, authorID)
+	if err != nil {
+		return err
+	}
+
+	pin, err := serv.pinsRep.Get(pinID)
+	if err != nil {
+		return err
+	}
+
+	if pin.Author != authorID {
+		err = serv.notificationsServ.Create(pin.Author, constants.NewLike, models.NewLikeNotification{
+			PinID:    pinID,
+			AuthorID: authorID})
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
 }
 
 func (serv *service) Unlike(pinId, authorId int) error {
