@@ -39,9 +39,15 @@ const createNewCommentNotificationCmd = `
 func (rep *repository) Create(userID int, notificationType string, data interface{}) (int, error) {
 	tx, err := rep.db.Begin()
 	if err != nil {
+		rep.log.Error("DB Begin failed", zap.Error(err))
 		return 0, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
-	defer tx.Rollback()
+	defer func() {
+		err := tx.Rollback()
+		if err != nil {
+			rep.log.Error("DB Rollback failed", zap.Error(err))
+		}
+	}()
 
 	var notificationID int
 	err = tx.QueryRow(createNotificationCmd, userID, notificationType).Scan(&notificationID)
@@ -66,6 +72,7 @@ func (rep *repository) Create(userID int, notificationType string, data interfac
 
 	err = tx.Commit()
 	if err != nil {
+		rep.log.Error("DB Commit failed", zap.Error(err))
 		return 0, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	return notificationID, nil
