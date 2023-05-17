@@ -60,7 +60,7 @@ func TestService_Create(t *testing.T) {
 	}
 }
 
-func TestService_MessagesList(t *testing.T) {
+func TestService_List(t *testing.T) {
 	type fields struct {
 		repo     *mocks.MockRepository
 		pinID    int
