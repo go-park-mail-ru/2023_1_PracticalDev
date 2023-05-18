@@ -112,7 +112,7 @@ func main() {
 
 	logger.Info("Starting http metrics...")
 
-	go metrics.ServePrometheusHTTP("0.0.0.0:9001")
+	go metrics.ServePrometheusHTTP("0.0.0.0:9005")
 
 	logger.Info("Starting http server...")
 	err = httpServer.ListenAndServe()
