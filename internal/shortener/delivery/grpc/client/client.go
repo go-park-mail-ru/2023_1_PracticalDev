@@ -2,6 +2,8 @@ package client
 
 import (
 	"context"
+	"fmt"
+	"os"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener/delivery/grpc/models"
@@ -37,4 +39,11 @@ func (c *client) Create(url string) (string, error) {
 
 	res := models.NewStringMessage(resp)
 	return res, nil
+}
+
+func (c *client) CreatePinLink(id int) (string, error) {
+	if os.Getenv("SHORT_HOST") == "localhost:8091" {
+		return c.Create(fmt.Sprintf("http://localhost/pins/%d", id))
+	}
+	return c.Create(fmt.Sprintf("https://pickpin.ru/pins/%d", id))
 }

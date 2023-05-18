@@ -61,7 +61,7 @@ func main() {
 		logger.Error("failed to connect to mongo db", zap.Error(err))
 		os.Exit(1)
 	}
-	defer client.Disconnect(context.Background())
+	defer client.Disconnect(context.Background()) //nolint
 	err = client.Ping(context.Background(), readpref.Primary())
 	if err != nil {
 		logger.Error("failed to ping mongo db", zap.Error(err))

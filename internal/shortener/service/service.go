@@ -1,6 +1,9 @@
 package service
 
 import (
+	"fmt"
+	"os"
+
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener"
 )
 
@@ -20,4 +23,11 @@ func (serv *service) Get(hash string) (string, error) {
 
 func (serv *service) Create(url string) (string, error) {
 	return serv.rep.Create(url)
+}
+
+func (serv *service) CreatePinLink(id int) (string, error) {
+	if os.Getenv("SHORT_HOST") == "localhost:8091" {
+		return serv.Create(fmt.Sprintf("http://localhost/pins/%d", id))
+	}
+	return serv.Create(fmt.Sprintf("https://pickpin.ru/pins/%d", id))
 }
