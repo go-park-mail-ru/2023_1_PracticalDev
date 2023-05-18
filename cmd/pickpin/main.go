@@ -47,6 +47,10 @@ import (
 	chatsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/chats/repository/postgres"
 	chatsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/chats/service"
 
+	commentsDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/comments/delivery/http"
+	commentsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/comments/repository/postgres"
+	commentsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/comments/service"
+
 	pkgDb "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/db"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
@@ -157,6 +161,9 @@ func main() {
 	chatsRepo := chatsRepository.NewRepository(db, logger)
 	chatsServ := chatsService.NewService(chatsRepo)
 
+	commentsRepo := commentsRepository.NewRepository(db, logger)
+	commentsServ := commentsService.NewService(commentsRepo)
+
 	authDelivery.RegisterHandlers(mux, logger, authServ, token, metricsMiddleware)
 	likesDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, likesServ, metricsMiddleware)
 	usersDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, usersServ, metricsMiddleware)
@@ -165,6 +172,7 @@ func main() {
 	boardsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, boardsAccessChecker, boardsServ, metricsMiddleware)
 	pinsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, middleware.NewAccessChecker(pinsServ), pinsServ, metricsMiddleware)
 	chatsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, chatsServ)
+	commentsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, commentsServ, metricsMiddleware)
 	ping.RegisterHandlers(mux, logger)
 	searchDelivery.RegisterHandlers(mux, logger, authorizer, searchServ)
 

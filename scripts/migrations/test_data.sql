@@ -76,7 +76,7 @@ VALUES ('Самолет', '#самолет #путешествия', 'https://pi
        ('Пейзаж "Кит"', '', 'https://pickpin.hb.bizmrg.com/eca6ca6a-841f-4098-a8ef-8530210f8aec.jpg', 2),
        ('Гранат', '', 'https://pickpin.hb.bizmrg.com/9ec4ce1a-ff5c-4f28-b4b4-b5d93882367e.jpg', 2);
 
-INSERT INTO comments(description, pin_id, user_id)
+INSERT INTO comments(text, pin_id, author_id)
 VALUES ('Why?', 1, 2),
        ('It is good.', 1, 3),
        ('Normal', 2, 1),

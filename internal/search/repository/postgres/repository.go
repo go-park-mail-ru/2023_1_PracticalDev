@@ -54,7 +54,7 @@ const getUsersCmd = `
 func (rep repository) Get(query string) (models.SearchRes, error) {
 	rows, err := rep.db.Query(getPinsCmd, query)
 	if err != nil {
-		rep.log.Error(constants.DBError, zap.String("sql_query", getPinsCmd),
+		rep.log.Error(constants.DBQueryError, zap.String("sql_query", getPinsCmd),
 			zap.String("search_query", query), zap.Error(err))
 		return models.SearchRes{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
@@ -65,7 +65,7 @@ func (rep repository) Get(query string) (models.SearchRes, error) {
 	for rows.Next() {
 		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
 		if err != nil {
-			rep.log.Error(constants.DBError, zap.String("sql_query", getPinsCmd),
+			rep.log.Error(constants.DBScanError, zap.String("sql_query", getPinsCmd),
 				zap.String("search_query", query), zap.Error(err))
 			return models.SearchRes{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
@@ -78,7 +78,7 @@ func (rep repository) Get(query string) (models.SearchRes, error) {
 
 	rows, err = rep.db.Query(getUsersCmd, query)
 	if err != nil {
-		rep.log.Error(constants.DBError, zap.String("sql_query", getUsersCmd),
+		rep.log.Error(constants.DBQueryError, zap.String("sql_query", getUsersCmd),
 			zap.String("search_query", query), zap.Error(err))
 		return models.SearchRes{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
@@ -89,7 +89,7 @@ func (rep repository) Get(query string) (models.SearchRes, error) {
 	for rows.Next() {
 		err = rows.Scan(&user.Id, &user.Username, &user.Name, &profileImage, &websiteUrl)
 		if err != nil {
-			rep.log.Error(constants.DBError, zap.String("sql_query", getUsersCmd),
+			rep.log.Error(constants.DBScanError, zap.String("sql_query", getUsersCmd),
 				zap.String("search_query", query), zap.Error(err))
 			return models.SearchRes{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
@@ -101,7 +101,7 @@ func (rep repository) Get(query string) (models.SearchRes, error) {
 
 	rows, err = rep.db.Query(getBoardsCmd, query)
 	if err != nil {
-		rep.log.Error(constants.DBError, zap.String("sql_query", getBoardsCmd),
+		rep.log.Error(constants.DBQueryError, zap.String("sql_query", getBoardsCmd),
 			zap.String("search_query", query), zap.Error(err))
 		return models.SearchRes{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
@@ -111,7 +111,7 @@ func (rep repository) Get(query string) (models.SearchRes, error) {
 	for rows.Next() {
 		err = rows.Scan(&board.Id, &board.Name, &description, &board.Privacy, &board.UserId)
 		if err != nil {
-			rep.log.Error(constants.DBError, zap.String("sql_query", getBoardsCmd),
+			rep.log.Error(constants.DBScanError, zap.String("sql_query", getBoardsCmd),
 				zap.String("search_query", query), zap.Error(err))
 			return models.SearchRes{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}

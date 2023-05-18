@@ -18,6 +18,8 @@ interface_files=(
   internal/images/client/client.go
   internal/chats/service.go
   internal/chats/repository.go
+  internal/comments/service.go
+  internal/comments/repository.go
 )
 
 echo "Generating mocks..."
