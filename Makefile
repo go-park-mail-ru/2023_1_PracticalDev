@@ -58,6 +58,7 @@ deploy:
 	cp prod/docker-compose.prod.yml docker-compose.yml
 	docker compose -f docker-compose.yml up -d --build backend
 	cp docker-compose.yml.old docker-compose.yml
+	rm docker-compose.yml.old
 
 .PHONY: metrics
 metrics:
@@ -65,3 +66,4 @@ metrics:
 	cp prod/docker-compose.prod.yml docker-compose.yml
 	docker compose -f docker-compose.yml up -d node_exporter prometheus grafana
 	cp docker-compose.yml.old docker-compose.yml
+	rm docker-compose.yml.old

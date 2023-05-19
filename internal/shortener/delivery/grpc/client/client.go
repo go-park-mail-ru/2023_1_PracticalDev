@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"os"
 
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener/delivery/grpc/models"
 	proto "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener/delivery/grpc/proto"
@@ -24,7 +25,7 @@ func NewShortenerClient(con *grpc.ClientConn) shortener.ShortenerService {
 func (c *client) Get(hash string) (string, error) {
 	resp, err := c.shortenerClient.Get(context.Background(), models.NewProtoStringMessage(hash))
 	if err != nil {
-		return "", err
+		return "", errors.RestoreHTTPError(errors.GRPCUnwrapper(err))
 	}
 
 	res := models.NewStringMessage(resp)
@@ -34,7 +35,7 @@ func (c *client) Get(hash string) (string, error) {
 func (c *client) Create(url string) (string, error) {
 	resp, err := c.shortenerClient.Create(context.Background(), models.NewProtoStringMessage(url))
 	if err != nil {
-		return "", err
+		return "", errors.RestoreHTTPError(errors.GRPCUnwrapper(err))
 	}
 
 	res := models.NewStringMessage(resp)

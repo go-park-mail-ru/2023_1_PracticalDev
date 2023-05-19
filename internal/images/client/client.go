@@ -6,6 +6,7 @@ import (
 
 	proto "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/images/proto"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"google.golang.org/grpc"
 )
 
@@ -30,7 +31,7 @@ func (client *client) UploadImage(ctx context.Context, image *models.Image) (str
 
 	if err != nil {
 		fmt.Println(err)
-		return "", err
+		return "", errors.RestoreHTTPError(errors.GRPCUnwrapper(err))
 	}
 
 	return url.GetURL(), nil
