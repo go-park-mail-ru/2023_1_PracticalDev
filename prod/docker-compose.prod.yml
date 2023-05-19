@@ -47,7 +47,7 @@ services:
         condition: on-failure
 
   backend:
-    image: backend
+    image: pickpin
     container_name: backend
     env_file:
       - .env
