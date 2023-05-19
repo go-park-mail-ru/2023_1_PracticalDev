@@ -168,10 +168,6 @@ services:
     command: "--config.file=/etc/prometheus/prometheus.yml"
     volumes:
       - ./configs/:/etc/prometheus/
-    depends_on:
-      - backend
-      - auth
-      - images
 
   grafana:
     container_name: "grafana"
