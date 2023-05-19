@@ -67,3 +67,15 @@ metrics:
 	docker compose -f docker-compose.yml up -d node_exporter prometheus grafana
 	cp docker-compose.yml.old docker-compose.yml
 	rm docker-compose.yml.old
+
+.PHONY: build-images
+build-images:
+	./scripts/build_images.sh
+
+.PHONY: push-images
+push-images: build-images
+	./scripts/push_images.sh
+	
+.PHONY: pull-images
+pull-images:
+	./scripts/pull_images.sh
