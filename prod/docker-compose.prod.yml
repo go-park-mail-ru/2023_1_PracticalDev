@@ -47,7 +47,7 @@ services:
         condition: on-failure
 
   backend:
-    build: "."
+    image: backend
     container_name: backend
     env_file:
       - .env
@@ -70,9 +70,7 @@ services:
         condition: on-failure
 
   images:
-    build:
-      context: .
-      dockerfile: ./cmd/images/Dockerfile
+    image: images
     container_name: images
     volumes:
       - ./.aws/credentials:/root/.aws/credentials
@@ -85,9 +83,7 @@ services:
       - api-network
 
   auth:
-    build:
-      context: .
-      dockerfile: ./cmd/auth/Dockerfile
+    image: auth
     container_name: auth
     env_file:
       - .env
@@ -103,9 +99,7 @@ services:
       - redis-network
 
   search:
-    build:
-      context: .
-      dockerfile: ./cmd/search/Dockerfile
+    image: search
     container_name: search
     env_file:
       - .env
@@ -119,9 +113,7 @@ services:
       - db-network
   
   shortener:
-    build:
-      context: .
-      dockerfile: ./cmd/shortener/Dockerfile
+    image: shortener
     container_name: shortener
     depends_on:
       - db

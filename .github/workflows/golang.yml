@@ -40,9 +40,6 @@ jobs:
       - name: Start DB
         run: make db && ./scripts/check_db_available.sh
 
-      - name: Run migrations
-        run: ./scripts/run_migrations.sh
-
       - name: Populate DB with test data
         run: ././scripts/populate_db.sh
         
@@ -51,3 +48,34 @@ jobs:
 
       - name: Get coverage
         run: make print-coverage
+
+  Deploy:
+    if: github.ref == 'refs/heads/master'
+    runs-on: ubuntu-latest
+    needs: [Lint, Unit-test]
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to YC Container Registry
+        id: login-cr
+        uses: yc-actions/yc-cr-login@v1
+        with:
+          yc-sa-json-credentials: ${{ secrets.YC_SA_JSON_CREDENTIALS }}
+
+      - name: Build docker imaged
+        run: make build-images
+
+      - name: Push docker imaged
+        run: make push-images
+      
+      - name: Run backend # даже интересно, будет ли это работать
+        uses: appleboy/ssh-action@master
+        with:
+          host: pickpin.ru
+          username: ${{ secrets.USERNAME }}
+          key: ${{ secrets.PRIVATE_KEY }}
+          script: |
+            cd 2023_Practical_Dev/backend
+            make pull-images
+            make deploy
+            make metrics
