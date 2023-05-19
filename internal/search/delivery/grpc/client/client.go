@@ -5,6 +5,7 @@ import (
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search"
 	grpcModels "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/delivery/grpc/models"
 	proto "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/search/delivery/grpc/proto"
@@ -30,7 +31,7 @@ func (c *client) Get(userId int, query string) (models.SearchRes, error) {
 	resp, err := c.searchClient.Get(context.TODO(), q)
 	res := *grpcModels.NewQueryResult(resp)
 	if err != nil {
-		return res, err
+		return res, errors.RestoreHTTPError(errors.GRPCUnwrapper(err))
 	}
 
 	for i := range res.Pins {

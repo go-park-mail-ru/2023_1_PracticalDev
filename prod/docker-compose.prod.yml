@@ -65,8 +65,6 @@ services:
       - api-network
     environment:
         SHORT_HOST: "short.pickpin.ru"
-    ports:
-      - 8080:8080
     deploy:
       restart_policy:
         condition: on-failure

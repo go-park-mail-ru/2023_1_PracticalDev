@@ -4,6 +4,7 @@ import (
 	"fmt"
 
 	"github.com/pkg/errors"
+	"google.golang.org/grpc/status"
 )
 
 var (
@@ -72,6 +73,72 @@ var (
 	ErrChatAlreadyExists      = errors.New("chat already exists")
 )
 
+var ErrorsByNames = map[string]error{
+	// Common delivery
+	ErrMissingFile.Error(): ErrMissingFile,
+
+	// Common repository
+	ErrDb.Error():           ErrDb,
+	ErrImageService.Error(): ErrImageService,
+
+	// Profile
+	ErrTooShortUsername.Error(): ErrTooShortUsername,
+	ErrTooLongUsername.Error():  ErrTooLongUsername,
+	ErrEmptyName.Error():        ErrEmptyName,
+	ErrTooLongName.Error():      ErrTooLongName,
+
+	// Not found
+	ErrUserNotFound.Error():      ErrUserNotFound,
+	ErrProfileNotFound.Error():   ErrProfileNotFound,
+	ErrBoardNotFound.Error():     ErrBoardNotFound,
+	ErrPinNotFound.Error():       ErrPinNotFound,
+	ErrLikeNotFound.Error():      ErrLikeNotFound,
+	ErrFollowingNotFound.Error(): ErrFollowingNotFound,
+	ErrChatNotFound.Error():      ErrChatNotFound,
+	ErrLinkNotFound.Error():      ErrLinkNotFound,
+
+	// CSRF
+	ErrBadCsrfTokenCookie.Error(): ErrBadCsrfTokenCookie,
+	ErrBadTokenTime.Error():       ErrBadTokenTime,
+	ErrBadTokenData.Error():       ErrBadTokenData,
+
+	// Auth
+	ErrWrongLoginOrPassword.Error(): ErrWrongLoginOrPassword,
+	ErrUserAlreadyExists.Error():    ErrUserAlreadyExists,
+
+	// Invalid Param
+	ErrInvalidUserIdParam.Error():  ErrInvalidUserIdParam,
+	ErrInvalidBoardIdParam.Error(): ErrInvalidBoardIdParam,
+	ErrInvalidPinIdParam.Error():   ErrInvalidPinIdParam,
+	ErrInvalidPageParam.Error():    ErrInvalidPageParam,
+	ErrInvalidLimitParam.Error():   ErrInvalidLimitParam,
+	ErrInvalidPrivacy.Error():      ErrInvalidPrivacy,
+	ErrInvalidChatIDParam.Error():  ErrInvalidChatIDParam,
+	ErrInvalidLinkIDParam.Error():  ErrInvalidLinkIDParam,
+
+	// WebSocket
+	ErrUpgradeToWebSocket.Error(): ErrUpgradeToWebSocket,
+
+	ErrBadParams.Error():              ErrBadParams,
+	ErrBadRequest.Error():             ErrBadRequest,
+	ErrBadSessionCookie.Error():       ErrBadSessionCookie,
+	ErrFileCopy.Error():               ErrFileCopy,
+	ErrParseForm.Error():              ErrParseForm,
+	ErrParseJson.Error():              ErrParseJson,
+	ErrSameUserId.Error():             ErrSameUserId,
+	ErrService.Error():                ErrService,
+	ErrCreateResponse.Error():         ErrCreateResponse,
+	ErrCreateCsrfToken.Error():        ErrCreateCsrfToken,
+	ErrUnauthorized.Error():           ErrUnauthorized,
+	ErrNoContent.Error():              ErrNoContent,
+	ErrForbidden.Error():              ErrForbidden,
+	ErrTokenExpired.Error():           ErrTokenExpired,
+	ErrLikeAlreadyExists.Error():      ErrLikeAlreadyExists,
+	ErrFollowingAlreadyExists.Error(): ErrFollowingAlreadyExists,
+	ErrPinAlreadyAdded.Error():        ErrPinAlreadyAdded,
+	ErrChatAlreadyExists.Error():      ErrChatAlreadyExists,
+}
+
 type ErrRepositoryQuery struct {
 	Func   string // the failing function name
 	Query  string // query
@@ -81,4 +148,20 @@ type ErrRepositoryQuery struct {
 
 func (e ErrRepositoryQuery) Error() string {
 	return fmt.Sprintf("%s: query [%s], params %v, error [%s]", e.Func, e.Query, e.Params, e.Err)
+}
+
+func GRPCWrapper(err error) error {
+	errCause := errors.Cause(err).Error()
+	code, _ := GetGRPCCodeByError(err)
+	return status.Error(code, errCause)
+}
+
+func GRPCUnwrapper(err error) error {
+	s, _ := status.FromError(errors.Cause(err))
+
+	return errors.New(s.Message())
+}
+
+func RestoreHTTPError(err error) error {
+	return ErrorsByNames[err.Error()]
 }

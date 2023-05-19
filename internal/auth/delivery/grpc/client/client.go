@@ -10,6 +10,7 @@ import (
 	proto "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/delivery/grpc/proto"
 	hasherPkg "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/hasher"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"google.golang.org/grpc"
@@ -33,7 +34,7 @@ func (client *client) Authenticate(login, hashedPassword string) (models.User, a
 	}
 	resp, err := client.authClient.Authenticate(context.TODO(), &authParams)
 	if err != nil {
-		return models.User{}, auth.SessionParams{}, errors.Wrap(err, "Authenticate")
+		return models.User{}, auth.SessionParams{}, pkgErrors.RestoreHTTPError(pkgErrors.GRPCUnwrapper(err))
 	}
 
 	sessionParams := client.CreateSession(int(resp.GetID()))
@@ -68,7 +69,7 @@ func (client *client) SetSession(token string, session *models.Session, expirati
 	}
 	_, err := client.authClient.SetSession(context.TODO(), &setParams)
 
-	return err
+	return pkgErrors.RestoreHTTPError(pkgErrors.GRPCUnwrapper(err))
 }
 
 func (client *client) CheckAuth(userId, sessionId string) (models.User, error) {
@@ -79,7 +80,7 @@ func (client *client) CheckAuth(userId, sessionId string) (models.User, error) {
 
 	user, err := client.authClient.CheckAuth(context.TODO(), &checkParams)
 	if err != nil {
-		return models.User{}, errors.Wrap(err, "Authenticate")
+		return models.User{}, pkgErrors.RestoreHTTPError(pkgErrors.GRPCUnwrapper(err))
 	}
 
 	return *protomodels.NewUser(user), err
@@ -93,7 +94,7 @@ func (client *client) DeleteSession(userId, sessionId string) error {
 
 	_, err := client.authClient.CheckAuth(context.TODO(), &checkParams)
 	if err != nil {
-		return errors.Wrap(err, "Authenticate")
+		return pkgErrors.RestoreHTTPError(pkgErrors.GRPCUnwrapper(err))
 	}
 
 	return nil
@@ -115,7 +116,7 @@ func (client *client) Register(user *auth.RegisterParams) (models.User, auth.Ses
 
 	usr, err := client.authClient.Register(context.TODO(), protomodels.NewProtoUser(&tmp))
 	if err != nil {
-		return models.User{}, auth.SessionParams{}, errors.Wrap(err, "Register")
+		return models.User{}, auth.SessionParams{}, pkgErrors.RestoreHTTPError(pkgErrors.GRPCUnwrapper(err))
 	}
 
 	return client.Authenticate(usr.GetEmail(), user.Password)
