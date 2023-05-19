@@ -81,6 +81,7 @@ jobs:
             cr.yandex
 
             cd 2023_Practical_Dev/backend
+            git checkout main
             git pull --rebase
 
             make pull-images
