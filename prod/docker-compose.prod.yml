@@ -20,6 +20,19 @@ services:
       restart_policy:
         condition: on-failure
 
+  mongo:
+    image: mongo
+    container_name: mongo
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: "${MONGO_ROOT_USER}"
+        MONGO_INITDB_ROOT_PASSWORD: "${MONGO_ROOT_PASSWORD}"
+        MONGO_INITDB_DATABASE: "url_shortener"
+    networks:
+      - db-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+
   redis:
     image: redis:latest
     container_name: redis
@@ -44,11 +57,16 @@ services:
       - images
       - auth
       - search
+      - shortener
     networks:
       - nginx-network
       - db-network
       - redis-network
       - api-network
+    environment:
+        SHORT_HOST: "short.pickpin.ru"
+    ports:
+      - 8080:8080
     deploy:
       restart_policy:
         condition: on-failure
@@ -75,6 +93,9 @@ services:
     container_name: auth
     env_file:
       - .env
+    depends_on:
+      - db
+      - redis
     deploy:
       restart_policy:
         condition: on-failure
@@ -90,12 +111,32 @@ services:
     container_name: search
     env_file:
       - .env
+    depends_on:
+      - db
     deploy:
       restart_policy:
         condition: on-failure
     networks:
       - api-network
       - db-network
+  
+  shortener:
+    build:
+      context: .
+      dockerfile: ./cmd/shortener/Dockerfile
+    container_name: shortener
+    depends_on:
+      - db
+      - mongo
+    env_file:
+      - .env
+    deploy:
+      restart_policy:
+        condition: on-failure
+    networks:
+      - api-network
+      - db-network
+      - nginx-network
 
   docs:
     image: nginx
@@ -105,35 +146,6 @@ services:
       - ./docs/openapi.yml:/usr/share/nginx/html/openapi.yml:ro
     ports:
       - ${DOCS_PORT}:80
-    networks:
-      - nginx-network
-    deploy:
-      restart_policy:
-        condition: on-failure
-  
-  frontend:
-    build:
-      context: https://github.com/frontend-park-mail-ru/2023_1_PracticalDev.git#main
-      dockerfile: Dockerfile.prod
-    container_name: frontend
-    command: npm run server
-    networks:
-      - nginx-network
-    deploy:
-      restart_policy:
-        condition: on-failure
-
-  nginx:
-    image: nginx
-    container_name: nginx
-    volumes:
-      - ./configs/pickpin.conf:/etc/nginx/conf.d/default.conf
-    ports:
-      - 80:80
-    depends_on:
-      - backend
-      - frontend
-      - docs
     networks:
       - nginx-network
     deploy:

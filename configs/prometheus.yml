@@ -27,6 +27,12 @@ scrape_configs:
     static_configs:
       - targets: [ 'search:9004' ]
 
+  - job_name: shortener
+    scrape_interval: 5s
+    metrics_path: '/prometheus'
+    static_configs:
+      - targets: [ 'shortener:9005' ]
+
   - job_name: 'node'
     static_configs:
       - targets: ['node-exporter:9100']
