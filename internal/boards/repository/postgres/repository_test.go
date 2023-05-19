@@ -574,10 +574,11 @@ func TestPinsList(t *testing.T) {
 	tests := map[string]testCase{
 		"good query": {
 			prepare: func(f *fields) {
-				rows := sqlmock.NewRows([]string{"id", "title", "description", "media_source", "author_id"})
-				rows = rows.AddRow(1, "t1", "d1", "ms_url1", 12)
-				rows = rows.AddRow(2, "t2", "d2", "ms_url2", 12)
-				rows = rows.AddRow(3, "t3", "d3", "ms_url3", 12)
+				rows := sqlmock.NewRows([]string{"id", "title", "description", "media_source", "media_source_color",
+					"author_id"})
+				rows = rows.AddRow(1, "t1", "d1", "ms_url1", "rgb(39, 102, 120)", 12)
+				rows = rows.AddRow(2, "t2", "d2", "ms_url2", "rgb(39, 102, 120)", 12)
+				rows = rows.AddRow(3, "t3", "d3", "ms_url3", "rgb(39, 102, 120)", 12)
 				f.mock.
 					ExpectQuery(regexp.QuoteMeta(pinsListCmd)).
 					WithArgs(3, 30, 0).
@@ -587,9 +588,12 @@ func TestPinsList(t *testing.T) {
 			page:    1,
 			limit:   30,
 			pins: []models.Pin{
-				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
-				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
-				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
+				{Id: 1, Title: "t1", MediaSource: "ms_url1", MediaSourceColor: "rgb(39, 102, 120)", Description: "d1",
+					Author: 12},
+				{Id: 2, Title: "t2", MediaSource: "ms_url2", MediaSourceColor: "rgb(39, 102, 120)", Description: "d2",
+					Author: 12},
+				{Id: 3, Title: "t3", MediaSource: "ms_url3", MediaSourceColor: "rgb(39, 102, 120)", Description: "d3",
+					Author: 12},
 			},
 			err: nil,
 		},

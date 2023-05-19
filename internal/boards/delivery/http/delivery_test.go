@@ -587,9 +587,12 @@ func TestPinsList(t *testing.T) {
 		"usual": {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().PinsList(3, 12, 1, 30).Return([]models.Pin{
-					{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
-					{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 10},
-					{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 3},
+					{Id: 1, Title: "t1", MediaSource: "ms_url1", MediaSourceColor: "rgb(39, 102, 120)",
+						Description: "d1", Author: 12},
+					{Id: 2, Title: "t2", MediaSource: "ms_url2", MediaSourceColor: "rgb(39, 102, 120)",
+						Description: "d2", Author: 10},
+					{Id: 3, Title: "t3", MediaSource: "ms_url3", MediaSourceColor: "rgb(39, 102, 120)",
+						Description: "d3", Author: 3},
 				}, nil)
 			},
 			params: []httprouter.Param{
@@ -598,7 +601,7 @@ func TestPinsList(t *testing.T) {
 				{Key: "id", Value: "12"},
 				{Key: "user-id", Value: "3"},
 			},
-			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","n_likes":0,"liked":false,"author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","n_likes":0,"liked":false,"author_id":10},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","n_likes":0,"liked":false,"author_id":3}]}`,
+			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","media_source_color":"rgb(39, 102, 120)","n_likes":0,"liked":false,"author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","media_source_color":"rgb(39, 102, 120)","n_likes":0,"liked":false,"author_id":10},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","media_source_color":"rgb(39, 102, 120)","n_likes":0,"liked":false,"author_id":3}]}`,
 			err:      nil,
 		},
 		"no pins": {

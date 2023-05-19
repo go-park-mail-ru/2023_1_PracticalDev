@@ -1,16 +1,10 @@
 package postgres
 
 import (
-	"bytes"
 	"context"
 	"database/sql"
 	"fmt"
-	"image"
-	"image/color"
-	_ "image/jpeg" // импортируем пакет для декодирования JPEG
-	_ "image/png"  // импортируем пакет для декодирования JPEG
-	"math"
-
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
@@ -18,6 +12,7 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
+	pkgImage "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/image"
 )
 
 func NewRepository(db *sql.DB, s3Service images.ImageClient, log *zap.Logger) pkgPins.Repository {
@@ -30,50 +25,10 @@ type repository struct {
 	imgServ images.ImageClient
 }
 
-func bytesToImage(b []byte) (image.Image, error) {
-	img, _, err := image.Decode(bytes.NewReader(b))
-	if err != nil {
-		return nil, err
-	}
-	return img, nil
-}
-
-type AvgColor struct {
-	Red   uint8
-	Green uint8
-	Blue  uint8
-}
-
-func calcAvgColor(img image.Image) (result AvgColor) {
-	imgSize := img.Bounds().Size()
-
-	var redSum float64
-	var greenSum float64
-	var blueSum float64
-
-	for x := 0; x <= imgSize.X; x++ {
-		for y := 0; y <= imgSize.Y; y++ {
-			pixel := img.At(x, y)
-			col := color.RGBAModel.Convert(pixel).(color.RGBA)
-
-			redSum += float64(col.R)
-			greenSum += float64(col.G)
-			blueSum += float64(col.B)
-		}
-	}
-
-	imgArea := float64(imgSize.X * imgSize.Y)
-
-	result.Red = uint8(math.Round(redSum / imgArea))
-	result.Green = uint8(math.Round(greenSum / imgArea))
-	result.Blue = uint8(math.Round(blueSum / imgArea))
-
-	return
-}
-
-const createCmd = `INSERT INTO pins (title, media_source, media_source_color, description, author_id)
-				   VALUES ($1, $2, $3, $4, $5)
-				   RETURNING id, title, media_source, description, author_id;`
+const createCmd = `
+		INSERT INTO pins (title, media_source, media_source_color, description, author_id)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id, title, media_source, media_source_color, description, author_id;`
 
 func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error) {
 	url, err := repo.imgServ.UploadImage(context.Background(), &params.MediaSource)
@@ -81,12 +36,15 @@ func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error)
 		return models.Pin{}, errors.Wrap(pkgErrors.ErrImageService, err.Error())
 	}
 
-	img, err := bytesToImage(params.MediaSource.Bytes)
-	if err != nil {
-		return models.Pin{}, err
+	avgColor := pkgImage.Color{
+		Red:   constants.DefaultRedAvgColor,
+		Green: constants.DefaultGreenAvgColor,
+		Blue:  constants.DefaultBlueAvgColor,
 	}
-	avgColor := calcAvgColor(img)
-	// (%d, %d, %d) #12F4D4
+	img, err := pkgImage.BytesToImage(params.MediaSource.Bytes)
+	if err == nil {
+		avgColor = pkgImage.CalcAvgColor(img)
+	}
 	avgColorStr := fmt.Sprintf("rgb(%d, %d, %d)", avgColor.Red, avgColor.Green, avgColor.Blue)
 
 	row := repo.db.QueryRow(createCmd,
@@ -99,7 +57,8 @@ func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error)
 
 	retrievedPin := models.Pin{}
 	var title, description, mediaSource sql.NullString
-	err = row.Scan(&retrievedPin.Id, &title, &mediaSource, &description, &retrievedPin.Author)
+	err = row.Scan(&retrievedPin.Id, &title, &mediaSource, &retrievedPin.MediaSourceColor, &description,
+		&retrievedPin.Author)
 	if err != nil {
 		return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
@@ -110,12 +69,17 @@ func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error)
 	return retrievedPin, nil
 }
 
+const getCmd = `
+		SELECT id, title, description, media_source, media_source_color, n_likes, author_id
+		FROM pins
+		WHERE id = $1;`
+
 func (repo *repository) Get(id int) (models.Pin, error) {
 	row := repo.db.QueryRow(getCmd, id)
 
 	pin := models.Pin{}
 	var title, description, mediaSource sql.NullString
-	err := row.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
+	err := row.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Author)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Pin{}, errors.Wrap(pkgErrors.ErrPinNotFound, err.Error())
@@ -130,6 +94,13 @@ func (repo *repository) Get(id int) (models.Pin, error) {
 	return pin, nil
 }
 
+const listByUserCmd = `
+		SELECT id, title, description, media_source, media_source_color, n_likes, author_id
+		FROM pins 
+		WHERE author_id = $1
+		ORDER BY created_at DESC 
+		LIMIT $2 OFFSET $3;`
+
 func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listByUserCmd, userId, limit, (page-1)*limit)
 	if err != nil {
@@ -141,7 +112,7 @@ func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin,
 	var title, description, mediaSource sql.NullString
 
 	for rows.Next() {
-		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Author)
 		if err != nil {
 			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
@@ -154,10 +125,11 @@ func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin,
 	return pins, nil
 }
 
-const listCmd = `SELECT id, title, description, media_source, media_source_color, n_likes, author_id 
-					FROM pins 
-					ORDER BY created_at DESC 
-					LIMIT $1 OFFSET $2;`
+const listCmd = `
+		SELECT id, title, description, media_source, media_source_color, n_likes, author_id 
+		FROM pins 
+		ORDER BY created_at DESC 
+		LIMIT $1 OFFSET $2;`
 
 func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listCmd, limit, (page-1)*limit)
@@ -167,22 +139,29 @@ func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 
 	pins := []models.Pin{}
 	pin := models.Pin{}
-	var title, description, mediaSourceColor sql.NullString
+	var title, description, mediaSource sql.NullString
 
 	for rows.Next() {
-		err = rows.Scan(&pin.Id, &title, &description, &pin.MediaSource, &mediaSourceColor, &pin.NumLikes,
-			&pin.Author)
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Author)
 		if err != nil {
 			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
+
 		pin.Title = title.String
 		pin.Description = description.String
-		pin.MediaSourceColor = mediaSourceColor.String
+		pin.MediaSource = mediaSource.String
 		pins = append(pins, pin)
 	}
 
 	return pins, nil
 }
+
+const fullUpdateCmd = `
+		UPDATE pins
+		SET title = $1::VARCHAR,
+		description = $2::TEXT
+		WHERE id = $3
+		RETURNING id, title, description, media_source, media_source_color, author_id;`
 
 func (repo *repository) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin, error) {
 	row := repo.db.QueryRow(fullUpdateCmd,
@@ -193,7 +172,8 @@ func (repo *repository) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin
 
 	retrievedPin := models.Pin{}
 	var title, description, mediaSource sql.NullString
-	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.MediaSourceColor,
+		&retrievedPin.Author)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Pin{}, errors.Wrap(pkgErrors.ErrPinNotFound, err.Error())
@@ -208,6 +188,10 @@ func (repo *repository) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin
 	return retrievedPin, nil
 }
 
+const deleteCmd = `
+		DELETE FROM pins 
+		WHERE id = $1;`
+
 func (repo *repository) Delete(id int) error {
 	_, err := repo.db.Exec(deleteCmd, id)
 	if err != nil {
@@ -217,9 +201,10 @@ func (repo *repository) Delete(id int) error {
 	return nil
 }
 
-const isLikedByUserCmd = `SELECT EXISTS(SELECT pin_id
-										FROM pin_likes
-										WHERE pin_id = $1 AND author_id = $2) AS liked;`
+const isLikedByUserCmd = `
+		SELECT EXISTS(SELECT pin_id
+		FROM pin_likes
+		WHERE pin_id = $1 AND author_id = $2) AS liked;`
 
 func (repo *repository) IsLikedByUser(pinId, userId int) (bool, error) {
 	row := repo.db.QueryRow(isLikedByUserCmd, pinId, userId)
@@ -231,6 +216,11 @@ func (repo *repository) IsLikedByUser(pinId, userId int) (bool, error) {
 	}
 	return liked, nil
 }
+
+const checkWriteCmd = `
+		SELECT EXISTS(SELECT id
+		FROM pins
+		WHERE id = $1 AND author_id = $2);`
 
 func (repo *repository) CheckWriteAccess(userId, pinId string) (bool, error) {
 	row := repo.db.QueryRow(checkWriteCmd, pinId, userId)

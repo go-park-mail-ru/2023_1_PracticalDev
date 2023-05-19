@@ -7,20 +7,22 @@ import (
 
 // API responses
 type createResponse struct {
-	Id          int    `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	MediaSource string `json:"media_source"`
-	Author      int    `json:"author_id"`
+	Id               int    `json:"id"`
+	Title            string `json:"title"`
+	Description      string `json:"description"`
+	MediaSource      string `json:"media_source"`
+	MediaSourceColor string `json:"media_source_color"`
+	Author           int    `json:"author_id"`
 }
 
 func newCreateResponse(pin *models.Pin) *createResponse {
 	return &createResponse{
-		Id:          pin.Id,
-		Title:       xss.Sanitize(pin.Title),
-		Description: xss.Sanitize(pin.Description),
-		MediaSource: pin.MediaSource,
-		Author:      pin.Author,
+		Id:               pin.Id,
+		Title:            xss.Sanitize(pin.Title),
+		Description:      xss.Sanitize(pin.Description),
+		MediaSource:      pin.MediaSource,
+		MediaSourceColor: pin.MediaSourceColor,
+		Author:           pin.Author,
 	}
 }
 
@@ -40,41 +42,45 @@ func newListResponse(pins []models.Pin) *listResponse {
 }
 
 type getResponse struct {
-	Id          int    `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	MediaSource string `json:"media_source"`
-	NumLikes    int    `json:"n_likes"`
-	Liked       bool   `json:"liked"`
-	Author      int    `json:"author_id"`
+	Id               int    `json:"id"`
+	Title            string `json:"title"`
+	Description      string `json:"description"`
+	MediaSource      string `json:"media_source"`
+	MediaSourceColor string `json:"media_source_color"`
+	NumLikes         int    `json:"n_likes"`
+	Liked            bool   `json:"liked"`
+	Author           int    `json:"author_id"`
 }
 
 func newGetResponse(pin *models.Pin) *getResponse {
 	return &getResponse{
-		Id:          pin.Id,
-		Title:       xss.Sanitize(pin.Title),
-		Description: xss.Sanitize(pin.Description),
-		MediaSource: pin.MediaSource,
-		NumLikes:    pin.NumLikes,
-		Liked:       pin.Liked,
-		Author:      pin.Author,
+		Id:               pin.Id,
+		Title:            xss.Sanitize(pin.Title),
+		Description:      xss.Sanitize(pin.Description),
+		MediaSource:      pin.MediaSource,
+		MediaSourceColor: pin.MediaSourceColor,
+		NumLikes:         pin.NumLikes,
+		Liked:            pin.Liked,
+		Author:           pin.Author,
 	}
 }
 
 type fullUpdateResponse struct {
-	Id          int    `json:"id"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	MediaSource string `json:"media_source"`
-	Author      int    `json:"author_id"`
+	Id               int    `json:"id"`
+	Title            string `json:"title"`
+	Description      string `json:"description"`
+	MediaSource      string `json:"media_source"`
+	MediaSourceColor string `json:"media_source_color"`
+	Author           int    `json:"author_id"`
 }
 
 func newFullUpdateResponse(pin *models.Pin) *fullUpdateResponse {
 	return &fullUpdateResponse{
-		Id:          pin.Id,
-		Title:       xss.Sanitize(pin.Title),
-		Description: xss.Sanitize(pin.Description),
-		MediaSource: pin.MediaSource,
-		Author:      pin.Author,
+		Id:               pin.Id,
+		Title:            xss.Sanitize(pin.Title),
+		Description:      xss.Sanitize(pin.Description),
+		MediaSource:      pin.MediaSource,
+		MediaSourceColor: pin.MediaSourceColor,
+		Author:           pin.Author,
 	}
 }

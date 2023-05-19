@@ -30,7 +30,7 @@ CREATE TABLE IF NOT EXISTS pins
     description        varchar(500),
     created_at         timestamp NOT NULL DEFAULT now(),
     media_source       varchar   NOT NULL,
-    media_source_color varchar   NOT NULL,
+    media_source_color varchar   NOT NULL DEFAULT 'rgb(39, 102, 120)',
     n_likes            int       NOT NULL DEFAULT 0,
     author_id          int       NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );

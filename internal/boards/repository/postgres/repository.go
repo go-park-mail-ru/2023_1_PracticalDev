@@ -248,7 +248,7 @@ func (rep *repository) AddPin(boardId, pinId int) error {
 	return nil
 }
 
-const pinsListCmd = `SELECT pins.id, title, description, media_source, author_id 
+const pinsListCmd = `SELECT pins.id, title, description, media_source, media_source_color, author_id 
 						FROM pins 
 						JOIN boards_pins AS b
 						ON b.board_id = $1 AND b.pin_id = pins.id
@@ -274,7 +274,8 @@ func (rep *repository) PinsList(boardId int, page, limit int) ([]models.Pin, err
 	var title, description, mediaSource sql.NullString
 
 	for rows.Next() {
-		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.Author)
+		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.MediaSourceColor,
+			&retrievedPin.Author)
 		if err != nil {
 			return nil, errors.Wrap(pkgErrors.ErrDb,
 				pkgErrors.ErrRepositoryQuery{

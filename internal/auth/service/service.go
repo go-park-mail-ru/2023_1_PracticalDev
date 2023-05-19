@@ -4,14 +4,12 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	hasherPkg "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/hasher"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	"github.com/google/uuid"
 	"github.com/pkg/errors"
 	"strconv"
 	"time"
 )
-
-const defaultAvatar = "https://pickpin.hb.bizmrg.com/default-user-icon-8-4024862977"
-const defaultAccountType = "personal"
 
 func NewService(rep auth.Repository) auth.Service {
 	return &service{rep}
@@ -62,9 +60,9 @@ func (serv *service) Register(user *auth.RegisterParams) (models.User, auth.Sess
 		Name:           user.Name,
 		Username:       user.Username,
 		Email:          user.Email,
-		ProfileImage:   defaultAvatar,
-		WebsiteUrl:     "",
-		AccountType:    defaultAccountType,
+		ProfileImage:   constants.DefaultAvatar,
+		WebsiteUrl:     constants.DefaultWebsiteUrl,
+		AccountType:    constants.DefaultAccountType,
 		HashedPassword: hash,
 	}
 
