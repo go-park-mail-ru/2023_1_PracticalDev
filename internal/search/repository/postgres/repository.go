@@ -24,13 +24,11 @@ type repository struct {
 const getPinsCmd = `
 		SELECT id, title, description, media_source, n_likes, author_id
 		FROM pins
-		WHERE websearch_to_tsquery('russian', $1) @@
-			  (to_tsvector('russian', title) || to_tsvector('russian', description))
-		   OR websearch_to_tsquery($1) @@ (to_tsvector(title) || to_tsvector(description))
-		   OR lower(title) || lower(description) LIKE lower('%' || $1 || '%')
-		ORDER BY ts_rank(to_tsvector('russian', title) || to_tsvector('russian', description),
-						 websearch_to_tsquery('russian', $1)),
-				 ts_rank(to_tsvector(title) || to_tsvector(description), websearch_to_tsquery($1)) DESC;`
+		WHERE websearch_to_tsquery('russian', $1) @@ to_tsvector('russian', title)
+		   OR websearch_to_tsquery($1) @@ to_tsvector(title)
+		   OR lower(title) LIKE lower('%' || $1 || '%')
+		ORDER BY ts_rank(to_tsvector('russian', title), websearch_to_tsquery('russian', $1)),
+				 ts_rank(to_tsvector(title), websearch_to_tsquery($1)) DESC;`
 
 const getBoardsCmd = `
 		SELECT *

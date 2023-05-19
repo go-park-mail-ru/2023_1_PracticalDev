@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	"go.uber.org/zap"
 
 	"github.com/pkg/errors"
@@ -38,6 +39,9 @@ const deleteCmd = `DELETE FROM pin_likes
 func (repo *repository) Delete(pinId, authorId int) error {
 	_, err := repo.db.Exec(deleteCmd, pinId, authorId)
 	if err != nil {
+		repo.log.Error(constants.DBQueryError, zap.Error(err), zap.String("sql_query", deleteCmd),
+			zap.Int("pin_id", pinId), zap.Int("author_id", authorId))
+
 		return errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 

@@ -39,7 +39,7 @@ const createNewCommentNotificationCmd = `
 func (rep *repository) Create(userID int, notificationType string, data interface{}) (int, error) {
 	tx, err := rep.db.Begin()
 	if err != nil {
-		rep.log.Error("DB Begin failed", zap.Error(err))
+		rep.log.Error("DB begin transaction failed", zap.Error(err))
 		return 0, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	defer func() {
@@ -49,6 +49,9 @@ func (rep *repository) Create(userID int, notificationType string, data interfac
 	var notificationID int
 	err = tx.QueryRow(createNotificationCmd, userID, notificationType).Scan(&notificationID)
 	if err != nil {
+		rep.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", createNotificationCmd),
+			zap.Int("user_id", userID), zap.String("notification_type", notificationType))
+
 		return 0, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
@@ -64,12 +67,13 @@ func (rep *repository) Create(userID int, notificationType string, data interfac
 		_, err = tx.Exec(createNewCommentNotificationCmd, notificationID, nc.CommentID)
 	}
 	if err != nil {
+		rep.log.Error(constants.DBQueryError, zap.Error(err), zap.Int("notification_id", notificationID))
 		return 0, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
 	err = tx.Commit()
 	if err != nil {
-		rep.log.Error("DB Commit failed", zap.Error(err))
+		rep.log.Error("DB commit failed", zap.Error(err))
 		return 0, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 	return notificationID, nil
@@ -94,6 +98,9 @@ func (rep *repository) Get(notificationID int) (*models.Notification, error) {
 	err := row.Scan(&notification.ID, &notification.UserID, &notification.CreatedAt, &notification.IsRead,
 		&notification.Type, &pinID1, &pinID2, &authorID, &commentID)
 	if err != nil {
+		rep.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", GetNotificationCmd),
+			zap.Int("notification_id", notificationID))
+
 		if err == sql.ErrNoRows {
 			return nil, errors.Wrap(pkgErrors.ErrNotificationNotFound, err.Error())
 		}
@@ -142,6 +149,9 @@ func (rep *repository) ListUnreadByUser(userID int) ([]models.Notification, erro
 		err = rows.Scan(&notification.ID, &notification.UserID, &notification.CreatedAt, &notification.IsRead,
 			&notification.Type, &pinID1, &pinID2, &authorID, &commentID)
 		if err != nil {
+			rep.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", listUnreadByUserCmd),
+				zap.Int("user_id", userID))
+
 			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
 

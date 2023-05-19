@@ -107,21 +107,21 @@ CREATE TABLE IF NOT EXISTS notifications
 
 CREATE TABLE IF NOT EXISTS new_pin_notifications
 (
-    notification_id int NOT NULL REFERENCES notifications (id),
-    pin_id          int NOT NULL REFERENCES pins (id)
+    notification_id int NOT NULL REFERENCES notifications (id) ON DELETE CASCADE,
+    pin_id          int NOT NULL REFERENCES pins (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS new_like_notifications
 (
-    notification_id int NOT NULL REFERENCES notifications (id),
-    pin_id          int NOT NULL REFERENCES pins (id),
-    author_id       int NOT NULL REFERENCES users (id)
+    notification_id int NOT NULL REFERENCES notifications (id) ON DELETE CASCADE,
+    pin_id          int NOT NULL REFERENCES pins (id) ON DELETE CASCADE,
+    author_id       int NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS new_comment_notifications
 (
-    notification_id int NOT NULL REFERENCES notifications (id),
-    comment_id      int NOT NULL REFERENCES comments (id)
+    notification_id int NOT NULL REFERENCES notifications (id) ON DELETE CASCADE,
+    comment_id      int NOT NULL REFERENCES comments (id) ON DELETE CASCADE
 );
 
 -- Обработка создания лайка
@@ -159,3 +159,33 @@ CREATE OR REPLACE TRIGGER pin_unlike
     ON pin_likes
     FOR EACH ROW
 EXECUTE PROCEDURE on_pin_unlike();
+
+-- Удаление уведомления из-за удаления сущностей на которые ссылается уведомление
+CREATE OR REPLACE FUNCTION on_specific_notification_delete() RETURNS TRIGGER AS
+$$
+BEGIN
+    DELETE
+    FROM notifications
+    WHERE id = old.notification_id;
+
+    RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER new_pin_notification_delete
+    AFTER DELETE
+    ON new_pin_notifications
+    FOR EACH ROW
+EXECUTE PROCEDURE on_specific_notification_delete();
+
+CREATE OR REPLACE TRIGGER new_comment_notification_delete
+    AFTER DELETE
+    ON new_comment_notifications
+    FOR EACH ROW
+EXECUTE PROCEDURE on_specific_notification_delete();
+
+CREATE OR REPLACE TRIGGER new_like_notification_delete
+    AFTER DELETE
+    ON new_like_notifications
+    FOR EACH ROW
+EXECUTE PROCEDURE on_specific_notification_delete();

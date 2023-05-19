@@ -151,11 +151,14 @@ func main() {
 	notificationsRepo := notificationsRepository.NewRepository(db, logger)
 	notificationsServ := notificationsService.NewService(notificationsRepo, logger)
 
+	followingsRepo := followingsRepository.NewRepository(db, logger)
+	followingsServ := followingsService.NewService(followingsRepo)
+
 	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
-	pinsServ := pinsService.NewService(pinsRepo)
+	pinsServ := pinsService.NewService(pinsRepo, notificationsServ, followingsRepo)
 
 	likesRepo := likesRepository.NewRepository(db, logger)
-	likesServ := likesService.NewService(likesRepo, notificationsServ, pinsRepo)
+	likesServ := likesService.NewService(likesRepo, notificationsServ, pinsRepo, logger)
 
 	token := tokens.NewHMACHashToken(config.Get("CSRF_TOKEN_SECRET"))
 	CSRFMiddleware := middleware.NewCSRFMiddleware(token, logger)
@@ -173,14 +176,11 @@ func main() {
 	profileRepo := profileRepository.NewPostgresRepository(db, imagesServ, logger)
 	profileServ := profileService.NewProfileService(profileRepo)
 
-	followingsRepo := followingsRepository.NewRepository(db, logger)
-	followingsServ := followingsService.NewService(followingsRepo)
-
 	chatsRepo := chatsRepository.NewRepository(db, logger)
 	chatsServ := chatsService.NewService(chatsRepo)
 
 	commentsRepo := commentsRepository.NewRepository(db, logger)
-	commentsServ := commentsService.NewService(commentsRepo)
+	commentsServ := commentsService.NewService(commentsRepo, notificationsServ, pinsRepo)
 
 	shortServ := shortenerService.NewShortenerClient(shortenerConn)
 
