@@ -23,9 +23,9 @@ func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.
 	del := delivery{serv, logger}
 
 	mux.POST("/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.create))), logger), logger), logger))
-	mux.GET("/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.list))), logger), logger), logger))
-	mux.GET("/pins/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.get))), logger), logger), logger))
-	mux.GET("/users/:id/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.listByAuthor))), logger), logger), logger))
+	mux.GET("/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.list, logger), logger), logger))
+	mux.GET("/pins/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.get, logger), logger), logger))
+	mux.GET("/users/:id/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.listByAuthor, logger), logger), logger))
 	mux.PUT("/pins/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(access.WriteChecker(del.fullUpdate)))), logger), logger), logger))
 	mux.DELETE("/pins/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(access.WriteChecker(del.delete)))), logger), logger), logger))
 }
