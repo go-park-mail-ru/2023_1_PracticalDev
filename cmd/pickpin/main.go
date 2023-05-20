@@ -152,7 +152,7 @@ func main() {
 	notificationsServ := notificationsService.NewService(notificationsRepo, logger)
 
 	followingsRepo := followingsRepository.NewRepository(db, logger)
-	followingsServ := followingsService.NewService(followingsRepo)
+	followingsServ := followingsService.NewService(followingsRepo, notificationsServ)
 
 	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
 	pinsServ := pinsService.NewService(pinsRepo, notificationsServ, followingsRepo)

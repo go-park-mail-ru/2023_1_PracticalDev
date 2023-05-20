@@ -33,7 +33,11 @@ const createNewLikeNotificationCmd = `
 		VALUES ($1, $2, $3);`
 
 const createNewCommentNotificationCmd = `
-		INSERT INTO new_comment_notifications (notification_id, comment_id)
+		INSERT INTO new_comment_notifications (notification_id, pin_id, author_id, text)
+		VALUES ($1, $2, $3, $4);`
+
+const createNewFollowerNotificationCmd = `
+		INSERT INTO new_follower_notifications (notification_id, follower_id)
 		VALUES ($1, $2);`
 
 func (rep *repository) Create(userID int, notificationType string, data interface{}) (int, error) {
@@ -64,7 +68,10 @@ func (rep *repository) Create(userID int, notificationType string, data interfac
 		_, err = tx.Exec(createNewLikeNotificationCmd, notificationID, nl.PinID, nl.AuthorID)
 	case constants.NewComment:
 		nc := data.(models.NewCommentNotification)
-		_, err = tx.Exec(createNewCommentNotificationCmd, notificationID, nc.CommentID)
+		_, err = tx.Exec(createNewCommentNotificationCmd, notificationID, nc.PinID, nc.AuthorID, nc.Text)
+	case constants.NewFollower:
+		nf := data.(models.NewFollowerNotification)
+		_, err = tx.Exec(createNewFollowerNotificationCmd, notificationID, nf.FollowerID)
 	}
 	if err != nil {
 		rep.log.Error(constants.DBQueryError, zap.Error(err), zap.Int("notification_id", notificationID))
@@ -83,20 +90,23 @@ const GetNotificationCmd = `
 		SELECT n.id, n.user_id, n.created_at, n.is_read, n.type,
 			np.pin_id,
 			nl.pin_id, nl.author_id,
-			nc.comment_id
+			nc.pin_id, nc.author_id, nc.text,
+			nf.follower_id
 		FROM notifications n
 		LEFT JOIN new_pin_notifications np ON n.id = np.notification_id
 		LEFT JOIN new_like_notifications nl ON n.id = nl.notification_id
 		LEFT JOIN new_comment_notifications nc ON n.id = nc.notification_id
+		LEFT JOIN new_follower_notifications nf ON n.id = nf.notification_id
 		WHERE n.id = $1;`
 
 func (rep *repository) Get(notificationID int) (*models.Notification, error) {
 	row := rep.db.QueryRow(GetNotificationCmd, notificationID)
 
-	var pinID1, pinID2, authorID, commentID sql.NullInt32
+	var npPinID, nlPinID, nlAuthorID, ncPinID, ncAuthorID, nfFollowerID sql.NullInt32
+	var ncText sql.NullString
 	notification := &models.Notification{}
 	err := row.Scan(&notification.ID, &notification.UserID, &notification.CreatedAt, &notification.IsRead,
-		&notification.Type, &pinID1, &pinID2, &authorID, &commentID)
+		&notification.Type, &npPinID, &nlPinID, &nlAuthorID, &ncPinID, &ncAuthorID, &ncText, &nfFollowerID)
 	if err != nil {
 		rep.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", GetNotificationCmd),
 			zap.Int("notification_id", notificationID))
@@ -109,17 +119,14 @@ func (rep *repository) Get(notificationID int) (*models.Notification, error) {
 
 	switch notification.Type {
 	case constants.NewPin:
-		if pinID1.Valid {
-			notification.Data = models.NewPinNotification{PinID: int(pinID1.Int32)}
-		}
+		notification.Data = models.NewPinNotification{PinID: int(npPinID.Int32)}
 	case constants.NewLike:
-		if pinID2.Valid && authorID.Valid {
-			notification.Data = models.NewLikeNotification{PinID: int(pinID2.Int32), AuthorID: int(authorID.Int32)}
-		}
+		notification.Data = models.NewLikeNotification{PinID: int(nlPinID.Int32), AuthorID: int(nlAuthorID.Int32)}
 	case constants.NewComment:
-		if commentID.Valid {
-			notification.Data = models.NewCommentNotification{CommentID: int(commentID.Int32)}
-		}
+		notification.Data = models.NewCommentNotification{PinID: int(ncPinID.Int32), AuthorID: int(ncAuthorID.Int32),
+			Text: ncText.String}
+	case constants.NewFollower:
+		notification.Data = models.NewFollowerNotification{FollowerID: int(nfFollowerID.Int32)}
 	}
 
 	return notification, nil
@@ -129,11 +136,13 @@ const listUnreadByUserCmd = `
 		SELECT n.id, n.user_id, n.created_at, n.is_read, n.type,
 			np.pin_id,
 			nl.pin_id, nl.author_id,
-			nc.comment_id
+			nc.pin_id, nc.author_id, nc.text,
+			nf.follower_id
 		FROM notifications n
 		LEFT JOIN new_pin_notifications np ON n.id = np.notification_id
 		LEFT JOIN new_like_notifications nl ON n.id = nl.notification_id
 		LEFT JOIN new_comment_notifications nc ON n.id = nc.notification_id
+		LEFT JOIN new_follower_notifications nf ON n.id = nf.notification_id
 		WHERE n.user_id = $1 AND n.is_read = false;`
 
 func (rep *repository) ListUnreadByUser(userID int) ([]models.Notification, error) {
@@ -142,12 +151,13 @@ func (rep *repository) ListUnreadByUser(userID int) ([]models.Notification, erro
 		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
-	var pinID1, pinID2, authorID, commentID sql.NullInt32
+	var npPinID, nlPinID, nlAuthorID, ncPinID, ncAuthorID, nfFollowerID sql.NullInt32
+	var ncText sql.NullString
 	notifications := []models.Notification{}
 	notification := models.Notification{}
 	for rows.Next() {
 		err = rows.Scan(&notification.ID, &notification.UserID, &notification.CreatedAt, &notification.IsRead,
-			&notification.Type, &pinID1, &pinID2, &authorID, &commentID)
+			&notification.Type, &npPinID, &nlPinID, &nlAuthorID, &ncPinID, &ncAuthorID, &ncText, &nfFollowerID)
 		if err != nil {
 			rep.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", listUnreadByUserCmd),
 				zap.Int("user_id", userID))
@@ -157,17 +167,14 @@ func (rep *repository) ListUnreadByUser(userID int) ([]models.Notification, erro
 
 		switch notification.Type {
 		case constants.NewPin:
-			if pinID1.Valid {
-				notification.Data = models.NewPinNotification{PinID: int(pinID1.Int32)}
-			}
+			notification.Data = models.NewPinNotification{PinID: int(npPinID.Int32)}
 		case constants.NewLike:
-			if pinID2.Valid && authorID.Valid {
-				notification.Data = models.NewLikeNotification{PinID: int(pinID2.Int32), AuthorID: int(authorID.Int32)}
-			}
+			notification.Data = models.NewLikeNotification{PinID: int(nlPinID.Int32), AuthorID: int(nlAuthorID.Int32)}
 		case constants.NewComment:
-			if commentID.Valid {
-				notification.Data = models.NewCommentNotification{CommentID: int(commentID.Int32)}
-			}
+			notification.Data = models.NewCommentNotification{PinID: int(ncPinID.Int32), AuthorID: int(ncAuthorID.Int32),
+				Text: ncText.String}
+		case constants.NewFollower:
+			notification.Data = models.NewFollowerNotification{FollowerID: int(nfFollowerID.Int32)}
 		}
 
 		notifications = append(notifications, notification)
