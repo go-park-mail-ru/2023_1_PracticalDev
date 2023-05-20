@@ -46,9 +46,11 @@ func TestCreate(t *testing.T) {
 						Author:      12,
 					}, nil),
 					f.followingsRepo.EXPECT().GetFollowers(12).Return([]followings.Follower{
-						{Id: 13}, {Id: 14}}, nil),
-					f.notificationsServ.EXPECT().Create(13, gomock.Any(), gomock.Any()).Return(nil),
-					f.notificationsServ.EXPECT().Create(14, gomock.Any(), gomock.Any()).Return(nil),
+						{Id: 13}, {Id: 14}}, nil).MinTimes(0).MaxTimes(1),
+					f.notificationsServ.EXPECT().Create(13, gomock.Any(), gomock.Any()).Return(nil).
+						MinTimes(0).MaxTimes(1),
+					f.notificationsServ.EXPECT().Create(14, gomock.Any(), gomock.Any()).Return(nil).
+						MinTimes(0).MaxTimes(1),
 				)
 			},
 			params: pkgPins.CreateParams{Title: "t1", MediaSource: models.Image{}, Description: "d1", Author: 12},

@@ -33,8 +33,10 @@ func TestService_Create(t *testing.T) {
 			prepare: func(f *fields) {
 				gomock.InOrder(
 					f.repo.EXPECT().Create(f.params).Return(*f.comment, nil),
-					f.pinsRepo.EXPECT().Get(f.params.PinID).Return(models.Pin{Author: 12}, nil),
-					f.notificationsServ.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil))
+					f.pinsRepo.EXPECT().Get(f.params.PinID).Return(models.Pin{Author: 12}, nil).
+						MinTimes(0).MaxTimes(1),
+					f.notificationsServ.EXPECT().Create(12, gomock.Any(), gomock.Any()).Return(nil).
+						MinTimes(0).MaxTimes(1))
 			},
 			params:  &pkgComments.CreateParams{AuthorID: 27, PinID: 21, Text: "Good pin!"},
 			comment: models.Comment{ID: 2, AuthorID: 27, PinID: 21, Text: "Good pin!"},

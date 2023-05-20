@@ -51,11 +51,11 @@ func (serv *service) Follow(followerID, followeeID int) error {
 		return err
 	}
 
-	go func() {
+	go func(followeeID int) {
 		_ = serv.notificationsServ.Create(followeeID, constants.NewFollower, models.NewFollowerNotification{
 			FollowerID: followerID,
 		})
-	}()
+	}(followeeID)
 
 	return nil
 }

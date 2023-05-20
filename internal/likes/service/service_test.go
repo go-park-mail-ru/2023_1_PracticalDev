@@ -40,8 +40,11 @@ func TestLike(t *testing.T) {
 					f.repo.EXPECT().UserExists(f.authorId).Return(true, nil),
 					f.repo.EXPECT().LikeExists(f.pinId, f.authorId).Return(false, nil),
 					f.repo.EXPECT().Create(f.pinId, f.authorId).Return(nil),
-					f.pinsRepo.EXPECT().Get(f.pinId).Return(models.Pin{Author: 12}, nil),
-					f.notificationsServ.EXPECT().Create(gomock.Any(), gomock.Any(), gomock.Any()).Return(nil))
+					f.pinsRepo.EXPECT().Get(f.pinId).Return(models.Pin{Author: 12}, nil).
+						MinTimes(0).MaxTimes(1),
+					f.notificationsServ.EXPECT().Create(12, gomock.Any(), gomock.Any()).Return(nil).
+						MinTimes(0).MaxTimes(1),
+				)
 			},
 			pinId:    3,
 			authorId: 2,

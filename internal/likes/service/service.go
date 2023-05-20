@@ -51,14 +51,14 @@ func (serv *service) Like(pinID, authorID int) error {
 		return err
 	}
 
-	go func() {
+	go func(pinID, authorID int) {
 		pin, err := serv.pinsRep.Get(pinID)
 		if err == nil && pin.Author != authorID {
 			_ = serv.notificationsServ.Create(pin.Author, constants.NewLike, models.NewLikeNotification{
 				PinID:    pinID,
 				AuthorID: authorID})
 		}
-	}()
+	}(pinID, authorID)
 
 	return nil
 }

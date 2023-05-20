@@ -24,7 +24,7 @@ func (serv *service) Create(params *pkgPins.CreateParams) (models.Pin, error) {
 		return models.Pin{}, err
 	}
 
-	go func() {
+	go func(pin models.Pin) {
 		followers, err := serv.followingsRep.GetFollowers(pin.Author)
 		if err == nil {
 			for _, follower := range followers {
@@ -33,7 +33,7 @@ func (serv *service) Create(params *pkgPins.CreateParams) (models.Pin, error) {
 				})
 			}
 		}
-	}()
+	}(pin)
 
 	return pin, err
 }
