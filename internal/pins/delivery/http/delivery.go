@@ -3,11 +3,12 @@ package http
 import (
 	"bytes"
 	"encoding/json"
-	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"path/filepath"
 	"strconv"
+
+	"go.uber.org/zap"
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -25,7 +26,7 @@ func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.
 	mux.POST("/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.create))), logger), logger), logger))
 	mux.GET("/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.list, logger), logger), logger))
 	mux.GET("/pins/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.get, logger), logger), logger))
-	mux.GET("/users/:id/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(del.listByAuthor, logger), logger), logger))
+	mux.GET("/users/:id/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware((authorizer(mw.Cors(csrf(del.listByAuthor)))), logger), logger), logger))
 	mux.PUT("/pins/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(access.WriteChecker(del.fullUpdate)))), logger), logger), logger))
 	mux.DELETE("/pins/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(access.WriteChecker(del.delete)))), logger), logger), logger))
 }
@@ -97,7 +98,7 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
-	if err != nil {
+	if err != nil && strUserId != "" {
 		return pkgErrors.ErrInvalidUserIdParam
 	}
 
@@ -174,7 +175,7 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
-	if err != nil {
+	if err != nil && strUserId != "" {
 		return pkgErrors.ErrInvalidUserIdParam
 	}
 
