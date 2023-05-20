@@ -3,6 +3,7 @@ package http
 import (
 	"encoding/json"
 	"fmt"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/connectionservice"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	"net/http"
 	"strconv"
@@ -29,7 +30,7 @@ const (
 
 type delivery struct {
 	serv        pkgChats.Service
-	connManager *ConnectionManager
+	connService *connectionservice.Service
 	log         *zap.Logger
 	upgrader    ws.Upgrader
 }
@@ -37,7 +38,7 @@ type delivery struct {
 func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv pkgChats.Service) {
 	del := delivery{
 		serv:        serv,
-		connManager: NewConnectionManager(logger),
+		connService: connectionservice.NewService(logger),
 		log:         logger,
 		upgrader: ws.Upgrader{
 			ReadBufferSize:  1024,
@@ -181,11 +182,11 @@ func (del *delivery) sendNewChatToChatMembers(chat models.Chat) error {
 		Chat: chat,
 	}
 
-	err := del.connManager.Broadcast(newChat, chat.User1ID)
+	err := del.connService.Broadcast(newChat, chat.User1ID)
 	if err != nil {
 		return err
 	}
-	err = del.connManager.Broadcast(newChat, chat.User2ID)
+	err = del.connService.Broadcast(newChat, chat.User2ID)
 	if err != nil {
 		return err
 	}
@@ -201,11 +202,11 @@ func (del *delivery) sendMessageToChatMembers(message models.Message, user1ID, u
 		Message: message,
 	}
 
-	err := del.connManager.Broadcast(newMessage, user1ID)
+	err := del.connService.Broadcast(newMessage, user1ID)
 	if err != nil {
 		return err
 	}
-	err = del.connManager.Broadcast(newMessage, user2ID)
+	err = del.connService.Broadcast(newMessage, user2ID)
 	if err != nil {
 		return err
 	}
@@ -239,14 +240,14 @@ func (del *delivery) chatHandler(w http.ResponseWriter, r *http.Request, p httpr
 }
 
 func (del *delivery) handleConnection(conn *ws.Conn, userID int) error {
-	del.connManager.AddConnection(userID, conn)
+	del.connService.AddConnection(userID, conn)
 
 	for {
 		del.log.Debug(fmt.Sprintf("Start reading new messages from connection %p...", conn))
 		_, message, err := conn.ReadMessage()
 		if err != nil {
 			del.log.Debug(fmt.Sprintf("Error reading message from connection=%p: err=%v", conn, err))
-			del.connManager.RemoveConnection(userID, conn)
+			del.connService.RemoveConnection(userID, conn)
 			return nil
 		}
 
@@ -261,7 +262,7 @@ func (del *delivery) handleConnection(conn *ws.Conn, userID int) error {
 			}
 			err = conn.WriteJSON(errResp)
 			if err != nil {
-				del.connManager.RemoveConnection(userID, conn)
+				del.connService.RemoveConnection(userID, conn)
 				return nil
 			}
 		}

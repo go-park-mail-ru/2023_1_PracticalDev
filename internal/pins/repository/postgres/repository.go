@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
+
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
@@ -81,6 +82,9 @@ func (repo *repository) Get(id int) (models.Pin, error) {
 	var title, description, mediaSource sql.NullString
 	err := row.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Author)
 	if err != nil {
+		repo.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", getCmd),
+			zap.Int("id", id))
+
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Pin{}, errors.Wrap(pkgErrors.ErrPinNotFound, err.Error())
 		} else {

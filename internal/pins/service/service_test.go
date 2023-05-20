@@ -1,6 +1,9 @@
 package service
 
 import (
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings"
+	followingsMocks "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings/mocks"
+	notificationsMocks "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications/mocks"
 	"reflect"
 	"testing"
 
@@ -15,7 +18,9 @@ import (
 
 func TestCreate(t *testing.T) {
 	type fields struct {
-		repo *mocks.MockRepository
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		followingsRepo    *followingsMocks.MockRepository
 	}
 
 	type testCase struct {
@@ -28,17 +33,25 @@ func TestCreate(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.repo.EXPECT().Create(&pkgPins.CreateParams{
-					Title:       "t1",
-					MediaSource: models.Image{},
-					Description: "d1",
-					Author:      12,
-				}).Return(models.Pin{Id: 1,
-					Title:       "t1",
-					MediaSource: "ms_url",
-					Description: "d1",
-					Author:      12,
-				}, nil)
+				gomock.InOrder(
+					f.repo.EXPECT().Create(&pkgPins.CreateParams{
+						Title:       "t1",
+						MediaSource: models.Image{},
+						Description: "d1",
+						Author:      12,
+					}).Return(models.Pin{Id: 1,
+						Title:       "t1",
+						MediaSource: "ms_url",
+						Description: "d1",
+						Author:      12,
+					}, nil),
+					f.followingsRepo.EXPECT().GetFollowers(12).Return([]followings.Follower{
+						{Id: 13}, {Id: 14}}, nil).MinTimes(0).MaxTimes(1),
+					f.notificationsServ.EXPECT().Create(13, gomock.Any(), gomock.Any()).Return(nil).
+						MinTimes(0).MaxTimes(1),
+					f.notificationsServ.EXPECT().Create(14, gomock.Any(), gomock.Any()).Return(nil).
+						MinTimes(0).MaxTimes(1),
+				)
 			},
 			params: pkgPins.CreateParams{Title: "t1", MediaSource: models.Image{}, Description: "d1", Author: 12},
 			pin:    models.Pin{Id: 1, Title: "t1", MediaSource: "ms_url", Description: "d1", Author: 12},
@@ -54,13 +67,16 @@ func TestCreate(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				followingsRepo:    followingsMocks.NewMockRepository(ctrl),
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
-
+			serv := NewService(f.repo, f.notificationsServ, f.followingsRepo)
 			pin, err := serv.Create(&test.params)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -74,7 +90,9 @@ func TestCreate(t *testing.T) {
 
 func TestList(t *testing.T) {
 	type fields struct {
-		repo *mocks.MockRepository
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		followingsRepo    *followingsMocks.MockRepository
 	}
 
 	type testCase struct {
@@ -130,13 +148,16 @@ func TestList(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				followingsRepo:    followingsMocks.NewMockRepository(ctrl),
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
-
+			serv := NewService(f.repo, f.notificationsServ, f.followingsRepo)
 			pins, err := serv.List(test.userId, test.page, test.limit)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -150,7 +171,9 @@ func TestList(t *testing.T) {
 
 func TestListByAuthor(t *testing.T) {
 	type fields struct {
-		repo *mocks.MockRepository
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		followingsRepo    *followingsMocks.MockRepository
 	}
 
 	type testCase struct {
@@ -209,13 +232,16 @@ func TestListByAuthor(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				followingsRepo:    followingsMocks.NewMockRepository(ctrl),
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
-
+			serv := NewService(f.repo, f.notificationsServ, f.followingsRepo)
 			pins, err := serv.ListByAuthor(test.authorId, test.userId, test.page, test.limit)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -229,7 +255,9 @@ func TestListByAuthor(t *testing.T) {
 
 func TestGet(t *testing.T) {
 	type fields struct {
-		repo *mocks.MockRepository
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		followingsRepo    *followingsMocks.MockRepository
 	}
 
 	type testCase struct {
@@ -287,13 +315,16 @@ func TestGet(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				followingsRepo:    followingsMocks.NewMockRepository(ctrl),
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
-
+			serv := NewService(f.repo, f.notificationsServ, f.followingsRepo)
 			pin, err := serv.Get(test.id, test.userId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -307,7 +338,9 @@ func TestGet(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	type fields struct {
-		repo *mocks.MockRepository
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		followingsRepo    *followingsMocks.MockRepository
 	}
 
 	type testCase struct {
@@ -341,13 +374,16 @@ func TestDelete(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				followingsRepo:    followingsMocks.NewMockRepository(ctrl),
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
-
+			serv := NewService(f.repo, f.notificationsServ, f.followingsRepo)
 			err := serv.Delete(test.id)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -358,7 +394,9 @@ func TestDelete(t *testing.T) {
 
 func TestCheckWriteAccess(t *testing.T) {
 	type fields struct {
-		repo *mocks.MockRepository
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		followingsRepo    *followingsMocks.MockRepository
 	}
 
 	type testCase struct {
@@ -398,13 +436,16 @@ func TestCheckWriteAccess(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				followingsRepo:    followingsMocks.NewMockRepository(ctrl),
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
-
+			serv := NewService(f.repo, f.notificationsServ, f.followingsRepo)
 			access, err := serv.CheckWriteAccess(test.userId, test.pinId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -418,7 +459,9 @@ func TestCheckWriteAccess(t *testing.T) {
 
 func TestCheckReadAccess(t *testing.T) {
 	type fields struct {
-		repo *mocks.MockRepository
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		followingsRepo    *followingsMocks.MockRepository
 	}
 
 	type testCase struct {
@@ -458,13 +501,16 @@ func TestCheckReadAccess(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl)}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				followingsRepo:    followingsMocks.NewMockRepository(ctrl),
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
-
+			serv := NewService(f.repo, f.notificationsServ, f.followingsRepo)
 			access, err := serv.CheckReadAccess(test.userId, test.pinId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)

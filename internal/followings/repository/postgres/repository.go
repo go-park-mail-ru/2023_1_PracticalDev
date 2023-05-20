@@ -2,6 +2,7 @@ package postgres
 
 import (
 	"database/sql"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 
@@ -89,6 +90,9 @@ func (repo *repository) GetFollowers(userId int) ([]followings.Follower, error) 
 	for rows.Next() {
 		err = rows.Scan(&followee.Id, &followee.Username, &followee.Name, &profileImage, &websiteUrl)
 		if err != nil {
+			repo.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", getFollowersCmd),
+				zap.Int("user_id", userId))
+
 			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
 

@@ -2,23 +2,27 @@ package service
 
 import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 type service struct {
-	rep followings.Repository
+	rep               followings.Repository
+	notificationsServ notifications.Service
 }
 
-func NewService(rep followings.Repository) followings.Service {
-	return &service{rep}
+func NewService(rep followings.Repository, notificationsServ notifications.Service) followings.Service {
+	return &service{rep: rep, notificationsServ: notificationsServ}
 }
 
-func (serv *service) Follow(followerId, followeeId int) error {
-	if followerId == followeeId {
+func (serv *service) Follow(followerID, followeeID int) error {
+	if followerID == followeeID {
 		return pkgErrors.ErrSameUserId
 	}
 
-	exists, err := serv.rep.UserExists(followerId)
+	exists, err := serv.rep.UserExists(followerID)
 	if err != nil {
 		return err
 	}
@@ -26,7 +30,7 @@ func (serv *service) Follow(followerId, followeeId int) error {
 		return pkgErrors.ErrUserNotFound
 	}
 
-	exists, err = serv.rep.UserExists(followeeId)
+	exists, err = serv.rep.UserExists(followeeID)
 	if err != nil {
 		return err
 	}
@@ -34,7 +38,7 @@ func (serv *service) Follow(followerId, followeeId int) error {
 		return pkgErrors.ErrUserNotFound
 	}
 
-	exists, err = serv.rep.FollowingExists(followerId, followeeId)
+	exists, err = serv.rep.FollowingExists(followerID, followeeID)
 	if err != nil {
 		return err
 	}
@@ -42,7 +46,18 @@ func (serv *service) Follow(followerId, followeeId int) error {
 		return pkgErrors.ErrFollowingAlreadyExists
 	}
 
-	return serv.rep.Create(followerId, followeeId)
+	err = serv.rep.Create(followerID, followeeID)
+	if err != nil {
+		return err
+	}
+
+	go func(followeeID int) {
+		_ = serv.notificationsServ.Create(followeeID, constants.NewFollower, models.NewFollowerNotification{
+			FollowerID: followerID,
+		})
+	}(followeeID)
+
+	return nil
 }
 
 func (serv *service) Unfollow(followerId, followeeId int) error {

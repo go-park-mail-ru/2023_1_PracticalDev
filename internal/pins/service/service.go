@@ -1,20 +1,41 @@
 package service
 
 import (
+	pkgFollowings "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 )
 
 type service struct {
-	rep pkgPins.Repository
+	rep               pkgPins.Repository
+	notificationsServ notifications.Service
+	followingsRep     pkgFollowings.Repository
 }
 
-func NewService(rep pkgPins.Repository) pkgPins.Service {
-	return &service{rep}
+func NewService(rep pkgPins.Repository, notificationsServ notifications.Service, followingsRep pkgFollowings.Repository) pkgPins.Service {
+	return &service{rep: rep, notificationsServ: notificationsServ, followingsRep: followingsRep}
 }
 
 func (serv *service) Create(params *pkgPins.CreateParams) (models.Pin, error) {
-	return serv.rep.Create(params)
+	pin, err := serv.rep.Create(params)
+	if err != nil {
+		return models.Pin{}, err
+	}
+
+	go func(pin models.Pin) {
+		followers, err := serv.followingsRep.GetFollowers(pin.Author)
+		if err == nil {
+			for _, follower := range followers {
+				_ = serv.notificationsServ.Create(follower.Id, constants.NewPin, models.NewPinNotification{
+					PinID: pin.Id,
+				})
+			}
+		}
+	}(pin)
+
+	return pin, err
 }
 
 func (serv *service) Get(id, userId int) (models.Pin, error) {

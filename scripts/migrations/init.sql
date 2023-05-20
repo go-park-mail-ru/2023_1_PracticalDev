@@ -1,5 +1,6 @@
 CREATE TYPE account_type AS ENUM ('personal', 'business');
 CREATE TYPE privacy AS ENUM ('public', 'secret');
+CREATE TYPE notification_type AS ENUM ('new_pin', 'new_like', 'new_comment', 'new_follower');
 
 CREATE TABLE IF NOT EXISTS users
 (
@@ -37,8 +38,8 @@ CREATE TABLE IF NOT EXISTS pins
 
 CREATE TABLE IF NOT EXISTS pin_likes
 (
-    pin_id     int REFERENCES pins (id) ON DELETE CASCADE,
-    author_id  int REFERENCES users (id) ON DELETE CASCADE,
+    pin_id     int       NOT NULL REFERENCES pins (id) ON DELETE CASCADE,
+    author_id  int       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     created_at timestamp NOT NULL DEFAULT now(),
     PRIMARY KEY (pin_id, author_id)
 );
@@ -61,16 +62,16 @@ CREATE TABLE IF NOT EXISTS comments
 
 CREATE TABLE IF NOT EXISTS comment_likes
 (
-    comment_id int REFERENCES comments (id) ON DELETE CASCADE,
-    author_id  int REFERENCES users (id) ON DELETE CASCADE,
+    comment_id int       NOT NULL REFERENCES comments (id) ON DELETE CASCADE,
+    author_id  int       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     created_at timestamp NOT NULL DEFAULT now(),
     PRIMARY KEY (comment_id, author_id)
 );
 
 CREATE TABLE IF NOT EXISTS followings
 (
-    follower_id int REFERENCES users (id) ON DELETE CASCADE,
-    followee_id int REFERENCES users (id) ON DELETE CASCADE,
+    follower_id int       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    followee_id int       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     created_at  timestamp NOT NULL DEFAULT now(),
     PRIMARY KEY (followee_id, follower_id)
 );
@@ -92,6 +93,42 @@ CREATE TABLE IF NOT EXISTS messages
     chat_id    int       NOT NULL REFERENCES chats (id) ON DELETE CASCADE,
     text       text      NOT NULL,
     created_at timestamp NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS notifications
+(
+    id         serial            NOT NULL PRIMARY KEY,
+    user_id    int               NOT NULL REFERENCES users (id),
+    type       notification_type NOT NULL,
+    is_read    boolean           NOT NULL DEFAULT false,
+    created_at timestamp         NOT NULL DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS new_pin_notifications
+(
+    notification_id int NOT NULL REFERENCES notifications (id) ON DELETE CASCADE,
+    pin_id          int NOT NULL REFERENCES pins (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS new_like_notifications
+(
+    notification_id int NOT NULL REFERENCES notifications (id) ON DELETE CASCADE,
+    pin_id          int NOT NULL REFERENCES pins (id) ON DELETE CASCADE,
+    author_id       int NOT NULL REFERENCES users (id) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS new_comment_notifications
+(
+    notification_id int  NOT NULL REFERENCES notifications (id) ON DELETE CASCADE,
+    pin_id          int  NOT NULL REFERENCES pins (id) ON DELETE CASCADE,
+    author_id       int  NOT NULL REFERENCES users (id) ON DELETE CASCADE,
+    text            text NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS new_follower_notifications
+(
+    notification_id int NOT NULL REFERENCES notifications (id) ON DELETE CASCADE,
+    follower_id     int NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
 -- Обработка создания лайка
@@ -129,3 +166,39 @@ CREATE OR REPLACE TRIGGER pin_unlike
     ON pin_likes
     FOR EACH ROW
 EXECUTE PROCEDURE on_pin_unlike();
+
+-- Удаление уведомления из-за удаления сущностей на которые ссылается уведомление
+CREATE OR REPLACE FUNCTION on_specific_notification_delete() RETURNS TRIGGER AS
+$$
+BEGIN
+    DELETE
+    FROM notifications
+    WHERE id = old.notification_id;
+
+    RETURN NULL;
+END
+$$ LANGUAGE plpgsql;
+
+CREATE OR REPLACE TRIGGER new_pin_notification_delete
+    AFTER DELETE
+    ON new_pin_notifications
+    FOR EACH ROW
+EXECUTE PROCEDURE on_specific_notification_delete();
+
+CREATE OR REPLACE TRIGGER new_comment_notification_delete
+    AFTER DELETE
+    ON new_comment_notifications
+    FOR EACH ROW
+EXECUTE PROCEDURE on_specific_notification_delete();
+
+CREATE OR REPLACE TRIGGER new_like_notification_delete
+    AFTER DELETE
+    ON new_like_notifications
+    FOR EACH ROW
+EXECUTE PROCEDURE on_specific_notification_delete();
+
+CREATE OR REPLACE TRIGGER new_follower_notification_delete
+    AFTER DELETE
+    ON new_follower_notifications
+    FOR EACH ROW
+EXECUTE PROCEDURE on_specific_notification_delete();

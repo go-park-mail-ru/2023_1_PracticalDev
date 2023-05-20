@@ -3,6 +3,7 @@ package service
 import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/followings/mocks"
+	notificationsMocks "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications/mocks"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/golang/mock/gomock"
 	"github.com/pkg/errors"
@@ -12,9 +13,10 @@ import (
 
 func TestService_Follow(t *testing.T) {
 	type fields struct {
-		repo       *mocks.MockRepository
-		followerID int
-		followeeID int
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		followerID        int
+		followeeID        int
 	}
 
 	type testCase struct {
@@ -32,6 +34,8 @@ func TestService_Follow(t *testing.T) {
 					f.repo.EXPECT().UserExists(f.followeeID).Return(true, nil),
 					f.repo.EXPECT().FollowingExists(f.followerID, f.followeeID).Return(false, nil),
 					f.repo.EXPECT().Create(f.followerID, f.followeeID).Return(nil),
+					f.notificationsServ.EXPECT().Create(f.followeeID, gomock.Any(), gomock.Any()).Return(nil).
+						MinTimes(0).MaxTimes(1),
 				)
 			},
 			followerID: 3,
@@ -94,12 +98,17 @@ func TestService_Follow(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl), followerID: test.followerID, followeeID: test.followeeID}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				followerID:        test.followerID,
+				followeeID:        test.followeeID,
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
+			serv := NewService(f.repo, f.notificationsServ)
 			err := serv.Follow(test.followerID, test.followeeID)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -110,9 +119,10 @@ func TestService_Follow(t *testing.T) {
 
 func TestService_Unfollow(t *testing.T) {
 	type fields struct {
-		repo       *mocks.MockRepository
-		followerID int
-		followeeID int
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		followerID        int
+		followeeID        int
 	}
 
 	type testCase struct {
@@ -192,12 +202,17 @@ func TestService_Unfollow(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl), followerID: test.followerID, followeeID: test.followeeID}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				followerID:        test.followerID,
+				followeeID:        test.followeeID,
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
+			serv := NewService(f.repo, f.notificationsServ)
 			err := serv.Unfollow(test.followerID, test.followeeID)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -208,9 +223,10 @@ func TestService_Unfollow(t *testing.T) {
 
 func TestService_GetFollowers(t *testing.T) {
 	type fields struct {
-		repo      *mocks.MockRepository
-		userID    int
-		followers []followings.Follower
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		userID            int
+		followers         []followings.Follower
 	}
 
 	type testCase struct {
@@ -255,12 +271,17 @@ func TestService_GetFollowers(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl), userID: test.userID, followers: test.followers}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				userID:            test.userID,
+				followers:         test.followers,
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
+			serv := NewService(f.repo, f.notificationsServ)
 			followers, err := serv.GetFollowers(test.userID)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -274,9 +295,10 @@ func TestService_GetFollowers(t *testing.T) {
 
 func TestService_GetFollowees(t *testing.T) {
 	type fields struct {
-		repo      *mocks.MockRepository
-		userID    int
-		followees []followings.Followee
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		userID            int
+		followees         []followings.Followee
 	}
 
 	type testCase struct {
@@ -321,12 +343,17 @@ func TestService_GetFollowees(t *testing.T) {
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl), userID: test.userID, followees: test.followees}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				userID:            test.userID,
+				followees:         test.followees,
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
+			serv := NewService(f.repo, f.notificationsServ)
 			followees, err := serv.GetFollowees(test.userID)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)

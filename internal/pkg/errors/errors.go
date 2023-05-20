@@ -22,14 +22,15 @@ var (
 	ErrTooLongName      = errors.New("name must be no more than 60 characters")
 
 	// Not found
-	ErrUserNotFound      = errors.New("user not found")
-	ErrProfileNotFound   = errors.New("profile not found")
-	ErrBoardNotFound     = errors.New("board not found")
-	ErrPinNotFound       = errors.New("pin not found")
-	ErrLikeNotFound      = errors.New("no such like")
-	ErrFollowingNotFound = errors.New("no such following")
-	ErrChatNotFound      = errors.New("chat not found")
-	ErrLinkNotFound      = errors.New("link not found")
+	ErrUserNotFound         = errors.New("user not found")
+	ErrProfileNotFound      = errors.New("profile not found")
+	ErrBoardNotFound        = errors.New("board not found")
+	ErrPinNotFound          = errors.New("pin not found")
+	ErrLikeNotFound         = errors.New("no such like")
+	ErrFollowingNotFound    = errors.New("no such following")
+	ErrChatNotFound         = errors.New("chat not found")
+	ErrLinkNotFound         = errors.New("link not found")
+	ErrNotificationNotFound = errors.New("notification not found")
 
 	// CSRF
 	ErrBadCsrfTokenCookie = errors.New("bad csrf token cookie")

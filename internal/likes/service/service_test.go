@@ -1,6 +1,9 @@
 package service
 
 import (
+	notificationsMocks "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications/mocks"
+	pinsMocks "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/mocks"
+	"go.uber.org/zap"
 	"reflect"
 	"testing"
 	"time"
@@ -15,9 +18,11 @@ import (
 
 func TestLike(t *testing.T) {
 	type fields struct {
-		repo     *mocks.MockRepository
-		pinId    int
-		authorId int
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		pinsRepo          *pinsMocks.MockRepository
+		pinId             int
+		authorId          int
 	}
 
 	type testCase struct {
@@ -35,6 +40,10 @@ func TestLike(t *testing.T) {
 					f.repo.EXPECT().UserExists(f.authorId).Return(true, nil),
 					f.repo.EXPECT().LikeExists(f.pinId, f.authorId).Return(false, nil),
 					f.repo.EXPECT().Create(f.pinId, f.authorId).Return(nil),
+					f.pinsRepo.EXPECT().Get(f.pinId).Return(models.Pin{Author: 12}, nil).
+						MinTimes(0).MaxTimes(1),
+					f.notificationsServ.EXPECT().Create(12, gomock.Any(), gomock.Any()).Return(nil).
+						MinTimes(0).MaxTimes(1),
 				)
 			},
 			pinId:    3,
@@ -73,16 +82,27 @@ func TestLike(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			logger, err := zap.NewDevelopment()
+			if err != nil {
+				t.Fatalf("can't create logger: %s", err)
+			}
+
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl), pinId: test.pinId, authorId: test.authorId}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				pinsRepo:          pinsMocks.NewMockRepository(ctrl),
+				pinId:             test.pinId,
+				authorId:          test.authorId,
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
-			err := serv.Like(test.pinId, test.authorId)
+			serv := NewService(f.repo, f.notificationsServ, f.pinsRepo, logger)
+			err = serv.Like(test.pinId, test.authorId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}
@@ -92,9 +112,11 @@ func TestLike(t *testing.T) {
 
 func TestListByAuthor(t *testing.T) {
 	type fields struct {
-		repo     *mocks.MockRepository
-		authorId int
-		likes    []models.Like
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		pinsRepo          *pinsMocks.MockRepository
+		authorId          int
+		likes             []models.Like
 	}
 
 	type testCase struct {
@@ -132,15 +154,26 @@ func TestListByAuthor(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			logger, err := zap.NewDevelopment()
+			if err != nil {
+				t.Fatalf("can't create logger: %s", err)
+			}
+
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl), authorId: test.authorId, likes: test.likes}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				pinsRepo:          pinsMocks.NewMockRepository(ctrl),
+				authorId:          test.authorId,
+				likes:             test.likes,
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
+			serv := NewService(f.repo, f.notificationsServ, f.pinsRepo, logger)
 			likes, err := serv.ListByAuthor(test.authorId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -154,9 +187,11 @@ func TestListByAuthor(t *testing.T) {
 
 func TestListByPin(t *testing.T) {
 	type fields struct {
-		repo  *mocks.MockRepository
-		pinId int
-		likes []models.Like
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		pinsRepo          *pinsMocks.MockRepository
+		pinId             int
+		likes             []models.Like
 	}
 
 	type testCase struct {
@@ -194,15 +229,26 @@ func TestListByPin(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			logger, err := zap.NewDevelopment()
+			if err != nil {
+				t.Fatalf("can't create logger: %s", err)
+			}
+
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl), pinId: test.pinId, likes: test.likes}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				pinsRepo:          pinsMocks.NewMockRepository(ctrl),
+				pinId:             test.pinId,
+				likes:             test.likes,
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
+			serv := NewService(f.repo, f.notificationsServ, f.pinsRepo, logger)
 			likes, err := serv.ListByPin(test.pinId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
@@ -216,9 +262,11 @@ func TestListByPin(t *testing.T) {
 
 func TestDelete(t *testing.T) {
 	type fields struct {
-		repo     *mocks.MockRepository
-		pinId    int
-		authorId int
+		repo              *mocks.MockRepository
+		notificationsServ *notificationsMocks.MockService
+		pinsRepo          *pinsMocks.MockRepository
+		pinId             int
+		authorId          int
 	}
 
 	type testCase struct {
@@ -274,16 +322,27 @@ func TestDelete(t *testing.T) {
 		t.Run(name, func(t *testing.T) {
 			t.Parallel()
 
+			logger, err := zap.NewDevelopment()
+			if err != nil {
+				t.Fatalf("can't create logger: %s", err)
+			}
+
 			ctrl := gomock.NewController(t)
 			defer ctrl.Finish()
 
-			f := fields{repo: mocks.NewMockRepository(ctrl), pinId: test.pinId, authorId: test.authorId}
+			f := fields{
+				repo:              mocks.NewMockRepository(ctrl),
+				notificationsServ: notificationsMocks.NewMockService(ctrl),
+				pinsRepo:          pinsMocks.NewMockRepository(ctrl),
+				pinId:             test.pinId,
+				authorId:          test.authorId,
+			}
 			if test.prepare != nil {
 				test.prepare(&f)
 			}
 
-			serv := NewService(f.repo)
-			err := serv.Unlike(test.pinId, test.authorId)
+			serv := NewService(f.repo, f.notificationsServ, f.pinsRepo, logger)
+			err = serv.Unlike(test.pinId, test.authorId)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}

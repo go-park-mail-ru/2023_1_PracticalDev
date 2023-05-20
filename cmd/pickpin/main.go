@@ -18,6 +18,10 @@ import (
 	likesRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/repository/postgres"
 	likesService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/likes/service"
 
+	notificationsDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications/delivery/http"
+	notificationsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications/repository/postgres"
+	notificationsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications/service"
+
 	pinsDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/delivery/http"
 	pinsRepository "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/repository/postgres"
 	pinsService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins/service"
@@ -144,15 +148,21 @@ func main() {
 	mux := httprouter.New()
 	mux.GlobalOPTIONS = middleware.HandlerFuncLogger(middleware.OptionsHandler, logger)
 
+	notificationsRepo := notificationsRepository.NewRepository(db, logger)
+	notificationsServ := notificationsService.NewService(notificationsRepo, logger)
+
+	followingsRepo := followingsRepository.NewRepository(db, logger)
+	followingsServ := followingsService.NewService(followingsRepo, notificationsServ)
+
+	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
+	pinsServ := pinsService.NewService(pinsRepo, notificationsServ, followingsRepo)
+
 	likesRepo := likesRepository.NewRepository(db, logger)
-	likesServ := likesService.NewService(likesRepo)
+	likesServ := likesService.NewService(likesRepo, notificationsServ, pinsRepo, logger)
 
 	token := tokens.NewHMACHashToken(config.Get("CSRF_TOKEN_SECRET"))
 	CSRFMiddleware := middleware.NewCSRFMiddleware(token, logger)
 	authorizer := middleware.NewAuthorizer(authServ, logger)
-
-	pinsRepo := pinsRepository.NewRepository(db, imagesServ, logger)
-	pinsServ := pinsService.NewService(pinsRepo)
 
 	searchServ := searchService.NewSearchClient(searchConn, pinsServ)
 
@@ -166,14 +176,11 @@ func main() {
 	profileRepo := profileRepository.NewPostgresRepository(db, imagesServ, logger)
 	profileServ := profileService.NewProfileService(profileRepo)
 
-	followingsRepo := followingsRepository.NewRepository(db, logger)
-	followingsServ := followingsService.NewService(followingsRepo)
-
 	chatsRepo := chatsRepository.NewRepository(db, logger)
 	chatsServ := chatsService.NewService(chatsRepo)
 
 	commentsRepo := commentsRepository.NewRepository(db, logger)
-	commentsServ := commentsService.NewService(commentsRepo)
+	commentsServ := commentsService.NewService(commentsRepo, notificationsServ, pinsRepo)
 
 	shortServ := shortenerService.NewShortenerClient(shortenerConn)
 
@@ -189,6 +196,8 @@ func main() {
 	ping.RegisterHandlers(mux, logger)
 	searchDelivery.RegisterHandlers(mux, logger, authorizer, searchServ)
 	shortenerDelivery.RegisterPostHandler(mux, logger, authorizer, CSRFMiddleware, shortServ, metricsMiddleware)
+	notificationsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, notificationsServ,
+		metricsMiddleware)
 
 	server := http.Server{
 		Addr:    "0.0.0.0:8080",
