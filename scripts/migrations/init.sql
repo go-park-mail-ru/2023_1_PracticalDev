@@ -24,14 +24,15 @@ CREATE TABLE IF NOT EXISTS boards
 
 CREATE TABLE IF NOT EXISTS pins
 (
-    id           serial    NOT NULL PRIMARY KEY,
-    link         varchar(2048),
-    title        varchar(100),
-    description  varchar(500),
-    created_at   timestamp NOT NULL DEFAULT now(),
-    media_source varchar,
-    n_likes      int       NOT NULL DEFAULT 0,
-    author_id    int       NOT NULL REFERENCES users (id) ON DELETE CASCADE
+    id                 serial    NOT NULL PRIMARY KEY,
+    link               varchar(2048),
+    title              varchar(100),
+    description        varchar(500),
+    created_at         timestamp NOT NULL DEFAULT now(),
+    media_source       varchar   NOT NULL,
+    media_source_color varchar   NOT NULL DEFAULT 'rgb(39, 102, 120)',
+    n_likes            int       NOT NULL DEFAULT 0,
+    author_id          int       NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS pin_likes
