@@ -24,14 +24,16 @@ func (serv *service) Create(params *pkgPins.CreateParams) (models.Pin, error) {
 		return models.Pin{}, err
 	}
 
-	followers, err := serv.followingsRep.GetFollowers(pin.Author)
-	if err == nil {
-		for _, follower := range followers {
-			_ = serv.notificationsServ.Create(follower.Id, constants.NewPin, models.NewPinNotification{
-				PinID: pin.Id,
-			})
+	go func() {
+		followers, err := serv.followingsRep.GetFollowers(pin.Author)
+		if err == nil {
+			for _, follower := range followers {
+				_ = serv.notificationsServ.Create(follower.Id, constants.NewPin, models.NewPinNotification{
+					PinID: pin.Id,
+				})
+			}
 		}
-	}
+	}()
 
 	return pin, err
 }

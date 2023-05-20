@@ -23,9 +23,8 @@ type Request struct {
 	ID int `json:"id"`
 }
 
-// Response
 type Message struct {
-	Type    string      `json:"type"` // error, notification
+	Type    string      `json:"type"` // response, notification
 	Content interface{} `json:"content"`
 }
 
@@ -105,12 +104,7 @@ func (serv *service) Create(userID int, notificationType string, data interface{
 	}
 
 	msg := Message{Type: "notification", Content: notification}
-	err = serv.connService.Broadcast(msg, userID)
-	if err != nil {
-		return err
-	}
-
-	return nil
+	return serv.connService.Broadcast(msg, userID)
 }
 
 func (serv *service) ListUnreadByUser(userID int) ([]models.Notification, error) {
