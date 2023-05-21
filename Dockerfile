@@ -30,8 +30,8 @@ RUN --mount=target=.,rw=true \
     --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
     /bin/sh -c ' \
-    cat cover.out | fgrep -v "easyjson" > cover.out.filtered && \
-    go tool cover -func=cover.out.filtered > /out.stat \
+    cat /cover.out | fgrep -v "easyjson" > /cover.out.filtered && \
+    go tool cover -func=/cover.out.filtered > /out.stat \
     '
 CMD [ "cat", "/out.stat" ]
 
