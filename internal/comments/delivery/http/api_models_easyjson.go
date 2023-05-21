@@ -54,7 +54,7 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalComment
 				}
 				for !in.IsDelim(']') {
 					var v1 models.Comment
-					easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels(in, &v1)
+					(v1).UnmarshalEasyJSON(in)
 					out.Items = append(out.Items, v1)
 					in.WantComma()
 				}
@@ -85,7 +85,7 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalComment
 				if v2 > 0 {
 					out.RawByte(',')
 				}
-				easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels(out, v3)
+				(v3).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -115,78 +115,6 @@ func (v *listResponse) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *listResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalCommentsDeliveryHttp(l, v)
-}
-func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels(in *jlexer.Lexer, out *models.Comment) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "id":
-			out.ID = int(in.Int())
-		case "author_id":
-			out.AuthorID = int(in.Int())
-		case "pin_id":
-			out.PinID = int(in.Int())
-		case "text":
-			out.Text = string(in.String())
-		case "created_at":
-			if data := in.Raw(); in.Ok() {
-				in.AddError((out.CreatedAt).UnmarshalJSON(data))
-			}
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels(out *jwriter.Writer, in models.Comment) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"id\":"
-		out.RawString(prefix[1:])
-		out.Int(int(in.ID))
-	}
-	{
-		const prefix string = ",\"author_id\":"
-		out.RawString(prefix)
-		out.Int(int(in.AuthorID))
-	}
-	{
-		const prefix string = ",\"pin_id\":"
-		out.RawString(prefix)
-		out.Int(int(in.PinID))
-	}
-	{
-		const prefix string = ",\"text\":"
-		out.RawString(prefix)
-		out.String(string(in.Text))
-	}
-	{
-		const prefix string = ",\"created_at\":"
-		out.RawString(prefix)
-		out.Raw((in.CreatedAt).MarshalJSON())
-	}
-	out.RawByte('}')
 }
 func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalCommentsDeliveryHttp1(in *jlexer.Lexer, out *createResponse) {
 	isTopLevel := in.IsStart()

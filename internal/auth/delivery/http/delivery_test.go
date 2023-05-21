@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"log"
 	"net/http"
 	"net/http/httptest"
@@ -28,7 +27,7 @@ func init() {
 	}
 }
 
-var existingUsers []auth.LoginParams = []auth.LoginParams{
+var existingUsers = []loginRequest{
 	{
 		Email:    "geogreck@vk.com",
 		Password: "12345678",
@@ -53,13 +52,13 @@ type fields struct {
 
 type AuthenticateTestCase struct {
 	prepare func(f *fields)
-	req     auth.LoginParams
+	req     loginRequest
 	err     error
 }
 
 type RegisterTestCase struct {
 	prepare func(f *fields)
-	req     auth.RegisterParams
+	req     registerRequest
 	err     error
 }
 
@@ -93,7 +92,7 @@ func TestAuthenticate(t *testing.T) {
 				f.serv.EXPECT().Authenticate("123@vk.com", "12345678").
 					Return(models.User{}, auth.SessionParams{}, pkgErrors.ErrUserNotFound)
 			},
-			req: auth.LoginParams{
+			req: loginRequest{
 				Email:    "123@vk.com",
 				Password: "12345678",
 			},
@@ -113,7 +112,7 @@ func TestAuthenticate(t *testing.T) {
 		del := delivery{f.serv, logger, tokens.NewHMACHashToken("test_secret")}
 
 		url := "http://127.0.0.1/api/auth/login"
-		tmp, _ := json.Marshal(test.req)
+		tmp, _ := test.req.MarshalJSON()
 		body := strings.NewReader(string(tmp))
 
 		req := httptest.NewRequest(http.MethodPost, url, body)
@@ -145,7 +144,7 @@ func TestRegister(t *testing.T) {
 					AccountType:    "personal",
 				}, auth.SessionParams{}, nil)
 			},
-			req: auth.RegisterParams{
+			req: registerRequest{
 				Username: "test1",
 				Email:    "test1@test.ru",
 				Name:     "test",
@@ -171,7 +170,7 @@ func TestRegister(t *testing.T) {
 					AccountType:    "personal",
 				}, auth.SessionParams{}, pkgErrors.ErrUserAlreadyExists)
 			},
-			req: auth.RegisterParams{
+			req: registerRequest{
 				Username: "test3",
 				Email:    "test1@test.ru",
 				Name:     "test",
@@ -197,7 +196,7 @@ func TestRegister(t *testing.T) {
 					AccountType:    "personal",
 				}, auth.SessionParams{}, pkgErrors.ErrDb)
 			},
-			req: auth.RegisterParams{
+			req: registerRequest{
 				Username: "test3",
 				Email:    "test1@test.ru",
 				Name:     "test",
@@ -219,7 +218,7 @@ func TestRegister(t *testing.T) {
 		del := delivery{f.serv, logger, tokens.NewHMACHashToken("test_secret")}
 
 		url := "http://127.0.0.1/api/auth/signup"
-		tmp, _ := json.Marshal(test.req)
+		tmp, _ := test.req.MarshalJSON()
 		body := strings.NewReader(string(tmp))
 
 		req := httptest.NewRequest(http.MethodPost, url, body)

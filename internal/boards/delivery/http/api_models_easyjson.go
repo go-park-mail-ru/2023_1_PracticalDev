@@ -54,7 +54,7 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsD
 				}
 				for !in.IsDelim(']') {
 					var v1 models.Pin
-					easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels(in, &v1)
+					(v1).UnmarshalEasyJSON(in)
 					out.Pins = append(out.Pins, v1)
 					in.WantComma()
 				}
@@ -85,7 +85,7 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsD
 				if v2 > 0 {
 					out.RawByte(',')
 				}
-				easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels(out, v3)
+				(v3).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -115,97 +115,6 @@ func (v *pinListResponse) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *pinListResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp(l, v)
-}
-func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels(in *jlexer.Lexer, out *models.Pin) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "id":
-			out.Id = int(in.Int())
-		case "title":
-			out.Title = string(in.String())
-		case "description":
-			out.Description = string(in.String())
-		case "media_source":
-			out.MediaSource = string(in.String())
-		case "media_source_color":
-			out.MediaSourceColor = string(in.String())
-		case "n_likes":
-			out.NumLikes = int(in.Int())
-		case "liked":
-			out.Liked = bool(in.Bool())
-		case "author_id":
-			out.Author = int(in.Int())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels(out *jwriter.Writer, in models.Pin) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"id\":"
-		out.RawString(prefix[1:])
-		out.Int(int(in.Id))
-	}
-	{
-		const prefix string = ",\"title\":"
-		out.RawString(prefix)
-		out.String(string(in.Title))
-	}
-	{
-		const prefix string = ",\"description\":"
-		out.RawString(prefix)
-		out.String(string(in.Description))
-	}
-	{
-		const prefix string = ",\"media_source\":"
-		out.RawString(prefix)
-		out.String(string(in.MediaSource))
-	}
-	{
-		const prefix string = ",\"media_source_color\":"
-		out.RawString(prefix)
-		out.String(string(in.MediaSourceColor))
-	}
-	{
-		const prefix string = ",\"n_likes\":"
-		out.RawString(prefix)
-		out.Int(int(in.NumLikes))
-	}
-	{
-		const prefix string = ",\"liked\":"
-		out.RawString(prefix)
-		out.Bool(bool(in.Liked))
-	}
-	{
-		const prefix string = ",\"author_id\":"
-		out.RawString(prefix)
-		out.Int(int(in.Author))
-	}
-	out.RawByte('}')
 }
 func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp1(in *jlexer.Lexer, out *partialUpdateResponse) {
 	isTopLevel := in.IsStart()
@@ -453,7 +362,7 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsD
 				}
 				for !in.IsDelim(']') {
 					var v4 models.Board
-					easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels1(in, &v4)
+					(v4).UnmarshalEasyJSON(in)
 					out.Boards = append(out.Boards, v4)
 					in.WantComma()
 				}
@@ -484,7 +393,7 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsD
 				if v5 > 0 {
 					out.RawByte(',')
 				}
-				easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels1(out, v6)
+				(v6).MarshalEasyJSON(out)
 			}
 			out.RawByte(']')
 		}
@@ -514,76 +423,6 @@ func (v *listResponse) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *listResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp3(l, v)
-}
-func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels1(in *jlexer.Lexer, out *models.Board) {
-	isTopLevel := in.IsStart()
-	if in.IsNull() {
-		if isTopLevel {
-			in.Consumed()
-		}
-		in.Skip()
-		return
-	}
-	in.Delim('{')
-	for !in.IsDelim('}') {
-		key := in.UnsafeFieldName(false)
-		in.WantColon()
-		if in.IsNull() {
-			in.Skip()
-			in.WantComma()
-			continue
-		}
-		switch key {
-		case "id":
-			out.Id = int(in.Int())
-		case "name":
-			out.Name = string(in.String())
-		case "description":
-			out.Description = string(in.String())
-		case "privacy":
-			out.Privacy = string(in.String())
-		case "user_id":
-			out.UserId = int(in.Int())
-		default:
-			in.SkipRecursive()
-		}
-		in.WantComma()
-	}
-	in.Delim('}')
-	if isTopLevel {
-		in.Consumed()
-	}
-}
-func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels1(out *jwriter.Writer, in models.Board) {
-	out.RawByte('{')
-	first := true
-	_ = first
-	{
-		const prefix string = ",\"id\":"
-		out.RawString(prefix[1:])
-		out.Int(int(in.Id))
-	}
-	{
-		const prefix string = ",\"name\":"
-		out.RawString(prefix)
-		out.String(string(in.Name))
-	}
-	{
-		const prefix string = ",\"description\":"
-		out.RawString(prefix)
-		out.String(string(in.Description))
-	}
-	{
-		const prefix string = ",\"privacy\":"
-		out.RawString(prefix)
-		out.String(string(in.Privacy))
-	}
-	{
-		const prefix string = ",\"user_id\":"
-		out.RawString(prefix)
-		out.Int(int(in.UserId))
-	}
-	out.RawByte('}')
 }
 func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp4(in *jlexer.Lexer, out *getResponse) {
 	isTopLevel := in.IsStart()

@@ -1,7 +1,8 @@
 package http
 
 import (
-	"encoding/json"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
+	"github.com/pkg/errors"
 	"net/http"
 	"strings"
 	"time"
@@ -12,7 +13,6 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
@@ -60,20 +60,18 @@ func createCsrfTokenCookie(token string) *http.Cookie {
 }
 
 func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	decoder := json.NewDecoder(r.Body)
-	defer func() {
-		err := r.Body.Close()
-		if err != nil {
-			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
-		}
-	}()
-
-	data := auth.LoginParams{}
-	if err := decoder.Decode(&data); err != nil {
-		return pkgErrors.ErrBadRequest
+	body, err := utils.ReadBody(r, del.log)
+	if err != nil {
+		return err
 	}
 
-	user, session, err := del.serv.Authenticate(data.Email, data.Password)
+	var request loginRequest
+	err = request.UnmarshalJSON(body)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrParseJson, err.Error())
+	}
+
+	user, session, err := del.serv.Authenticate(request.Email, request.Password)
 	if err != nil {
 		return err
 	}
@@ -90,10 +88,15 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 	csrfCookie := createCsrfTokenCookie(token)
 	http.SetCookie(w, csrfCookie)
 
+	data, err := user.MarshalJSON()
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	encoder := json.NewEncoder(w)
-	if err = encoder.Encode(user); err != nil {
-		return pkgErrors.ErrCreateResponse
+	_, err = w.Write(data)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 	return nil
 }
@@ -114,13 +117,16 @@ func (del *delivery) CheckAuth(w http.ResponseWriter, r *http.Request, p httprou
 		return pkgErrors.ErrUnauthorized
 	}
 
-	decoder := json.NewEncoder(w)
-	w.Header().Set("Content-Type", "application/json")
-
-	if err = decoder.Encode(user); err != nil {
-		return pkgErrors.ErrCreateResponse
+	data, err := user.MarshalJSON()
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
 	return nil
 }
 
@@ -151,19 +157,23 @@ func (del *delivery) Logout(w http.ResponseWriter, r *http.Request, p httprouter
 }
 
 func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-	decoder := json.NewDecoder(r.Body)
-	defer func() {
-		err := r.Body.Close()
-		if err != nil {
-			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
-		}
-	}()
-	params := auth.RegisterParams{}
-
-	if err := decoder.Decode(&params); err != nil {
-		return pkgErrors.ErrParseJson
+	body, err := utils.ReadBody(r, del.log)
+	if err != nil {
+		return err
 	}
 
+	var request registerRequest
+	err = request.UnmarshalJSON(body)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrParseJson, err.Error())
+	}
+
+	params := auth.RegisterParams{
+		Username: request.Username,
+		Email:    request.Email,
+		Name:     request.Name,
+		Password: request.Password,
+	}
 	user, sessionParams, err := del.serv.Register(&params)
 	if err != nil {
 		return err
@@ -181,11 +191,15 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 	csrfCookie := createCsrfTokenCookie(token)
 	http.SetCookie(w, csrfCookie)
 
-	w.Header().Set("Content-Type", "application/json")
-	encoder := json.NewEncoder(w)
-	if err = encoder.Encode(user); err != nil {
-		return pkgErrors.ErrCreateResponse
+	data, err := user.MarshalJSON()
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
+	w.Header().Set("Content-Type", "application/json")
+	_, err = w.Write(data)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
 	return nil
 }
