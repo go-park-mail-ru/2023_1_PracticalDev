@@ -242,37 +242,49 @@ func (del *delivery) handleConnection(conn *ws.Conn, userID int) error {
 	del.connService.AddConnection(userID, conn)
 
 	for {
-		del.log.Debug(fmt.Sprintf("Start reading new messages from connection %p...", conn))
 		_, message, err := conn.ReadMessage()
 		if err != nil {
-			del.log.Debug(fmt.Sprintf("Error reading message from connection=%p: err=%v", conn, err))
+			del.log.Debug("Read from connection error", zap.Error(err), zap.Int("user_id", userID),
+				zap.String("remote_addr", conn.RemoteAddr().String()))
 			del.connService.RemoveConnection(userID, conn)
 			return nil
 		}
 
-		msgReq := msgRequest{}
+		var msgReq msgRequest
 		err = msgReq.UnmarshalJSON(message)
 		if err != nil {
-			del.log.Debug(fmt.Sprintf("Error unmarshal message from connection=%p: err=%v", conn, err))
-			errResp := errorResponse{
-				Type:    "error",
-				ErrMsg:  "invalid json",
-				ErrCode: 1,
-			}
-			err = conn.WriteJSON(errResp)
+			del.log.Debug("Failed to unmarshal message", zap.Error(err), zap.Int("user_id", userID),
+				zap.String("remote_addr", conn.RemoteAddr().String()))
+
+			errResp := errorResponse{Type: "error", ErrMsg: "invalid json", ErrCode: 1}
+			data, err := errResp.MarshalJSON()
 			if err != nil {
+				del.log.Error("Marshal json failed", zap.Error(err), zap.Int("user_id", userID),
+					zap.String("remote_addr", conn.RemoteAddr().String()), zap.Any("message", errResp))
+
 				del.connService.RemoveConnection(userID, conn)
 				return nil
 			}
+
+			err = conn.WriteMessage(ws.TextMessage, data)
+			if err != nil {
+				del.log.Debug("Write json failed", zap.Error(err), zap.Int("user_id", userID),
+					zap.String("remote_addr", conn.RemoteAddr().String()), zap.Any("message", errResp))
+
+				del.connService.RemoveConnection(userID, conn)
+				return nil
+			}
+
+			continue
 		}
-		del.log.Debug(fmt.Sprintf("Got message (conn=%p; userID=%d): receiverID=%d; text=%s",
-			conn, userID, msgReq.ReceiverID, msgReq.Text))
+		del.log.Debug("Got message", zap.Int("user_id", userID),
+			zap.String("remote_addr", conn.RemoteAddr().String()), zap.Int("receiver_id", msgReq.ReceiverID),
+			zap.String("text", msgReq.Text))
 
 		var sendNewChat bool
 		chat, err := del.serv.GetByUsers(userID, msgReq.ReceiverID)
 		if err != nil {
 			if errors.Is(err, pkgErrors.ErrChatNotFound) {
-				del.log.Debug(fmt.Sprintf("Not found chat for (user1ID=%d; user2ID=%d)", userID, msgReq.ReceiverID))
 				params := pkgChats.CreateParams{User1ID: userID, User2ID: msgReq.ReceiverID}
 				createdChat, err := del.serv.Create(&params)
 				if err != nil {

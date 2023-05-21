@@ -163,7 +163,10 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+	return nil
 }
 
 func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -214,7 +217,10 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+	return nil
 }
 
 func (del *delivery) delete(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -279,7 +285,10 @@ func (del *delivery) pinsList(w http.ResponseWriter, r *http.Request, p httprout
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+	return nil
 }
 
 func (del *delivery) addPin(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
