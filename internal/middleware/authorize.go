@@ -26,17 +26,17 @@ func NewAuthorizer(serv AuthService, log *zap.Logger) Authorizer {
 		return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 			sessionCookie, err := r.Cookie("JSESSIONID")
 			if err != nil {
+				log.Debug("Failed to get session cookie", zap.Error(err))
 				return errors.Wrap(pkgErrors.ErrUnauthorized, err.Error())
 			}
 
 			tmp := strings.Split(sessionCookie.Value, "$")
-
 			if len(tmp) != 2 {
+				log.Debug("Failed to split session cookie", zap.String("cookie", sessionCookie.String()))
 				return errors.Wrap(pkgErrors.ErrUnauthorized, "invalid cookie")
 			}
 
 			userId := tmp[0]
-
 			if _, err = serv.CheckAuth(userId, sessionCookie.Value); err != nil {
 				return errors.Wrap(pkgErrors.ErrUnauthorized, err.Error())
 			}

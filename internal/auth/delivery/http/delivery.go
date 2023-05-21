@@ -114,7 +114,7 @@ func (del *delivery) CheckAuth(w http.ResponseWriter, r *http.Request, p httprou
 
 	user, err := del.serv.CheckAuth(userId, sessionId)
 	if err != nil {
-		return pkgErrors.ErrUnauthorized
+		return err
 	}
 
 	data, err := user.MarshalJSON()

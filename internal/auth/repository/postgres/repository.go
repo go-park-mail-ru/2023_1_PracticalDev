@@ -3,6 +3,7 @@ package postgres
 import (
 	"context"
 	"database/sql"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	"go.uber.org/zap"
 	"strconv"
 	"time"
@@ -85,16 +86,27 @@ func (rep *repository) SetSession(sessionId string, session *models.Session, exp
 	return err
 }
 
+const checkAuthCmd = `
+		SELECT * 
+		FROM users 
+		WHERE id = $1;`
+
 func (rep *repository) CheckAuth(userId, sessionId string) (models.User, error) {
 	err := rep.rdb.HGet(rep.ctx, userId, sessionId).Err()
-	user := models.User{}
-
 	if err != nil {
-		return user, err
+		rep.log.Error("Failed to get session from redis", zap.Error(err), zap.String("user_id", userId),
+			zap.String("session_id", sessionId))
+		return models.User{}, errors.Wrap(pkgErrors.ErrUnauthorized, err.Error())
 	}
 
-	row := rep.db.QueryRow("SELECT * FROM users WHERE id = $1", userId)
+	var user models.User
+	row := rep.db.QueryRow(checkAuthCmd, userId)
 	err = scanUser(&user, row)
+	if err != nil {
+		rep.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", checkAuthCmd),
+			zap.String("user_id", userId), zap.String("session_id", sessionId))
+		return models.User{}, errors.Wrap(pkgErrors.ErrUnauthorized, err.Error())
+	}
 
 	return user, err
 }
