@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"net/http"
@@ -37,9 +36,13 @@ func (del delivery) get(w http.ResponseWriter, _ *http.Request, p httprouter.Par
 		return err
 	}
 
+	data, err := res.MarshalJSON()
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+
 	w.Header().Set("Content-Type", "application/json")
-	encoder := json.NewEncoder(w)
-	err = encoder.Encode(res)
+	_, err = w.Write(data)
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}

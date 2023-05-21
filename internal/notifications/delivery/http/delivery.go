@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	pkgNotifications "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
@@ -61,7 +60,7 @@ func (del *delivery) ListUnreadByUser(w http.ResponseWriter, _ *http.Request, p 
 	}
 
 	response := newListResponse(notifications)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}

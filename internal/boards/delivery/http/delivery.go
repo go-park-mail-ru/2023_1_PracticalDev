@@ -1,8 +1,8 @@
 package http
 
 import (
-	"encoding/json"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -40,16 +40,15 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 		return pkgErrors.ErrInvalidUserIdParam
 	}
 
+	body, err := utils.ReadBody(r, del.log)
+	if err != nil {
+		return err
+	}
+
 	var request createRequest
-	decoder := json.NewDecoder(r.Body)
-	defer func() {
-		err = r.Body.Close()
-		if err != nil {
-			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
-		}
-	}()
-	if err = decoder.Decode(&request); err != nil {
-		return pkgErrors.ErrParseJson
+	err = request.UnmarshalJSON(body)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrParseJson, err.Error())
 	}
 
 	params := pkgBoards.CreateParams{
@@ -67,9 +66,9 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 		return err
 	}
 
-	data, err := json.Marshal(createdBoard)
+	data, err := createdBoard.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -90,9 +89,9 @@ func (del *delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.P
 	}
 
 	response := listResponse{Boards: boards}
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -113,9 +112,9 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	}
 
 	response := newGetResponse(&board)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -130,16 +129,15 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 		return pkgErrors.ErrInvalidBoardIdParam
 	}
 
+	body, err := utils.ReadBody(r, del.log)
+	if err != nil {
+		return err
+	}
+
 	var request fullUpdateRequest
-	decoder := json.NewDecoder(r.Body)
-	defer func() {
-		err = r.Body.Close()
-		if err != nil {
-			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
-		}
-	}()
-	if err = decoder.Decode(&request); err != nil {
-		return pkgErrors.ErrParseJson
+	err = request.UnmarshalJSON(body)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrParseJson, err.Error())
 	}
 
 	params := pkgBoards.FullUpdateParams{
@@ -158,9 +156,9 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	}
 
 	response := newFullUpdateResponse(&board)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -175,16 +173,15 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 		return pkgErrors.ErrInvalidBoardIdParam
 	}
 
+	body, err := utils.ReadBody(r, del.log)
+	if err != nil {
+		return err
+	}
+
 	var request partialUpdateRequest
-	decoder := json.NewDecoder(r.Body)
-	defer func() {
-		err = r.Body.Close()
-		if err != nil {
-			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
-		}
-	}()
-	if err = decoder.Decode(&request); err != nil {
-		return pkgErrors.ErrParseJson
+	err = request.UnmarshalJSON(body)
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrParseJson, err.Error())
 	}
 
 	params := pkgBoards.PartialUpdateParams{
@@ -210,9 +207,9 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	}
 
 	response := newPartialUpdateResponse(&board)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
@@ -275,9 +272,9 @@ func (del *delivery) pinsList(w http.ResponseWriter, r *http.Request, p httprout
 	}
 
 	response := pinListResponse{Pins: pins}
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")

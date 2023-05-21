@@ -2,7 +2,6 @@ package http
 
 import (
 	"bytes"
-	"encoding/json"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	"go.uber.org/zap"
 	"io"
@@ -46,15 +45,15 @@ func (del *delivery) getProfileByUser(w http.ResponseWriter, r *http.Request, p 
 	}
 
 	response := newGetResponse(&prof)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 	return nil
 }
@@ -105,15 +104,15 @@ func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httpro
 	}
 
 	response := newFullUpdateResponse(&prof)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 	return nil
 }
@@ -167,15 +166,15 @@ func (del *delivery) partialUpdate(w http.ResponseWriter, r *http.Request, p htt
 	}
 
 	response := newPartialUpdateResponse(&prof)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 	return nil
 }

@@ -29,6 +29,7 @@ var httpCodes = map[error]int{
 	ErrBadTokenData:       http.StatusBadRequest,
 	ErrParseForm:          http.StatusBadRequest,
 	ErrParseJson:          http.StatusBadRequest,
+	ErrReadBody:           http.StatusBadRequest,
 	ErrUserAlreadyExists:  http.StatusBadRequest,
 	ErrSameUserId:         http.StatusBadRequest,
 

@@ -2,7 +2,6 @@ package http
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
 	"net/http"
 	"path/filepath"
@@ -76,7 +75,7 @@ func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.
 	}
 
 	response := newCreateResponse(&pin)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}
@@ -108,7 +107,7 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	}
 
 	response := newGetResponse(&pin)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}
@@ -159,7 +158,7 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 	}
 
 	response := newListResponse(pins)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}
@@ -204,7 +203,7 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	}
 
 	response := newListResponse(pins)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}
@@ -235,7 +234,7 @@ func (del delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprou
 	}
 
 	response := newFullUpdateResponse(&pin)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}

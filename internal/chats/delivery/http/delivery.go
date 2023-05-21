@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"fmt"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/connectionservice"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
@@ -73,7 +72,7 @@ func (del *delivery) ListByUser(w http.ResponseWriter, _ *http.Request, p httpro
 	}
 
 	response := newListResponse(chats)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
@@ -99,7 +98,7 @@ func (del *delivery) MessagesList(w http.ResponseWriter, _ *http.Request, p http
 	}
 
 	response := newMessagesListResponse(messages)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
@@ -136,7 +135,7 @@ func (del *delivery) GetMessagesByReceiver(w http.ResponseWriter, r *http.Reques
 	}
 
 	response := newMessagesListResponse(messages)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
@@ -162,7 +161,7 @@ func (del *delivery) Get(w http.ResponseWriter, _ *http.Request, p httprouter.Pa
 	}
 
 	response := newGetResponse(&chat)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
@@ -252,7 +251,7 @@ func (del *delivery) handleConnection(conn *ws.Conn, userID int) error {
 		}
 
 		msgReq := msgRequest{}
-		err = json.Unmarshal(message, &msgReq)
+		err = msgReq.UnmarshalJSON(message)
 		if err != nil {
 			del.log.Debug(fmt.Sprintf("Error unmarshal message from connection=%p: err=%v", conn, err))
 			errResp := errorResponse{

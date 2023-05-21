@@ -1,9 +1,8 @@
 package http
 
 import (
-	"encoding/json"
 	pkgComments "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/comments"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"net/http"
@@ -43,15 +42,14 @@ func (del delivery) Create(w http.ResponseWriter, r *http.Request, p httprouter.
 		return errors.Wrap(pkgErrors.ErrInvalidPinIdParam, err.Error())
 	}
 
+	body, err := utils.ReadBody(r, del.log)
+	if err != nil {
+		return err
+	}
+
 	var request createRequest
-	decoder := json.NewDecoder(r.Body)
-	defer func() {
-		err = r.Body.Close()
-		if err != nil {
-			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
-		}
-	}()
-	if err = decoder.Decode(&request); err != nil {
+	err = request.UnmarshalJSON(body)
+	if err != nil {
 		return errors.Wrap(pkgErrors.ErrParseJson, err.Error())
 	}
 
@@ -66,7 +64,7 @@ func (del delivery) Create(w http.ResponseWriter, r *http.Request, p httprouter.
 	}
 
 	response := newCreateResponse(&comment)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
@@ -92,7 +90,7 @@ func (del delivery) List(w http.ResponseWriter, _ *http.Request, p httprouter.Pa
 	}
 
 	response := newListResponse(comments)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
