@@ -6,6 +6,8 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 )
 
+//go:generate easyjson -all -snake_case api_models.go
+
 // API requests
 type msgRequest struct {
 	Text       string `json:"text"`

@@ -5,6 +5,8 @@ import (
 	pkgProfile "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/profile"
 )
 
+//go:generate easyjson -all -snake_case api_models.go
+
 // API responses
 type getResponse struct {
 	Username     string `json:"username"`

@@ -1,5 +1,6 @@
 all: run
 
+EASYJSON_PATHS = ./internal/...
 
 .PHONY: build
 build:
@@ -47,6 +48,10 @@ fill-test-data:
 .PHONY: mocks
 mocks:
 	./scripts/gen_mocks.sh
+
+# easyjson
+generate:
+	go generate ${EASYJSON_PATHS}
 
 .PHONY: metrics-test
 metrics-test:

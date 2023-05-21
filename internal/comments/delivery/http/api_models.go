@@ -6,6 +6,8 @@ import (
 	"time"
 )
 
+//go:generate easyjson -all -snake_case api_models.go
+
 // API requests
 type createRequest struct {
 	Text string `json:"text"`

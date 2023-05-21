@@ -1,5 +1,7 @@
 package models
 
+//go:generate easyjson -all -snake_case pin.go
+
 type Pin struct {
 	Id               int    `json:"id"`
 	Title            string `json:"title"`
