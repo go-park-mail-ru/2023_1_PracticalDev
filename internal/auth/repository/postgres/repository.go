@@ -3,7 +3,6 @@ package postgres
 import (
 	"context"
 	"database/sql"
-	"encoding/json"
 	"go.uber.org/zap"
 	"strconv"
 	"time"
@@ -76,7 +75,7 @@ func (rep *repository) Authenticate(email, password string) (models.User, error)
 }
 
 func (rep *repository) SetSession(sessionId string, session *models.Session, expiration time.Duration) error {
-	tmp, _ := json.Marshal(session)
+	tmp, _ := session.MarshalJSON()
 
 	err := rep.rdb.HSet(rep.ctx, strconv.Itoa(session.UserId), sessionId, tmp).Err()
 	if err != nil {
