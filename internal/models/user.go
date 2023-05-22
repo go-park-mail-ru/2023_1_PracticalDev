@@ -1,5 +1,7 @@
 package models
 
+//go:generate easyjson -all -snake_case user.go
+
 type User struct {
 	Id             int    `json:"id"`
 	Username       string `json:"username"`

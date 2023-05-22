@@ -29,7 +29,10 @@ COPY --from=unit-test /out/cover.out /cover.out
 RUN --mount=target=.,rw=true \
     --mount=type=cache,target=/go/pkg/mod \
     --mount=type=cache,target=/root/.cache/go-build \
-    go tool cover -func /cover.out > /out.stat
+    /bin/sh -c ' \
+    cat /cover.out | fgrep -v "easyjson" > /cover.out.filtered && \
+    go tool cover -func=/cover.out.filtered > /out.stat \
+    '
 CMD [ "cat", "/out.stat" ]
 
 FROM golangci/golangci-lint:v1.51.2-alpine AS lint-base

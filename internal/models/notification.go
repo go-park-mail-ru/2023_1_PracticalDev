@@ -2,6 +2,8 @@ package models
 
 import "time"
 
+//go:generate easyjson -all -snake_case notification.go
+
 type Notification struct {
 	ID        int         `json:"id"`
 	UserID    int         `json:"user_id"`

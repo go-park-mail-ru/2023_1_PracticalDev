@@ -1,7 +1,7 @@
 package http
 
 import (
-	"encoding/json"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -28,7 +28,7 @@ func (del *delivery) Get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	strId := p.ByName("id")
 	id, err := strconv.Atoi(strId)
 	if err != nil {
-		return pkgErrors.ErrInvalidUserIdParam
+		return errors.Wrap(pkgErrors.ErrInvalidUserIdParam, err.Error())
 	}
 
 	user, err := del.serv.Get(id)
@@ -36,15 +36,15 @@ func (del *delivery) Get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 		return err
 	}
 
-	data, err := json.Marshal(user)
+	data, err := user.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 	return nil
 }

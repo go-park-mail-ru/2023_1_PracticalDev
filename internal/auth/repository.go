@@ -8,10 +8,7 @@ import (
 )
 
 var (
-	UserAlreadyExistsError    = errors.New("user with this email already exists")
-	UserCreationError         = errors.New("failed to create user")
 	WrongPasswordOrLoginError = errors.New("wrong password or login")
-	DBConnectionError         = errors.New("failed to connnect to db")
 )
 
 type Repository interface {

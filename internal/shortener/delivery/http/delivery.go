@@ -1,13 +1,13 @@
 package http
 
 import (
-	"encoding/json"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
+	"github.com/pkg/errors"
 	"net/http"
 	"os"
 	"strconv"
 
 	mw "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
 	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener"
 	"github.com/julienschmidt/httprouter"
@@ -31,42 +31,35 @@ type delivery struct {
 	log  *zap.Logger
 }
 
-type url struct {
-	URL string `json:"url"`
-}
-
 var shortHost = os.Getenv("SHORT_HOST")
 
 func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.Params) error { //nolint
-	decoder := json.NewDecoder(r.Body)
-	defer func() {
-		err := r.Body.Close()
-		if err != nil {
-			del.log.Error(constants.FailedCloseRequestBody, zap.Error(err))
-		}
-	}()
-
-	data := url{}
-	if err := decoder.Decode(&data); err != nil {
-		return pkgErrors.ErrBadRequest
-	}
-
-	hash, err := del.serv.Create(data.URL)
+	body, err := utils.ReadBody(r, del.log)
 	if err != nil {
 		return err
 	}
 
-	dt, err := json.Marshal(url{
-		URL: shortHost + "/" + hash,
-	})
+	var request url
+	err = request.UnmarshalJSON(body)
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrParseJson, err.Error())
+	}
+
+	hash, err := del.serv.Create(request.URL)
+	if err != nil {
+		return err
+	}
+
+	response := url{URL: shortHost + "/" + hash}
+	dt, err := response.MarshalJSON()
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(dt)
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 	return nil
 }
@@ -84,17 +77,16 @@ func (del *delivery) createPin(w http.ResponseWriter, r *http.Request, p httprou
 		return err
 	}
 
-	dt, err := json.Marshal(url{
-		URL: shortHost + "/" + hash,
-	})
+	response := url{URL: shortHost + "/" + hash}
+	dt, err := response.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(dt)
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 	return nil
 }

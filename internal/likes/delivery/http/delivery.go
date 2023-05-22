@@ -1,7 +1,7 @@
 package http
 
 import (
-	"encoding/json"
+	"github.com/pkg/errors"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -80,18 +80,16 @@ func (del *delivery) listByPin(w http.ResponseWriter, r *http.Request, p httprou
 		return err
 	}
 
-	response := listByPinResponse{
-		Likes: likes,
-	}
-	data, err := json.Marshal(response)
+	response := listByPinResponse{Likes: likes}
+	data, err := response.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 	return nil
 }
@@ -108,18 +106,16 @@ func (del *delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p http
 		return err
 	}
 
-	response := listByAuthorResponse{
-		Likes: likes,
-	}
-	data, err := json.Marshal(response)
+	response := listByAuthorResponse{Likes: likes}
+	data, err := response.MarshalJSON()
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
 	if err != nil {
-		return pkgErrors.ErrCreateResponse
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 	return nil
 }

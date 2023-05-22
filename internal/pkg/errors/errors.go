@@ -60,6 +60,7 @@ var (
 	ErrFileCopy               = errors.New("file copy error")
 	ErrParseForm              = errors.New("parse form error")
 	ErrParseJson              = errors.New("parse json error")
+	ErrReadBody               = errors.New("read request body error")
 	ErrSameUserId             = errors.New("same user id")
 	ErrService                = errors.New("service error")
 	ErrCreateResponse         = errors.New("create response error")

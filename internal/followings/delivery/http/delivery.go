@@ -1,7 +1,6 @@
 package http
 
 import (
-	"encoding/json"
 	"go.uber.org/zap"
 	"net/http"
 	"strconv"
@@ -80,10 +79,8 @@ func (del *delivery) GetFollowers(w http.ResponseWriter, r *http.Request, p http
 		return err
 	}
 
-	response := followersResponse{
-		Followers: followers,
-	}
-	data, err := json.Marshal(response)
+	response := followersResponse{Followers: followers}
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}
@@ -108,10 +105,8 @@ func (del *delivery) GetFollowees(w http.ResponseWriter, r *http.Request, p http
 		return err
 	}
 
-	response := followeesResponse{
-		Followees: followees,
-	}
-	data, err := json.Marshal(response)
+	response := followeesResponse{Followees: followees}
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}

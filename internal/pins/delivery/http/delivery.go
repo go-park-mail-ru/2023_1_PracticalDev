@@ -2,12 +2,12 @@ package http
 
 import (
 	"bytes"
-	"encoding/json"
-	"go.uber.org/zap"
 	"io"
 	"net/http"
 	"path/filepath"
 	"strconv"
+
+	"go.uber.org/zap"
 
 	"github.com/google/uuid"
 	"github.com/julienschmidt/httprouter"
@@ -23,8 +23,8 @@ func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.
 	del := delivery{serv, logger}
 
 	mux.POST("/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.create))), logger), logger), logger))
-	mux.GET("/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.list))), logger), logger), logger))
-	mux.GET("/pins/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.get))), logger), logger), logger))
+	mux.GET("/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.SetUserID(del.list), logger), logger), logger))
+	mux.GET("/pins/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.SetUserID(del.get), logger), logger), logger))
 	mux.GET("/users/:id/pins", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.listByAuthor))), logger), logger), logger))
 	mux.PUT("/pins/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(access.WriteChecker(del.fullUpdate)))), logger), logger), logger))
 	mux.DELETE("/pins/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(access.WriteChecker(del.delete)))), logger), logger), logger))
@@ -75,7 +75,7 @@ func (del delivery) create(w http.ResponseWriter, r *http.Request, p httprouter.
 	}
 
 	response := newCreateResponse(&pin)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}
@@ -97,7 +97,7 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
-	if err != nil {
+	if err != nil && strUserId != "" {
 		return pkgErrors.ErrInvalidUserIdParam
 	}
 
@@ -107,7 +107,7 @@ func (del delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Par
 	}
 
 	response := newGetResponse(&pin)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}
@@ -158,7 +158,7 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 	}
 
 	response := newListResponse(pins)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}
@@ -174,7 +174,7 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
-	if err != nil {
+	if err != nil && strUserId != "" {
 		return pkgErrors.ErrInvalidUserIdParam
 	}
 
@@ -203,7 +203,7 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 	}
 
 	response := newListResponse(pins)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}
@@ -234,7 +234,7 @@ func (del delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprou
 	}
 
 	response := newFullUpdateResponse(&pin)
-	data, err := json.Marshal(response)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
 	}

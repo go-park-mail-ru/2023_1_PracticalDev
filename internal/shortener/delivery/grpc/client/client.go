@@ -44,7 +44,7 @@ func (c *client) Create(url string) (string, error) {
 
 func (c *client) CreatePinLink(id int) (string, error) {
 	if os.Getenv("SHORT_HOST") == "localhost:8091" {
-		return c.Create(fmt.Sprintf("http://localhost/pins/%d", id))
+		return c.Create(fmt.Sprintf("http://localhost/pin/%d", id))
 	}
-	return c.Create(fmt.Sprintf("https://pickpin.ru/pins/%d", id))
+	return c.Create(fmt.Sprintf("https://pickpin.ru/pin/%d", id))
 }

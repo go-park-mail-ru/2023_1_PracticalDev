@@ -27,15 +27,9 @@ const getCmd = `
 
 func (rep *repository) Get(id int) (models.User, error) {
 	var profileImage, websiteUrl sql.NullString
-	rows, err := rep.db.Query(getCmd, id)
-	if err != nil {
-		return models.User{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
-	}
-
 	user := models.User{}
-	rows.Next()
-	err = rows.Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword, &user.Name, &profileImage,
-		&websiteUrl, &user.AccountType)
+	err := rep.db.QueryRow(getCmd, id).Scan(&user.Id, &user.Username, &user.Email, &user.HashedPassword, &user.Name,
+		&profileImage, &websiteUrl, &user.AccountType)
 	if err != nil {
 		return models.User{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}

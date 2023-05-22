@@ -1,7 +1,6 @@
 package service
 
 import (
-	"encoding/json"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/connectionservice"
@@ -19,24 +18,6 @@ func NewService(rep notifications.Repository, logger *zap.Logger) notifications.
 	return &service{rep: rep, connService: connectionservice.NewService(logger), log: logger}
 }
 
-type Request struct {
-	ID int `json:"id"`
-}
-
-type Message struct {
-	Type    string      `json:"type"` // response, notification
-	Content interface{} `json:"content"`
-}
-
-// Code
-// 20: ok,
-// 40: bad request,
-// 50: internal error
-type ResponseContent struct {
-	Message string `json:"message"`
-	Code    int    `json:"code"`
-}
-
 func (serv *service) HandleConnection(userID int, conn *ws.Conn) error {
 	serv.connService.AddConnection(userID, conn)
 
@@ -49,14 +30,23 @@ func (serv *service) HandleConnection(userID int, conn *ws.Conn) error {
 			return nil
 		}
 
-		req := Request{}
-		err = json.Unmarshal(message, &req)
+		var req Request
+		err = req.UnmarshalJSON(message)
 		if err != nil {
 			serv.log.Debug("Failed to unmarshal message", zap.Error(err), zap.Int("user_id", userID),
 				zap.String("remote_addr", conn.RemoteAddr().String()))
 
 			msg := Message{Type: "response", Content: ResponseContent{Message: "json unmarshal error", Code: 40}}
-			err = conn.WriteJSON(msg)
+			data, err := msg.MarshalJSON()
+			if err != nil {
+				serv.log.Error("Marshal json failed", zap.Error(err), zap.Int("user_id", userID),
+					zap.String("remote_addr", conn.RemoteAddr().String()), zap.Any("message", msg))
+
+				serv.connService.RemoveConnection(userID, conn)
+				return nil
+			}
+
+			err = conn.WriteMessage(ws.TextMessage, data)
 			if err != nil {
 				serv.log.Debug("Write json failed", zap.Error(err), zap.Int("user_id", userID),
 					zap.String("remote_addr", conn.RemoteAddr().String()), zap.Any("message", msg))
@@ -81,7 +71,16 @@ func (serv *service) HandleConnection(userID int, conn *ws.Conn) error {
 			}}
 		}
 
-		err = conn.WriteJSON(msg)
+		data, err := msg.MarshalJSON()
+		if err != nil {
+			serv.log.Debug("Marshal json failed", zap.Error(err), zap.Int("user_id", userID),
+				zap.String("remote_addr", conn.RemoteAddr().String()), zap.Any("message", msg))
+
+			serv.connService.RemoveConnection(userID, conn)
+			return nil
+		}
+
+		err = conn.WriteMessage(ws.TextMessage, data)
 		if err != nil {
 			serv.log.Debug("Write json failed", zap.Error(err), zap.Int("user_id", userID),
 				zap.String("remote_addr", conn.RemoteAddr().String()), zap.Any("message", msg))

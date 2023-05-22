@@ -22,6 +22,21 @@ services:
       restart_policy:
         condition: on-failure
 
+  mongo:
+    image: mongo
+    container_name: mongo
+    environment:
+        MONGO_INITDB_ROOT_USERNAME: "${MONGO_ROOT_USER}"
+        MONGO_INITDB_ROOT_PASSWORD: "${MONGO_ROOT_PASSWORD}"
+        MONGO_INITDB_DATABASE: "url_shortener"
+    networks:
+      - db-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "27017:27017"
+
   redis:
     image: redis:latest
     container_name: redis
@@ -50,6 +65,7 @@ services:
       - images
       - auth
       - search
+      - shortener
     networks:
       - nginx-network
       - db-network
@@ -108,6 +124,26 @@ services:
     networks:
       - api-network
       - db-network
+  
+  shortener:
+    build:
+      context: .
+      dockerfile: ./cmd/shortener/Dockerfile
+    container_name: shortener
+    depends_on:
+      - db
+      - mongo
+    env_file:
+      - .env
+    deploy:
+      restart_policy:
+        condition: on-failure
+    ports:
+      - "8091:8091"
+    networks:
+      - api-network
+      - db-network
+      - nginx-network
 
   docs:
     image: nginx

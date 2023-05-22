@@ -2,6 +2,8 @@ package models
 
 import "time"
 
+//go:generate easyjson -all -snake_case chat.go
+
 type Chat struct {
 	ID        int       `json:"id"`
 	User1ID   int       `json:"user1_id"`
