@@ -47,6 +47,7 @@ var (
 	ErrInvalidPinIdParam   = errors.New("invalid pin id param")
 	ErrInvalidPageParam    = errors.New("invalid page param")
 	ErrInvalidLimitParam   = errors.New("invalid limit param")
+	ErrInvalidLikedParam   = errors.New("invalid liked param")
 	ErrInvalidPrivacy      = errors.New("invalid privacy")
 	ErrInvalidChatIDParam  = errors.New("invalid chat id param")
 	ErrInvalidLinkIDParam  = errors.New("invalid link param")

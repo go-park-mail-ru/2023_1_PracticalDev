@@ -129,25 +129,144 @@ func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin,
 	return pins, nil
 }
 
-const listCmd = `
-		SELECT id, title, description, media_source, media_source_color, n_likes, author_id 
-		FROM pins 
-		ORDER BY created_at DESC 
-		LIMIT $1 OFFSET $2;`
+const listWithLikedFieldCmd = `
+		SELECT id,
+				title,
+				description,
+				media_source,
+				media_source_color,
+				n_likes,
+				CASE WHEN pin_likes.author_id IS NOT NULL THEN true ELSE false END AS liked,
+				pins.author_id 
+		FROM pins
+         	LEFT JOIN pin_likes ON pins.id = pin_likes.pin_id AND pin_likes.author_id = $1
+        ORDER BY pins.created_at DESC 
+		LIMIT $2 OFFSET $3;`
 
-func (repo *repository) List(page, limit int) ([]models.Pin, error) {
-	rows, err := repo.db.Query(listCmd, limit, (page-1)*limit)
+func (repo *repository) ListWithLikedField(userID int, page, limit int) ([]models.Pin, error) {
+	rows, err := repo.db.Query(listWithLikedFieldCmd, userID, limit, (page-1)*limit)
 	if err != nil {
+		repo.log.Error(constants.DBQueryError, zap.Error(err), zap.String("sql_query", listWithLikedFieldCmd),
+			zap.Int("page", page), zap.Int("limit", limit))
 		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			repo.log.Error(constants.FailedCloseQueryRows, zap.Error(err),
+				zap.String("sql_query", listWithLikedFieldCmd))
+		}
+	}()
 
 	pins := []models.Pin{}
 	pin := models.Pin{}
 	var title, description, mediaSource sql.NullString
 
 	for rows.Next() {
-		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Author)
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Liked,
+			&pin.Author)
 		if err != nil {
+			repo.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", listWithLikedFieldCmd),
+				zap.Int("page", page), zap.Int("limit", limit))
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		}
+
+		pin.Title = title.String
+		pin.Description = description.String
+		pin.MediaSource = mediaSource.String
+		pins = append(pins, pin)
+	}
+
+	return pins, nil
+}
+
+const listCmd = `
+		SELECT id,
+				title,
+				description,
+				media_source,
+				media_source_color,
+				n_likes,
+				false AS liked,
+				pins.author_id 
+		FROM pins
+		ORDER BY created_at DESC 
+		LIMIT $1 OFFSET $2;`
+
+func (repo *repository) List(page, limit int) ([]models.Pin, error) {
+	rows, err := repo.db.Query(listCmd, limit, (page-1)*limit)
+	if err != nil {
+		repo.log.Error(constants.DBQueryError, zap.Error(err), zap.String("sql_query", listCmd),
+			zap.Int("page", page), zap.Int("limit", limit))
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			repo.log.Error(constants.FailedCloseQueryRows, zap.Error(err), zap.String("sql_query", listCmd))
+		}
+	}()
+
+	pins := []models.Pin{}
+	pin := models.Pin{}
+	var title, description, mediaSource sql.NullString
+
+	for rows.Next() {
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Liked,
+			&pin.Author)
+		if err != nil {
+			repo.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", listCmd),
+				zap.Int("page", page), zap.Int("limit", limit))
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		}
+
+		pin.Title = title.String
+		pin.Description = description.String
+		pin.MediaSource = mediaSource.String
+		pins = append(pins, pin)
+	}
+
+	return pins, nil
+}
+
+const listLikedCmd = `
+		SELECT id,
+			   title,
+			   description,
+			   media_source,
+			   media_source_color,
+			   n_likes,
+			   true AS liked,
+			   pins.author_id
+		FROM pins
+			JOIN pin_likes ON pins.id = pin_likes.pin_id AND pin_likes.author_id = $1
+		ORDER BY pin_likes.created_at DESC 
+		LIMIT $2 OFFSET $3;`
+
+func (repo *repository) ListLiked(userID int, page, limit int) ([]models.Pin, error) {
+	rows, err := repo.db.Query(listLikedCmd, userID, limit, (page-1)*limit)
+	if err != nil {
+		repo.log.Error(constants.DBQueryError, zap.Error(err), zap.String("sql_query", listLikedCmd),
+			zap.Int("page", page), zap.Int("limit", limit))
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
+	defer func() {
+		err = rows.Close()
+		if err != nil {
+			repo.log.Error(constants.FailedCloseQueryRows, zap.Error(err), zap.String("sql_query", listLikedCmd))
+		}
+	}()
+
+	pins := []models.Pin{}
+	pin := models.Pin{}
+	var title, description, mediaSource sql.NullString
+
+	for rows.Next() {
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Liked,
+			&pin.Author)
+		if err != nil {
+			repo.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", listLikedCmd),
+				zap.Int("page", page), zap.Int("limit", limit))
 			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
 
