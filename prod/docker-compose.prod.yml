@@ -67,6 +67,7 @@ services:
       - auth
       - search
       - shortener
+      - consul
     networks:
       - nginx-network
       - db-network
@@ -88,6 +89,8 @@ services:
     deploy:
       restart_policy:
         condition: on-failure
+    depends_on:
+      - consul
     networks:
       - api-network
 
