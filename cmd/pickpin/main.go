@@ -86,7 +86,10 @@ func main() {
 	viper.SetConfigFile("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("/src/configs/")
-	viper.ReadInConfig()
+	err := viper.ReadInConfig()
+	if err != nil {
+		logger.Error("failed to read configuration", zap.Error(err))
+	}
 
 	// getting consul client
 	cnsl, err := consul.NewConsulClient()
@@ -213,5 +216,8 @@ func main() {
 	cancelDiscovery()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	server.Shutdown(ctx)
+	err = server.Shutdown(ctx)
+	if err != nil {
+		logger.Error("failed to gracefull shutdown http server", zap.Error(err))
+	}
 }

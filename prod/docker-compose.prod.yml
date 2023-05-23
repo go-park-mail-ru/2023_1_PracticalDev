@@ -1,6 +1,15 @@
 version: "3.9"
 
 services:
+  consul:
+    image: consul
+    container_name: consul
+    networks:
+      - api-network
+    deploy:
+      restart_policy:
+        condition: on-failure
+
   db:
     image: postgres
     container_name: db
@@ -71,7 +80,7 @@ services:
 
   images:
     image: images
-    container_name: images
+    container_name: image
     volumes:
       - ./.aws/credentials:/root/.aws/credentials
     env_file:

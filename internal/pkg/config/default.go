@@ -9,7 +9,7 @@ func GetGRPCAddr() string {
 }
 
 func GetConsulAddr() string {
-	return viper.GetString(GrpcConfig.ConsulAddr) + ":" + viper.GetString(GrpcConfig.Port)
+	return viper.GetString(GrpcConfig.ConsulAddr)
 }
 
 func DefaultRedisConfig() {

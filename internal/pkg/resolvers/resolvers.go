@@ -3,7 +3,6 @@ package resolvers
 import (
 	"context"
 	"errors"
-	"fmt"
 	"strconv"
 	"time"
 
@@ -15,7 +14,7 @@ import (
 	"google.golang.org/grpc/resolver/manual"
 )
 
-var ErrNoAliveServices = errors.New("No alive services")
+var ErrNoAliveServices = errors.New("no alive services")
 
 func NewResolver(client *consulapi.Client, serviceName string, logger *zap.Logger) (*manual.Resolver, error) {
 	health, _, err := client.Health().Service(serviceName, "", false, nil)
@@ -25,8 +24,8 @@ func NewResolver(client *consulapi.Client, serviceName string, logger *zap.Logge
 	}
 	servers := make([]resolver.Address, 0, len(health))
 	for _, item := range health {
-		addr := item.Service.Address
-		fmt.Println(addr)
+		addr := item.Service.Address +
+			":" + strconv.Itoa(item.Service.Port)
 		servers = append(servers, resolver.Address{Addr: addr})
 	}
 	if len(servers) == 0 {
@@ -62,12 +61,12 @@ func NewGRPCConnWithResolver(ctx context.Context, client *consulapi.Client, serv
 }
 
 func RunOnlineServiceDiscovery(ctx context.Context, client *consulapi.Client, nameResolver *manual.Resolver, serviceName string, logger *zap.Logger) {
-	ticker := time.Tick(5 * time.Second)
+	ticker := time.NewTicker(5 * time.Second)
 	for {
 		select {
 		case <-ctx.Done():
 			return
-		case <-ticker:
+		case <-ticker.C:
 			health, _, err := client.Health().Service(serviceName, "", false, nil)
 			if err != nil {
 				logger.Error("cant get alive services")
@@ -80,7 +79,9 @@ func RunOnlineServiceDiscovery(ctx context.Context, client *consulapi.Client, na
 					":" + strconv.Itoa(item.Service.Port)
 				servers = append(servers, resolver.Address{Addr: addr})
 			}
-			nameResolver.CC.NewAddress(servers)
+			_ = nameResolver.CC.UpdateState(resolver.State{
+				Addresses: servers,
+			})
 		}
 	}
 }

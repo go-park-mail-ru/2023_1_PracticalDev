@@ -91,7 +91,7 @@ services:
     build:
       context: .
       dockerfile: ./cmd/images/Dockerfile
-    container_name: images
+    container_name: image
     ports:
       - 8088:8088
     env_file:

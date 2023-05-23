@@ -42,7 +42,10 @@ func main() {
 	viper.SetConfigFile("config")
 	viper.SetConfigType("yaml")
 	viper.AddConfigPath("/src/configs/")
-	viper.ReadInConfig()
+	err := viper.ReadInConfig()
+	if err != nil {
+		logger.Error("failed to read configuration", zap.Error(err))
+	}
 
 	// creating shortener service
 	client, err := mongo.NewMongoClient(logger)
@@ -134,5 +137,8 @@ func main() {
 	server.GracefulStop()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
 	defer cancel()
-	httpServer.Shutdown(ctx)
+	err = httpServer.Shutdown(ctx)
+	if err != nil {
+		logger.Error("failed to gracefull shutdown http server", zap.Error(err))
+	}
 }

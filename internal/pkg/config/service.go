@@ -14,10 +14,6 @@ func setupMetricsConfig(Addr string) {
 	viper.Set(MetricsConfig.Addr, "0.0.0.0:9003")
 }
 
-func setupConsulConfig(Addr string) {
-	viper.Set(ConsulConfig.Addr, Addr)
-}
-
 func setupHTTPConfig(Addr string) {
 	viper.Set(HttpConfig.Addr, Addr)
 }
