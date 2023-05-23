@@ -5,21 +5,22 @@ import (
 	"fmt"
 
 	_ "github.com/lib/pq"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/config"
 )
 
 func New(logger *zap.Logger) (*sql.DB, error) {
 	logger.Info("Connecting to db...",
-		zap.String("host", config.Get("PGHOST")),
-		zap.String("port", config.Get("PGPORT")),
-		zap.String("dbname", config.Get("POSTGRES_DB")),
-		zap.String("sslmode", config.Get("POSTGRES_SSL")))
+		zap.String("host", viper.GetString(config.PostgresConfig.Host)),
+		zap.Int("port", viper.GetInt(config.PostgresConfig.Port)),
+		zap.String("dbname", viper.GetString(config.PostgresConfig.DB)),
+		zap.String("sslmode", viper.GetString(config.PostgresConfig.SSLMode)))
 
-	params := fmt.Sprintf("host=%s port=%s user=%s dbname=%s password=%s sslmode=%s",
-		config.Get("PGHOST"), config.Get("PGPORT"), config.Get("POSTGRES_USER"),
-		config.Get("POSTGRES_DB"), config.Get("POSTGRES_PASSWORD"), config.Get("POSTGRES_SSL"))
+	params := fmt.Sprintf("host=%s port=%d user=%s dbname=%s password=%s sslmode=%s",
+		viper.GetString(config.PostgresConfig.Host), viper.GetInt(config.PostgresConfig.Port), viper.GetString(config.PostgresConfig.User),
+		viper.GetString(config.PostgresConfig.DB), viper.GetString(config.PostgresConfig.Password), viper.GetString(config.PostgresConfig.SSLMode))
 	db, err := sql.Open("postgres", params)
 	if err != nil {
 		logger.Error("Failed to create DB connection", zap.Error(err))

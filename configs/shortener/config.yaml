@@ -1,0 +1,5 @@
+grpc:
+  addr: 0.0.0.0:8087
+  message_size: 1024
+metrics:
+  addr: 0.0.0.0:9003

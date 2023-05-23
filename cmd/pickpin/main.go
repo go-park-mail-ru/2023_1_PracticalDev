@@ -1,15 +1,17 @@
 package main
 
 import (
+	"context"
 	"log"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/julienschmidt/httprouter"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
-	"google.golang.org/grpc"
-	"google.golang.org/grpc/credentials/insecure"
 
 	authService "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/delivery/grpc/client"
 	authDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/delivery/http"
@@ -60,32 +62,18 @@ import (
 	shortenerDelivery "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener/delivery/http"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth/tokens"
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/ping"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/config"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/consul"
+	zaplogger "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/zap"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/metrics"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/resolvers"
 )
 
 func main() {
-	// Zap logger configuration
-	consoleCfg := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		MessageKey:     "msg",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.CapitalColorLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	}
-
-	// Zap logger
-	consoleEncoder := zapcore.NewConsoleEncoder(consoleCfg)
-	consoleCore := zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel)
-	logger := zap.New(consoleCore, zap.AddCaller())
+	// setting up logger
+	logger := zaplogger.NewDefaultZapProdLogger()
 	defer func() {
 		err := logger.Sync()
 		if err != nil {
@@ -93,49 +81,44 @@ func main() {
 		}
 	}()
 
-	db, err := pkgDb.New(logger)
+	// load config
+	config.DefaultPickPinConfig()
+	viper.SetConfigFile("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("/src/configs/")
+	viper.ReadInConfig()
+
+	// getting consul client
+	cnsl, err := consul.NewConsulClient()
 	if err != nil {
-		os.Exit(1)
+		logger.Error("failed to connect to consul", zap.Error(err))
 	}
 
-	imagesConn, err := grpc.Dial(
-		"images:8088",
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	ctx, cancelDiscovery := context.WithCancel(context.Background())
+
+	imagesConn, err := resolvers.NewGRPCConnWithResolver(ctx, cnsl, "image", logger)
 	if err != nil {
-		logger.Error("cant connect to images service")
 		os.Exit(1)
 	}
 	imagesServ := imagesService.NewImageUploaderClient(imagesConn)
 
-	authConn, err := grpc.Dial(
-		"auth:8087",
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	authConn, err := resolvers.NewGRPCConnWithResolver(ctx, cnsl, "auth", logger)
 	if err != nil {
-		logger.Error("cant connect to images service")
 		os.Exit(1)
 	}
 	authServ := authService.NewAuthenficatorClient(authConn)
 
-	searchConn, err := grpc.Dial(
-		"search:8089",
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	searchConn, err := resolvers.NewGRPCConnWithResolver(ctx, cnsl, "search", logger)
 	if err != nil {
-		logger.Error("cant connect to search service")
 		os.Exit(1)
 	}
 
-	shortenerConn, err := grpc.Dial(
-		"shortener:8090",
-		grpc.WithTransportCredentials(insecure.NewCredentials()),
-	)
+	shortenerConn, err := resolvers.NewGRPCConnWithResolver(ctx, cnsl, "shortener", logger)
 	if err != nil {
-		logger.Error("cant connect to shortener service")
 		os.Exit(1)
 	}
 
+	// setting up metrics
 	mt := metrics.NewPrometheusMetrics("pickpin")
 	err = mt.SetupMetrics()
 	metricsMiddleware := middleware.NewHttpMetricsMiddleware(mt)
@@ -147,6 +130,12 @@ func main() {
 
 	mux := httprouter.New()
 	mux.GlobalOPTIONS = middleware.HandlerFuncLogger(middleware.OptionsHandler, logger)
+
+	// creating services
+	db, err := pkgDb.New(logger)
+	if err != nil {
+		os.Exit(1)
+	}
 
 	notificationsRepo := notificationsRepository.NewRepository(db, logger)
 	notificationsServ := notificationsService.NewService(notificationsRepo, logger)
@@ -160,7 +149,7 @@ func main() {
 	likesRepo := likesRepository.NewRepository(db, logger)
 	likesServ := likesService.NewService(likesRepo, notificationsServ, pinsRepo, logger)
 
-	token := tokens.NewHMACHashToken(config.Get("CSRF_TOKEN_SECRET"))
+	token := tokens.NewHMACHashToken(viper.GetString(config.CSRFConfig.Token))
 	CSRFMiddleware := middleware.NewCSRFMiddleware(token, logger)
 	authorizer := middleware.NewAuthorizer(authServ, logger)
 
@@ -199,18 +188,30 @@ func main() {
 	notificationsDelivery.RegisterHandlers(mux, logger, authorizer, CSRFMiddleware, notificationsServ,
 		metricsMiddleware)
 
+	// setting up server
 	server := http.Server{
-		Addr:    "0.0.0.0:8080",
+		Addr:    viper.GetString(config.HttpConfig.Addr),
 		Handler: mux,
 	}
 
 	logger.Info("Starting metrics...")
 
-	go metrics.ServePrometheusHTTP("0.0.0.0:9001")
+	go metrics.ServePrometheusHTTP(viper.GetString(config.MetricsConfig.Addr))
 
 	logger.Info("Starting server...")
-	err = server.ListenAndServe()
-	if err != nil {
-		logger.Error("Failed to start server", zap.Error(err))
-	}
+	go func() {
+		err = server.ListenAndServe()
+		if err != nil {
+			logger.Error("Failed to start server", zap.Error(err))
+		}
+	}()
+
+	// gracefull shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	<-stop
+	cancelDiscovery()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	server.Shutdown(ctx)
 }

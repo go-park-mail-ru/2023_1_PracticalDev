@@ -2,6 +2,7 @@ package client
 
 import (
 	"context"
+	"fmt"
 	"strconv"
 	"time"
 
@@ -33,6 +34,7 @@ func (client *client) Authenticate(login, hashedPassword string) (models.User, a
 		Password: hashedPassword,
 	}
 	resp, err := client.authClient.Authenticate(context.TODO(), &authParams)
+	fmt.Println("here", resp, err)
 	if err != nil {
 		return models.User{}, auth.SessionParams{}, pkgErrors.RestoreHTTPError(pkgErrors.GRPCUnwrapper(err))
 	}
@@ -48,6 +50,7 @@ func (client *client) Authenticate(login, hashedPassword string) (models.User, a
 		return models.User{}, auth.SessionParams{}, errors.Wrap(err, "Authenticate")
 	}
 
+	fmt.Println("here")
 	return *protomodels.NewUser(resp), sessionParams, err
 
 }

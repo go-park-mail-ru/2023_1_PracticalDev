@@ -2,91 +2,97 @@ package main
 
 import (
 	"context"
+	"log"
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/middleware"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/config"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/consul"
+	zaplogger "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log/zap"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/metrics"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/mongo"
 	proto "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener/delivery/grpc/proto"
 	serv "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener/delivery/grpc/server"
 	delHTTP "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener/delivery/http"
 	rep "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener/repository/mongo"
 	service "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/shortener/service"
 	"github.com/julienschmidt/httprouter"
-	"go.mongodb.org/mongo-driver/mongo"
-	"go.mongodb.org/mongo-driver/mongo/options"
-	"go.mongodb.org/mongo-driver/mongo/readpref"
+	"github.com/spf13/viper"
 	"go.uber.org/zap"
-	"go.uber.org/zap/zapcore"
 	"google.golang.org/grpc"
 )
 
-var port = "0.0.0.0:8090"
-
 func main() {
-	// Zap logger configuration
-	consoleCfg := zapcore.EncoderConfig{
-		TimeKey:        "time",
-		LevelKey:       "level",
-		NameKey:        "logger",
-		CallerKey:      "caller",
-		MessageKey:     "msg",
-		StacktraceKey:  "stacktrace",
-		LineEnding:     zapcore.DefaultLineEnding,
-		EncodeLevel:    zapcore.CapitalColorLevelEncoder,
-		EncodeTime:     zapcore.ISO8601TimeEncoder,
-		EncodeDuration: zapcore.SecondsDurationEncoder,
-		EncodeCaller:   zapcore.ShortCallerEncoder,
-	}
+	// setting up logger
+	logger := zaplogger.NewDefaultZapProdLogger()
+	defer func() {
+		err := logger.Sync()
+		if err != nil {
+			log.Println(err)
+		}
+	}()
 
-	// Zap logger
-	consoleEncoder := zapcore.NewConsoleEncoder(consoleCfg)
-	consoleCore := zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel)
-	logger := zap.New(consoleCore, zap.AddCaller())
+	// reading configs
+	config.DefaultGRPCShortenerConfig()
+	viper.SetConfigFile("config")
+	viper.SetConfigType("yaml")
+	viper.AddConfigPath("/src/configs/")
+	viper.ReadInConfig()
 
-	lis, err := net.Listen("tcp", port)
+	// creating shortener service
+	client, err := mongo.NewMongoClient(logger)
 	if err != nil {
-		logger.Error("can't listet port", zap.Error(err))
-		return
-	}
-
-	client, err := mongo.Connect(context.Background(), options.Client().
-		ApplyURI("mongodb://mongo:27017").
-		SetAuth(options.Credential{
-			Username: os.Getenv("MONGO_ROOT_USER"),
-			Password: os.Getenv("MONGO_ROOT_PASSWORD"),
-		}))
-	if err != nil {
-		logger.Error("failed to connect to mongo db", zap.Error(err))
 		os.Exit(1)
 	}
 	defer client.Disconnect(context.Background()) //nolint
-	err = client.Ping(context.Background(), readpref.Primary())
-	if err != nil {
-		logger.Error("failed to ping mongo db", zap.Error(err))
-		os.Exit(1)
-	}
-	logger.Debug("connected to mongo db successfully")
 
 	shortenerRep := rep.NewShortenerRepository(client.Database("url_shortener"), logger)
 	shortenerServ := serv.NewShortenerServer(shortenerRep)
 
+	// setting up metrics
 	ms := metrics.NewPrometheusMetrics("shortener")
 	err = ms.SetupMetrics()
 	if err != nil {
 		logger.Error("Failed to setup metrics", zap.Error(err))
 		os.Exit(1)
 	}
-
 	mw := middleware.NewGRPCMetricsMiddleware(ms)
 
+	// registration in consul
+	cnsl, err := consul.NewConsulClient()
+	if err != nil {
+		logger.Error("Failed to connect to consul", zap.Error(err))
+		os.Exit(1)
+	}
+	err = consul.RegisterService(cnsl)
+	if err != nil {
+		logger.Error("Failed to add service to consul", zap.Error(err))
+		os.Exit(1)
+	}
+	logger.Info("registered in consul")
+	defer func() {
+		err := cnsl.Agent().ServiceDeregister(viper.GetString(config.GrpcConfig.ServiceName) + "_" + config.GetConsulAddr())
+		if err != nil {
+			logger.Error("Failed to remove service from consul", zap.Error(err))
+		}
+		logger.Info("deregistered in consul")
+	}()
+
+	// creating grpc server
 	server := grpc.NewServer(
 		grpc.ChainUnaryInterceptor(mw.MetricsInterceptor),
 	)
-
 	proto.RegisterShortenerServer(server, shortenerServ)
-
+	lis, err := net.Listen("tcp", config.GetGRPCAddr())
+	if err != nil {
+		logger.Error("can't listet port", zap.Error(err))
+		return
+	}
 	logger.Info("Starting shortener grpc service")
 	go func() {
 		err = server.Serve(lis)
@@ -96,27 +102,37 @@ func main() {
 		}
 	}()
 
+	// setting up http server
 	mux := httprouter.New()
 	mux.GlobalOPTIONS = middleware.HandlerFuncLogger(middleware.OptionsHandler, logger)
 
 	shortenerService := service.NewShortenerService(shortenerRep)
 
 	metricsMiddleware := middleware.NewHttpMetricsMiddleware(ms)
-
 	delHTTP.RegisterGetHandler(mux, logger, shortenerService, metricsMiddleware)
 
 	httpServer := http.Server{
-		Addr:    "0.0.0.0:8091",
+		Addr:    viper.GetString(config.HttpConfig.Addr),
 		Handler: mux,
 	}
 
-	logger.Info("Starting http metrics...")
-
-	go metrics.ServePrometheusHTTP("0.0.0.0:9005")
+	logger.Info("Starting metrics...")
+	go metrics.ServePrometheusHTTP(viper.GetString(config.MetricsConfig.Addr))
 
 	logger.Info("Starting http server...")
-	err = httpServer.ListenAndServe()
-	if err != nil {
-		logger.Error("Failed to start server", zap.Error(err))
-	}
+	go func() {
+		err = httpServer.ListenAndServe()
+		if err != nil {
+			logger.Error("Failed to start server", zap.Error(err))
+		}
+	}()
+
+	// gracefull shutdown
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	<-stop
+	server.GracefulStop()
+	ctx, cancel := context.WithTimeout(context.Background(), time.Minute)
+	defer cancel()
+	httpServer.Shutdown(ctx)
 }
