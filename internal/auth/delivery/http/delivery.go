@@ -88,7 +88,8 @@ func (del *delivery) Authenticate(w http.ResponseWriter, r *http.Request, p http
 	csrfCookie := createCsrfTokenCookie(token)
 	http.SetCookie(w, csrfCookie)
 
-	data, err := user.MarshalJSON()
+	response := newAuthenticateResponse(&user)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
@@ -117,7 +118,8 @@ func (del *delivery) CheckAuth(w http.ResponseWriter, r *http.Request, p httprou
 		return err
 	}
 
-	data, err := user.MarshalJSON()
+	response := newCheckAuthResponse(&user)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
@@ -191,7 +193,8 @@ func (del *delivery) Register(w http.ResponseWriter, r *http.Request, p httprout
 	csrfCookie := createCsrfTokenCookie(token)
 	http.SetCookie(w, csrfCookie)
 
-	data, err := user.MarshalJSON()
+	response := newRegisterResponse(&user)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
