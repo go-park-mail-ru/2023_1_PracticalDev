@@ -31,8 +31,48 @@ type listResponse struct {
 	Boards []models.Board `json:"boards"`
 }
 
+func newListResponse(boards []models.Board) *listResponse {
+	for i := range boards {
+		boards[i].Name = xss.Sanitize(boards[i].Name)
+		boards[i].Description = xss.Sanitize(boards[i].Description)
+	}
+
+	return &listResponse{
+		Boards: boards,
+	}
+}
+
 type pinListResponse struct {
 	Pins []models.Pin `json:"pins"`
+}
+
+func newPinsListResponse(pins []models.Pin) *pinListResponse {
+	for i := range pins {
+		pins[i].Title = xss.Sanitize(pins[i].Title)
+		pins[i].Description = xss.Sanitize(pins[i].Description)
+	}
+
+	return &pinListResponse{
+		Pins: pins,
+	}
+}
+
+type createResponse struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+	Privacy     string `json:"privacy"`
+	UserId      int    `json:"user_id"`
+}
+
+func newCreateResponse(board *models.Board) *createResponse {
+	return &createResponse{
+		ID:          board.Id,
+		Name:        xss.Sanitize(board.Name),
+		Description: xss.Sanitize(board.Description),
+		Privacy:     board.Privacy,
+		UserId:      board.UserId,
+	}
 }
 
 type getResponse struct {

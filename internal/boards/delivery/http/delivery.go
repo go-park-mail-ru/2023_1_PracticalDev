@@ -66,14 +66,18 @@ func (del *delivery) create(w http.ResponseWriter, r *http.Request, p httprouter
 		return err
 	}
 
-	data, err := createdBoard.MarshalJSON()
+	response := newCreateResponse(&createdBoard)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+	return nil
 }
 
 func (del *delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -88,7 +92,7 @@ func (del *delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.P
 		return pkgErrors.ErrService
 	}
 
-	response := listResponse{Boards: boards}
+	response := newListResponse(boards)
 	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
@@ -96,7 +100,10 @@ func (del *delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.P
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+	return nil
 }
 
 func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -119,7 +126,10 @@ func (del *delivery) get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 
 	w.Header().Set("Content-Type", "application/json")
 	_, err = w.Write(data)
-	return err
+	if err != nil {
+		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
+	}
+	return nil
 }
 
 func (del *delivery) fullUpdate(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
@@ -277,7 +287,7 @@ func (del *delivery) pinsList(w http.ResponseWriter, r *http.Request, p httprout
 		return pkgErrors.ErrService
 	}
 
-	response := pinListResponse{Pins: pins}
+	response := newPinsListResponse(pins)
 	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
