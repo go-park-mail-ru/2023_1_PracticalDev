@@ -78,6 +78,10 @@ var (
 	ErrTooLongBoardName        = errors.New("board name must be no more than 256 characters")
 	ErrTooLongBoardDescription = errors.New("board description must be no more than 500 characters")
 	ErrInvalidPrivacy          = errors.New("invalid privacy")
+
+	// Pins
+	ErrTooLongPinTitle       = errors.New("pin title must be no more than 100 characters")
+	ErrTooLongPinDescription = errors.New("pin description must be no more than 500 characters")
 )
 
 var ErrorsByNames = map[string]error{

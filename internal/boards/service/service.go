@@ -17,27 +17,6 @@ func NewBoardsService(repo boards.Repository, pinServ pkgPins.Service) boards.Se
 	return &service{repo: repo, pinServ: pinServ}
 }
 
-func validateName(name string) error {
-	if len(name) > constants.MaxBoardNameLen {
-		return pkgErrors.ErrTooLongBoardName
-	}
-	return nil
-}
-
-func validateDescription(name string) error {
-	if len(name) > constants.MaxBoardDescriptionLen {
-		return pkgErrors.ErrTooLongBoardDescription
-	}
-	return nil
-}
-
-func validatePrivacy(privacy string) error {
-	if privacy != "secret" && privacy != "public" {
-		return pkgErrors.ErrInvalidPrivacy
-	}
-	return nil
-}
-
 func (serv *service) Create(params *boards.CreateParams) (models.Board, error) {
 	if err := validatePrivacy(params.Privacy); err != nil {
 		return models.Board{}, err
@@ -132,4 +111,25 @@ func (serv *service) CheckWriteAccess(userId, boardId string) (bool, error) {
 
 func (serv *service) CheckReadAccess(userId, boardId string) (bool, error) {
 	return serv.repo.CheckReadAccess(userId, boardId)
+}
+
+func validateName(name string) error {
+	if len(name) > constants.MaxBoardNameLen {
+		return pkgErrors.ErrTooLongBoardName
+	}
+	return nil
+}
+
+func validateDescription(name string) error {
+	if len(name) > constants.MaxBoardDescriptionLen {
+		return pkgErrors.ErrTooLongBoardDescription
+	}
+	return nil
+}
+
+func validatePrivacy(privacy string) error {
+	if privacy != "secret" && privacy != "public" {
+		return pkgErrors.ErrInvalidPrivacy
+	}
+	return nil
 }
