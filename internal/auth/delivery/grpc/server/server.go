@@ -2,6 +2,7 @@ package server
 
 import (
 	"context"
+	"fmt"
 	"time"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/auth"
@@ -24,6 +25,7 @@ func NewAuthServer(rep auth.Repository) proto.AuthenficatorServer {
 
 func (serv *server) Authenticate(ctx context.Context, loginParams *proto.LoginParams) (*proto.User, error) {
 	user, err := serv.rep.Authenticate(loginParams.GetEmail(), loginParams.GetPassword())
+	fmt.Println("here", err)
 	if err != nil {
 		return &proto.User{}, pkgErrors.GRPCWrapper(err)
 	}

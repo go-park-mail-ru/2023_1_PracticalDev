@@ -5,16 +5,17 @@ import (
 
 	"go.uber.org/zap"
 
-	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/config"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/config"
 	"github.com/redis/go-redis/v9"
+	"github.com/spf13/viper"
 )
 
 func NewRedisClient(logger *zap.Logger, ctx context.Context) (*redis.Client, error) {
 	logger.Info("Connecting to redis...")
 
 	rdb := redis.NewClient(&redis.Options{
-		Addr:     config.Get("REDIS_HOST") + ":" + config.Get("REDIS_PORT"),
-		Password: config.Get("REDIS_PASSWORD"),
+		Addr:     viper.GetString(config.RedisConfig.Host) + ":" + viper.GetString(config.RedisConfig.Port),
+		Password: viper.GetString(config.RedisConfig.Password),
 		DB:       0,
 	})
 

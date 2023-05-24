@@ -1,13 +1,41 @@
 package zaplogger
 
 import (
+	"os"
+
 	"go.uber.org/zap"
+	"go.uber.org/zap/zapcore"
 
 	pkgLog "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/log"
 )
 
 type ZapLogger struct {
 	log *zap.SugaredLogger
+}
+
+func DefaultZapProdConfig() zapcore.EncoderConfig {
+	return zapcore.EncoderConfig{
+		TimeKey:        "time",
+		LevelKey:       "level",
+		NameKey:        "logger",
+		CallerKey:      "caller",
+		MessageKey:     "msg",
+		StacktraceKey:  "stacktrace",
+		LineEnding:     zapcore.DefaultLineEnding,
+		EncodeLevel:    zapcore.CapitalColorLevelEncoder,
+		EncodeTime:     zapcore.ISO8601TimeEncoder,
+		EncodeDuration: zapcore.SecondsDurationEncoder,
+		EncodeCaller:   zapcore.ShortCallerEncoder,
+	}
+}
+
+func NewDefaultZapProdLogger() *zap.Logger {
+	consoleCfg := DefaultZapProdConfig()
+
+	consoleEncoder := zapcore.NewConsoleEncoder(consoleCfg)
+	consoleCore := zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel)
+	logger := zap.New(consoleCore)
+	return logger
 }
 
 func New() (*ZapLogger, error) {
