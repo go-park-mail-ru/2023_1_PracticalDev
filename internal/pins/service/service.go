@@ -6,6 +6,7 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
+	pkgErrors "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
 )
 
 type service struct {
@@ -19,6 +20,12 @@ func NewService(rep pkgPins.Repository, notificationsServ notifications.Service,
 }
 
 func (serv *service) Create(params *pkgPins.CreateParams) (models.Pin, error) {
+	if err := validateTitle(params.Title); err != nil {
+		return models.Pin{}, err
+	} else if err = validateDescription(params.Description); err != nil {
+		return models.Pin{}, err
+	}
+
 	pin, err := serv.rep.Create(params)
 	if err != nil {
 		return models.Pin{}, err
@@ -79,6 +86,12 @@ func (serv *service) List(authorized bool, userID int, liked bool, page, limit i
 }
 
 func (serv *service) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin, error) {
+	if err := validateTitle(params.Title); err != nil {
+		return models.Pin{}, err
+	} else if err = validateDescription(params.Description); err != nil {
+		return models.Pin{}, err
+	}
+
 	return serv.rep.FullUpdate(params)
 }
 
@@ -100,5 +113,19 @@ func (serv *service) SetLikedField(pin *models.Pin, userId int) error {
 		return err
 	}
 	pin.Liked = liked
+	return nil
+}
+
+func validateTitle(title string) error {
+	if len(title) > constants.MaxPinTitleLen {
+		return pkgErrors.ErrTooLongPinTitle
+	}
+	return nil
+}
+
+func validateDescription(description string) error {
+	if len(description) > constants.MaxPinDescriptionLen {
+		return pkgErrors.ErrTooLongPinDescription
+	}
 	return nil
 }

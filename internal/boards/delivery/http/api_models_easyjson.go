@@ -704,7 +704,101 @@ func (v *fullUpdateRequest) UnmarshalJSON(data []byte) error {
 func (v *fullUpdateRequest) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp6(l, v)
 }
-func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(in *jlexer.Lexer, out *createRequest) {
+func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(in *jlexer.Lexer, out *createResponse) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "id":
+			out.ID = int(in.Int())
+		case "name":
+			out.Name = string(in.String())
+		case "description":
+			out.Description = string(in.String())
+		case "privacy":
+			out.Privacy = string(in.String())
+		case "user_id":
+			out.UserId = int(in.Int())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(out *jwriter.Writer, in createResponse) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"id\":"
+		out.RawString(prefix[1:])
+		out.Int(int(in.ID))
+	}
+	{
+		const prefix string = ",\"name\":"
+		out.RawString(prefix)
+		out.String(string(in.Name))
+	}
+	{
+		const prefix string = ",\"description\":"
+		out.RawString(prefix)
+		out.String(string(in.Description))
+	}
+	{
+		const prefix string = ",\"privacy\":"
+		out.RawString(prefix)
+		out.String(string(in.Privacy))
+	}
+	{
+		const prefix string = ",\"user_id\":"
+		out.RawString(prefix)
+		out.Int(int(in.UserId))
+	}
+	out.RawByte('}')
+}
+
+// MarshalJSON supports json.Marshaler interface
+func (v createResponse) MarshalJSON() ([]byte, error) {
+	w := jwriter.Writer{}
+	easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(&w, v)
+	return w.Buffer.BuildBytes(), w.Error
+}
+
+// MarshalEasyJSON supports easyjson.Marshaler interface
+func (v createResponse) MarshalEasyJSON(w *jwriter.Writer) {
+	easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(w, v)
+}
+
+// UnmarshalJSON supports json.Unmarshaler interface
+func (v *createResponse) UnmarshalJSON(data []byte) error {
+	r := jlexer.Lexer{Data: data}
+	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(&r, v)
+	return r.Error()
+}
+
+// UnmarshalEasyJSON supports easyjson.Unmarshaler interface
+func (v *createResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
+	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(l, v)
+}
+func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp8(in *jlexer.Lexer, out *createRequest) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
 		if isTopLevel {
@@ -747,7 +841,7 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsD
 		in.Consumed()
 	}
 }
-func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(out *jwriter.Writer, in createRequest) {
+func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp8(out *jwriter.Writer, in createRequest) {
 	out.RawByte('{')
 	first := true
 	_ = first
@@ -776,23 +870,23 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsD
 // MarshalJSON supports json.Marshaler interface
 func (v createRequest) MarshalJSON() ([]byte, error) {
 	w := jwriter.Writer{}
-	easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(&w, v)
+	easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp8(&w, v)
 	return w.Buffer.BuildBytes(), w.Error
 }
 
 // MarshalEasyJSON supports easyjson.Marshaler interface
 func (v createRequest) MarshalEasyJSON(w *jwriter.Writer) {
-	easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(w, v)
+	easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp8(w, v)
 }
 
 // UnmarshalJSON supports json.Unmarshaler interface
 func (v *createRequest) UnmarshalJSON(data []byte) error {
 	r := jlexer.Lexer{Data: data}
-	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(&r, v)
+	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp8(&r, v)
 	return r.Error()
 }
 
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *createRequest) UnmarshalEasyJSON(l *jlexer.Lexer) {
-	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp7(l, v)
+	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalBoardsDeliveryHttp8(l, v)
 }

@@ -7,19 +7,19 @@ import (
 	"github.com/julienschmidt/httprouter"
 )
 
-const mainOrigin = "https://pickpin.ru"
+const MainOrigin = "https://pickpin.ru"
 
-var allowedOrigins = map[string]struct{}{
-	mainOrigin:                {},
+var AllowedOrigins = map[string]struct{}{
+	MainOrigin:                {},
 	"http://localhost":        {},
 	"http://127.0.0.1":        {},
 	"https://park.vk.company": {},
 }
 
 func OptionsHandler(w http.ResponseWriter, r *http.Request) {
-	origin := mainOrigin
+	origin := MainOrigin
 	gotOrigin := r.Header.Get("Origin")
-	if _, allowed := allowedOrigins[gotOrigin]; allowed {
+	if _, allowed := AllowedOrigins[gotOrigin]; allowed {
 		origin = gotOrigin
 	}
 	wHeader := w.Header()
@@ -33,9 +33,9 @@ func OptionsHandler(w http.ResponseWriter, r *http.Request) {
 
 func Cors(handler router.Handler) router.Handler {
 	return func(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
-		origin := mainOrigin
+		origin := MainOrigin
 		gotOrigin := r.Header.Get("Origin")
-		if _, allowed := allowedOrigins[gotOrigin]; allowed {
+		if _, allowed := AllowedOrigins[gotOrigin]; allowed {
 			origin = gotOrigin
 		}
 		w.Header().Set("Access-Control-Allow-Origin", origin)

@@ -1,6 +1,7 @@
 package http
 
 import (
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/xss"
 	"time"
 
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
@@ -28,6 +29,10 @@ type messagesListResponse struct {
 }
 
 func newMessagesListResponse(messages []models.Message) *messagesListResponse {
+	for i := range messages {
+		messages[i].Text = xss.Sanitize(messages[i].Text)
+	}
+
 	return &messagesListResponse{Messages: messages}
 }
 

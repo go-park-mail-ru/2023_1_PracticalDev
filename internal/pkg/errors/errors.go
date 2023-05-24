@@ -48,7 +48,6 @@ var (
 	ErrInvalidPageParam    = errors.New("invalid page param")
 	ErrInvalidLimitParam   = errors.New("invalid limit param")
 	ErrInvalidLikedParam   = errors.New("invalid liked param")
-	ErrInvalidPrivacy      = errors.New("invalid privacy")
 	ErrInvalidChatIDParam  = errors.New("invalid chat id param")
 	ErrInvalidLinkIDParam  = errors.New("invalid link param")
 
@@ -74,6 +73,15 @@ var (
 	ErrFollowingAlreadyExists = errors.New("following already exists")
 	ErrPinAlreadyAdded        = errors.New("pin already added")
 	ErrChatAlreadyExists      = errors.New("chat already exists")
+
+	// Boards
+	ErrTooLongBoardName        = errors.New("board name must be no more than 256 characters")
+	ErrTooLongBoardDescription = errors.New("board description must be no more than 500 characters")
+	ErrInvalidPrivacy          = errors.New("invalid privacy")
+
+	// Pins
+	ErrTooLongPinTitle       = errors.New("pin title must be no more than 100 characters")
+	ErrTooLongPinDescription = errors.New("pin description must be no more than 500 characters")
 )
 
 var ErrorsByNames = map[string]error{

@@ -79,7 +79,7 @@ func (del *delivery) GetFollowers(w http.ResponseWriter, r *http.Request, p http
 		return err
 	}
 
-	response := followersResponse{Followers: followers}
+	response := newFollowersResponse(followers)
 	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse
@@ -105,7 +105,7 @@ func (del *delivery) GetFollowees(w http.ResponseWriter, r *http.Request, p http
 		return err
 	}
 
-	response := followeesResponse{Followees: followees}
+	response := newFolloweesResponse(followees)
 	data, err := response.MarshalJSON()
 	if err != nil {
 		return pkgErrors.ErrCreateResponse

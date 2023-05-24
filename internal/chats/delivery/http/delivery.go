@@ -1,9 +1,9 @@
 package http
 
 import (
-	"fmt"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/connectionservice"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/xss"
 	"net/http"
 	"strconv"
 
@@ -196,6 +196,8 @@ func (del *delivery) sendNewChatToChatMembers(chat models.Chat) error {
 
 func (del *delivery) sendMessageToChatMembers(message models.Message, user1ID, user2ID int) error {
 	del.log.Debug("New message for sending", zap.Any("message", message))
+
+	message.Text = xss.Sanitize(message.Text)
 	newMessage := newMessageResponse{
 		Type:    "message",
 		Message: message,
@@ -227,13 +229,15 @@ func (del *delivery) chatHandler(w http.ResponseWriter, r *http.Request, p httpr
 		return errors.Wrap(pkgErrors.ErrUpgradeToWebSocket, err.Error())
 	}
 	defer func() {
-		del.log.Debug(fmt.Sprintf("Close websocket connection=%p, userID=%d", conn, userID))
 		err = conn.Close()
 		if err != nil {
 			del.log.Error(constants.FailedCloseConnection, zap.Error(err))
 		}
+		del.log.Debug("Websocket closed", zap.Int("user_id", userID),
+			zap.String("remote_addr", conn.RemoteAddr().String()))
 	}()
-	del.log.Debug(fmt.Sprintf("Websocket connected: connection=%p, userID=%d", conn, userID))
+	del.log.Debug("Websocket connected", zap.Int("user_id", userID),
+		zap.String("remote_addr", conn.RemoteAddr().String()))
 
 	return del.handleConnection(conn, userID)
 }

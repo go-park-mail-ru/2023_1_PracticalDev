@@ -36,7 +36,8 @@ func (del *delivery) Get(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 		return err
 	}
 
-	data, err := user.MarshalJSON()
+	response := newGetResponse(&user)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
