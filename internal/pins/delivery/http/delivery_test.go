@@ -139,7 +139,7 @@ func TestList(t *testing.T) {
 	tests := map[string]testCase{
 		"usual": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().List(12, 1, 30).Return([]models.Pin{
+				f.serv.EXPECT().List(true, 12, false, 1, 30).Return([]models.Pin{
 					{Id: 1, Title: "t1", MediaSource: "ms_url1", MediaSourceColor: "rgb(39, 102, 120)",
 						Description: "d1", Author: 12},
 					{Id: 2, Title: "t2", MediaSource: "ms_url2", MediaSourceColor: "rgb(39, 102, 120)",
@@ -158,7 +158,7 @@ func TestList(t *testing.T) {
 		},
 		"no pins": {
 			prepare: func(f *fields) {
-				f.serv.EXPECT().List(12, 1, 30).Return([]models.Pin{}, nil)
+				f.serv.EXPECT().List(true, 12, false, 1, 30).Return([]models.Pin{}, nil)
 			},
 			params:   []httprouter.Param{{Key: "user-id", Value: "12"}},
 			response: `{"pins":[]}`,

@@ -8,7 +8,7 @@ type Service interface {
 	Create(params *CreateParams) (models.Pin, error)
 	Get(id, userId int) (models.Pin, error)
 	ListByAuthor(authorId, userId, page, limit int) ([]models.Pin, error)
-	List(userId, page, limit int) ([]models.Pin, error)
+	List(authorized bool, userId int, liked bool, page, limit int) ([]models.Pin, error)
 	FullUpdate(params *FullUpdateParams) (models.Pin, error)
 	Delete(id int) error
 

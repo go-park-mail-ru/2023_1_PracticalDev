@@ -174,7 +174,8 @@ func (del delivery) listByAuthor(w http.ResponseWriter, r *http.Request, p httpr
 func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {
 	strUserId := p.ByName("user-id")
 	userId, err := strconv.Atoi(strUserId)
-	if err != nil && strUserId != "" {
+	authorized := !(strUserId == "")
+	if err != nil && authorized {
 		return pkgErrors.ErrInvalidUserIdParam
 	}
 
@@ -197,7 +198,17 @@ func (del delivery) list(w http.ResponseWriter, r *http.Request, p httprouter.Pa
 		}
 	}
 
-	pins, err := del.serv.List(userId, page, limit)
+	liked := false
+	strLiked := queryValues.Get("liked")
+	if strLiked != "" {
+		if strLiked == "true" {
+			liked = true
+		} else if strLiked != "false" {
+			return pkgErrors.ErrInvalidLikedParam
+		}
+	}
+
+	pins, err := del.serv.List(authorized, userId, liked, page, limit)
 	if err != nil {
 		return err
 	}

@@ -68,20 +68,14 @@ func (serv *service) ListByAuthor(authorId, userId, page, limit int) ([]models.P
 	return pins, nil
 }
 
-func (serv *service) List(userId, page, limit int) ([]models.Pin, error) {
-	pins, err := serv.rep.List(page, limit)
-	if err != nil {
-		return []models.Pin{}, err
-	}
-
-	for i := range pins {
-		err = serv.SetLikedField(&pins[i], userId)
-		if err != nil {
-			return []models.Pin{}, err
+func (serv *service) List(authorized bool, userID int, liked bool, page, limit int) ([]models.Pin, error) {
+	if authorized {
+		if liked {
+			return serv.rep.ListLiked(userID, page, limit)
 		}
+		return serv.rep.ListWithLikedField(userID, page, limit)
 	}
-
-	return pins, nil
+	return serv.rep.List(page, limit)
 }
 
 func (serv *service) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin, error) {

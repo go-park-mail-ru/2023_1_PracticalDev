@@ -18,6 +18,7 @@ var httpCodes = map[error]int{
 	ErrInvalidPinIdParam:   http.StatusBadRequest,
 	ErrInvalidPageParam:    http.StatusBadRequest,
 	ErrInvalidLimitParam:   http.StatusBadRequest,
+	ErrInvalidLikedParam:   http.StatusBadRequest,
 	ErrInvalidChatIDParam:  http.StatusBadRequest,
 	ErrInvalidLinkIDParam:  http.StatusBadRequest,
 

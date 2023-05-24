@@ -168,3 +168,33 @@ func (mr *MockRepositoryMockRecorder) ListByAuthor(userId, page, limit interface
 	mr.mock.ctrl.T.Helper()
 	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListByAuthor", reflect.TypeOf((*MockRepository)(nil).ListByAuthor), userId, page, limit)
 }
+
+// ListLiked mocks base method.
+func (m *MockRepository) ListLiked(userID, page, limit int) ([]models.Pin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListLiked", userID, page, limit)
+	ret0, _ := ret[0].([]models.Pin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListLiked indicates an expected call of ListLiked.
+func (mr *MockRepositoryMockRecorder) ListLiked(userID, page, limit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListLiked", reflect.TypeOf((*MockRepository)(nil).ListLiked), userID, page, limit)
+}
+
+// ListWithLikedField mocks base method.
+func (m *MockRepository) ListWithLikedField(userID, page, limit int) ([]models.Pin, error) {
+	m.ctrl.T.Helper()
+	ret := m.ctrl.Call(m, "ListWithLikedField", userID, page, limit)
+	ret0, _ := ret[0].([]models.Pin)
+	ret1, _ := ret[1].(error)
+	return ret0, ret1
+}
+
+// ListWithLikedField indicates an expected call of ListWithLikedField.
+func (mr *MockRepositoryMockRecorder) ListWithLikedField(userID, page, limit interface{}) *gomock.Call {
+	mr.mock.ctrl.T.Helper()
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "ListWithLikedField", reflect.TypeOf((*MockRepository)(nil).ListWithLikedField), userID, page, limit)
+}

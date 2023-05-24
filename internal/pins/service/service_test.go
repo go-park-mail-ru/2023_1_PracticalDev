@@ -113,18 +113,15 @@ func TestList(t *testing.T) {
 						{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 3},
 						{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 10},
 					}, nil),
-					f.repo.EXPECT().IsLikedByUser(1, 12).Return(true, nil),
-					f.repo.EXPECT().IsLikedByUser(2, 12).Return(false, nil),
-					f.repo.EXPECT().IsLikedByUser(3, 12).Return(true, nil),
 				)
 			},
 			userId: 12,
 			page:   1,
 			limit:  30,
 			pins: []models.Pin{
-				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Liked: true, Author: 12},
+				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Liked: false, Author: 12},
 				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Liked: false, Author: 3},
-				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Liked: true, Author: 10},
+				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Liked: false, Author: 10},
 			},
 			err: nil,
 		},
@@ -158,7 +155,7 @@ func TestList(t *testing.T) {
 			}
 
 			serv := NewService(f.repo, f.notificationsServ, f.followingsRepo)
-			pins, err := serv.List(test.userId, test.page, test.limit)
+			pins, err := serv.List(false, test.userId, false, test.page, test.limit)
 			if !errors.Is(err, test.err) {
 				t.Errorf("\nExpected: %s\nGot: %s", test.err, err)
 			}

@@ -133,10 +133,10 @@ func TestList(t *testing.T) {
 		"good query": {
 			prepare: func(f *fields) {
 				rows := sqlmock.NewRows([]string{"id", "title", "description", "media_source", "media_source_color",
-					"n_likes", "author_id"})
-				rows = rows.AddRow(1, "t1", "d1", "ms_url1", "rgb(39, 102, 120)", 0, 12)
-				rows = rows.AddRow(2, "t2", "d2", "ms_url2", "rgb(39, 102, 120)", 2, 3)
-				rows = rows.AddRow(3, "t3", "d3", "ms_url3", "rgb(39, 102, 120)", 3, 10)
+					"n_likes", "liked", "author_id"})
+				rows = rows.AddRow(1, "t1", "d1", "ms_url1", "rgb(39, 102, 120)", 0, false, 12)
+				rows = rows.AddRow(2, "t2", "d2", "ms_url2", "rgb(39, 102, 120)", 2, false, 3)
+				rows = rows.AddRow(3, "t3", "d3", "ms_url3", "rgb(39, 102, 120)", 3, false, 10)
 				f.mock.
 					ExpectQuery(regexp.QuoteMeta(listCmd)).
 					WithArgs(30, 0).

@@ -125,18 +125,18 @@ func (mr *MockServiceMockRecorder) Get(id, userId interface{}) *gomock.Call {
 }
 
 // List mocks base method.
-func (m *MockService) List(userId, page, limit int) ([]models.Pin, error) {
+func (m *MockService) List(authorized bool, userId int, liked bool, page, limit int) ([]models.Pin, error) {
 	m.ctrl.T.Helper()
-	ret := m.ctrl.Call(m, "List", userId, page, limit)
+	ret := m.ctrl.Call(m, "List", authorized, userId, liked, page, limit)
 	ret0, _ := ret[0].([]models.Pin)
 	ret1, _ := ret[1].(error)
 	return ret0, ret1
 }
 
 // List indicates an expected call of List.
-func (mr *MockServiceMockRecorder) List(userId, page, limit interface{}) *gomock.Call {
+func (mr *MockServiceMockRecorder) List(authorized, userId, liked, page, limit interface{}) *gomock.Call {
 	mr.mock.ctrl.T.Helper()
-	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockService)(nil).List), userId, page, limit)
+	return mr.mock.ctrl.RecordCallWithMethodType(mr.mock, "List", reflect.TypeOf((*MockService)(nil).List), authorized, userId, liked, page, limit)
 }
 
 // ListByAuthor mocks base method.
