@@ -4,6 +4,8 @@ import (
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/notifications"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/connectionservice"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/xss"
 	ws "github.com/gorilla/websocket"
 	"go.uber.org/zap"
 )
@@ -100,6 +102,11 @@ func (serv *service) Create(userID int, notificationType string, data interface{
 	notification, err := serv.rep.Get(notificationID)
 	if err != nil {
 		return err
+	}
+
+	if notification.Type == constants.NewComment {
+		nc := notification.Data.(models.NewCommentNotification)
+		nc.Text = xss.Sanitize(nc.Text)
 	}
 
 	msg := Message{Type: "notification", Content: notification}
