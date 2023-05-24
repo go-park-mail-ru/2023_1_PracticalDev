@@ -36,7 +36,8 @@ func (del delivery) get(w http.ResponseWriter, _ *http.Request, p httprouter.Par
 		return err
 	}
 
-	data, err := res.MarshalJSON()
+	response := newSearchResponse(&res)
+	data, err := response.MarshalJSON()
 	if err != nil {
 		return errors.Wrap(pkgErrors.ErrCreateResponse, err.Error())
 	}
