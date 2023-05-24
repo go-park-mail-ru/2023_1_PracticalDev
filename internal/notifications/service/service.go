@@ -107,6 +107,7 @@ func (serv *service) Create(userID int, notificationType string, data interface{
 	if notification.Type == constants.NewComment {
 		nc := notification.Data.(models.NewCommentNotification)
 		nc.Text = xss.Sanitize(nc.Text)
+		notification.Data = nc
 	}
 
 	msg := Message{Type: "notification", Content: notification}

@@ -18,6 +18,7 @@ func newListResponse(notifications []models.Notification) *listResponse {
 		if notifications[i].Type == constants.NewComment {
 			nc := notifications[i].Data.(models.NewCommentNotification)
 			nc.Text = xss.Sanitize(nc.Text)
+			notifications[i].Data = nc
 		}
 	}
 
