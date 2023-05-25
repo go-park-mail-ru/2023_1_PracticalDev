@@ -22,13 +22,24 @@ type repository struct {
 }
 
 const getPinsCmd = `
-		SELECT id, title, description, media_source, n_likes, author_id
-		FROM pins
-		WHERE websearch_to_tsquery('russian', $1) @@ to_tsvector('russian', title)
-		   OR websearch_to_tsquery($1) @@ to_tsvector(title)
-		   OR lower(title) LIKE lower('%' || $1 || '%')
-		ORDER BY ts_rank(to_tsvector('russian', title), websearch_to_tsquery('russian', $1)),
-				 ts_rank(to_tsvector(title), websearch_to_tsquery($1)) DESC;`
+		SELECT p.id,
+			   p.title,
+			   p.description,
+			   p.media_source,
+			   p.media_source_color,
+			   p.n_likes,
+			   u.id,
+			   u.username,
+			   u.name,
+			   u.profile_image,
+			   u.website_url
+		FROM pins p
+			JOIN users u ON p.author_id = u.id
+		WHERE websearch_to_tsquery('russian', $1) @@ to_tsvector('russian', p.title)
+		   OR websearch_to_tsquery($1) @@ to_tsvector(p.title)
+		   OR lower(p.title) LIKE lower('%' || $1 || '%')
+		ORDER BY ts_rank(to_tsvector('russian', p.title), websearch_to_tsquery('russian', $1)),
+				 ts_rank(to_tsvector(p.title), websearch_to_tsquery($1)) DESC;`
 
 const getBoardsCmd = `
 		SELECT *
@@ -59,9 +70,10 @@ func (rep repository) Get(query string) (models.SearchRes, error) {
 
 	var pins []models.Pin
 	pin := models.Pin{}
-	var title, description, mediaSource sql.NullString
+	var title, description, mediaSource, profileImage, websiteUrl sql.NullString
 	for rows.Next() {
-		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.NumLikes, &pin.Author)
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes,
+			&pin.Author.Id, &pin.Author.Username, &pin.Author.Name, &profileImage, &websiteUrl)
 		if err != nil {
 			rep.log.Error(constants.DBScanError, zap.String("sql_query", getPinsCmd),
 				zap.String("search_query", query), zap.Error(err))
@@ -71,6 +83,8 @@ func (rep repository) Get(query string) (models.SearchRes, error) {
 		pin.Title = title.String
 		pin.Description = description.String
 		pin.MediaSource = mediaSource.String
+		pin.Author.ProfileImage = profileImage.String
+		pin.Author.WebsiteUrl = websiteUrl.String
 		pins = append(pins, pin)
 	}
 
@@ -83,7 +97,6 @@ func (rep repository) Get(query string) (models.SearchRes, error) {
 
 	var users []models.Profile
 	user := models.Profile{}
-	var profileImage, websiteUrl sql.NullString
 	for rows.Next() {
 		err = rows.Scan(&user.Id, &user.Username, &user.Name, &profileImage, &websiteUrl)
 		if err != nil {
