@@ -26,7 +26,7 @@ func RegisterHandlers(mux *httprouter.Router, logger *zap.Logger, authorizer mw.
 	del := delivery{serv, logger}
 
 	mux.POST(commentsUrl, mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.Create))), logger), logger), logger))
-	mux.GET(commentsUrl, mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(authorizer(mw.Cors(csrf(del.List))), logger), logger), logger))
+	mux.GET(commentsUrl, mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(del.List), logger), logger), logger))
 }
 
 func (del delivery) Create(w http.ResponseWriter, r *http.Request, p httprouter.Params) error {

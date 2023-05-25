@@ -32,7 +32,7 @@ func (serv *service) Create(params *pkgPins.CreateParams) (models.Pin, error) {
 	}
 
 	go func(pin models.Pin) {
-		followers, err := serv.followingsRep.GetFollowers(pin.Author)
+		followers, err := serv.followingsRep.GetFollowers(pin.Author.Id)
 		if err == nil {
 			for _, follower := range followers {
 				_ = serv.notificationsServ.Create(follower.Id, constants.NewPin, models.NewPinNotification{

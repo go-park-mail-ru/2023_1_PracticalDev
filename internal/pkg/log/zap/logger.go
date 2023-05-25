@@ -34,7 +34,7 @@ func NewDefaultZapProdLogger() *zap.Logger {
 
 	consoleEncoder := zapcore.NewConsoleEncoder(consoleCfg)
 	consoleCore := zapcore.NewCore(consoleEncoder, zapcore.Lock(os.Stdout), zapcore.DebugLevel)
-	logger := zap.New(consoleCore)
+	logger := zap.New(consoleCore, zap.AddCaller(), zap.AddStacktrace(zapcore.ErrorLevel))
 	return logger
 }
 

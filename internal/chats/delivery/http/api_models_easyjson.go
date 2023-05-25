@@ -40,7 +40,7 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalChatsDe
 		case "type":
 			out.Type = string(in.String())
 		case "message":
-			(out.Message).UnmarshalEasyJSON(in)
+			easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels(in, &out.Message)
 		default:
 			in.SkipRecursive()
 		}
@@ -63,7 +63,7 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalChatsDe
 	{
 		const prefix string = ",\"message\":"
 		out.RawString(prefix)
-		(in.Message).MarshalEasyJSON(out)
+		easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels(out, in.Message)
 	}
 	out.RawByte('}')
 }
@@ -91,6 +91,78 @@ func (v *newMessageResponse) UnmarshalJSON(data []byte) error {
 func (v *newMessageResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalChatsDeliveryHttp(l, v)
 }
+func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels(in *jlexer.Lexer, out *models.Message) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "id":
+			out.ID = int(in.Int())
+		case "author_id":
+			out.AuthorID = int(in.Int())
+		case "chat_id":
+			out.ChatID = int(in.Int())
+		case "text":
+			out.Text = string(in.String())
+		case "created_at":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CreatedAt).UnmarshalJSON(data))
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels(out *jwriter.Writer, in models.Message) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"id\":"
+		out.RawString(prefix[1:])
+		out.Int(int(in.ID))
+	}
+	{
+		const prefix string = ",\"author_id\":"
+		out.RawString(prefix)
+		out.Int(int(in.AuthorID))
+	}
+	{
+		const prefix string = ",\"chat_id\":"
+		out.RawString(prefix)
+		out.Int(int(in.ChatID))
+	}
+	{
+		const prefix string = ",\"text\":"
+		out.RawString(prefix)
+		out.String(string(in.Text))
+	}
+	{
+		const prefix string = ",\"created_at\":"
+		out.RawString(prefix)
+		out.Raw((in.CreatedAt).MarshalJSON())
+	}
+	out.RawByte('}')
+}
 func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalChatsDeliveryHttp1(in *jlexer.Lexer, out *newChatResponse) {
 	isTopLevel := in.IsStart()
 	if in.IsNull() {
@@ -113,7 +185,7 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalChatsDe
 		case "type":
 			out.Type = string(in.String())
 		case "chat":
-			(out.Chat).UnmarshalEasyJSON(in)
+			easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels1(in, &out.Chat)
 		default:
 			in.SkipRecursive()
 		}
@@ -136,7 +208,7 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalChatsDe
 	{
 		const prefix string = ",\"chat\":"
 		out.RawString(prefix)
-		(in.Chat).MarshalEasyJSON(out)
+		easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels1(out, in.Chat)
 	}
 	out.RawByte('}')
 }
@@ -163,6 +235,80 @@ func (v *newChatResponse) UnmarshalJSON(data []byte) error {
 // UnmarshalEasyJSON supports easyjson.Unmarshaler interface
 func (v *newChatResponse) UnmarshalEasyJSON(l *jlexer.Lexer) {
 	easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalChatsDeliveryHttp1(l, v)
+}
+func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels1(in *jlexer.Lexer, out *models.Chat) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "id":
+			out.ID = int(in.Int())
+		case "user1_id":
+			out.User1ID = int(in.Int())
+		case "user2_id":
+			out.User2ID = int(in.Int())
+		case "created_at":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.CreatedAt).UnmarshalJSON(data))
+			}
+		case "updated_at":
+			if data := in.Raw(); in.Ok() {
+				in.AddError((out.UpdatedAt).UnmarshalJSON(data))
+			}
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels1(out *jwriter.Writer, in models.Chat) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"id\":"
+		out.RawString(prefix[1:])
+		out.Int(int(in.ID))
+	}
+	{
+		const prefix string = ",\"user1_id\":"
+		out.RawString(prefix)
+		out.Int(int(in.User1ID))
+	}
+	{
+		const prefix string = ",\"user2_id\":"
+		out.RawString(prefix)
+		out.Int(int(in.User2ID))
+	}
+	{
+		const prefix string = ",\"created_at\":"
+		out.RawString(prefix)
+		out.Raw((in.CreatedAt).MarshalJSON())
+	}
+	{
+		const prefix string = ",\"updated_at\":"
+		out.RawString(prefix)
+		out.Raw((in.UpdatedAt).MarshalJSON())
+	}
+	out.RawByte('}')
 }
 func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalChatsDeliveryHttp2(in *jlexer.Lexer, out *msgRequest) {
 	isTopLevel := in.IsStart()
@@ -273,7 +419,7 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalChatsDe
 				}
 				for !in.IsDelim(']') {
 					var v1 models.Message
-					(v1).UnmarshalEasyJSON(in)
+					easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels(in, &v1)
 					out.Messages = append(out.Messages, v1)
 					in.WantComma()
 				}
@@ -304,7 +450,7 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalChatsDe
 				if v2 > 0 {
 					out.RawByte(',')
 				}
-				(v3).MarshalEasyJSON(out)
+				easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels(out, v3)
 			}
 			out.RawByte(']')
 		}
@@ -371,7 +517,7 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalChatsDe
 				}
 				for !in.IsDelim(']') {
 					var v4 models.Chat
-					(v4).UnmarshalEasyJSON(in)
+					easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels1(in, &v4)
 					out.Chats = append(out.Chats, v4)
 					in.WantComma()
 				}
@@ -402,7 +548,7 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalChatsDe
 				if v5 > 0 {
 					out.RawByte(',')
 				}
-				(v6).MarshalEasyJSON(out)
+				easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels1(out, v6)
 			}
 			out.RawByte(']')
 		}

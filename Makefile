@@ -50,8 +50,13 @@ mocks:
 	./scripts/gen_mocks.sh
 
 # easyjson
+.PHONY: generate
 generate:
 	go generate ${EASYJSON_PATHS}
+
+.PHONY: clean
+clean:
+	find . -name "*_easyjson.go" -type f -delete
 
 .PHONY: metrics-test
 metrics-test:

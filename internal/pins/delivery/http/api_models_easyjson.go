@@ -149,8 +149,8 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalPinsDel
 			out.NumLikes = int(in.Int())
 		case "liked":
 			out.Liked = bool(in.Bool())
-		case "author_id":
-			out.Author = int(in.Int())
+		case "author":
+			(out.Author).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -201,9 +201,9 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalPinsDel
 		out.Bool(bool(in.Liked))
 	}
 	{
-		const prefix string = ",\"author_id\":"
+		const prefix string = ",\"author\":"
 		out.RawString(prefix)
-		out.Int(int(in.Author))
+		(in.Author).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -260,8 +260,8 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalPinsDel
 			out.MediaSource = string(in.String())
 		case "media_source_color":
 			out.MediaSourceColor = string(in.String())
-		case "author_id":
-			out.Author = int(in.Int())
+		case "author":
+			(out.Author).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -302,9 +302,9 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalPinsDel
 		out.String(string(in.MediaSourceColor))
 	}
 	{
-		const prefix string = ",\"author_id\":"
+		const prefix string = ",\"author\":"
 		out.RawString(prefix)
-		out.Int(int(in.Author))
+		(in.Author).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }
@@ -361,8 +361,8 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalPinsDel
 			out.MediaSource = string(in.String())
 		case "media_source_color":
 			out.MediaSourceColor = string(in.String())
-		case "author_id":
-			out.Author = int(in.Int())
+		case "author":
+			(out.Author).UnmarshalEasyJSON(in)
 		default:
 			in.SkipRecursive()
 		}
@@ -403,9 +403,9 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalPinsDel
 		out.String(string(in.MediaSourceColor))
 	}
 	{
-		const prefix string = ",\"author_id\":"
+		const prefix string = ",\"author\":"
 		out.RawString(prefix)
-		out.Int(int(in.Author))
+		(in.Author).MarshalEasyJSON(out)
 	}
 	out.RawByte('}')
 }

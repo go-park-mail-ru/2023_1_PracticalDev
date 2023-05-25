@@ -48,62 +48,84 @@ func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error)
 	}
 	avgColorStr := fmt.Sprintf("rgb(%d, %d, %d)", avgColor.Red, avgColor.Green, avgColor.Blue)
 
-	row := repo.db.QueryRow(createCmd,
-		params.Title,
-		url,
-		avgColorStr,
-		params.Description,
-		params.Author,
-	)
-
-	retrievedPin := models.Pin{}
+	var pin models.Pin
+	var authorID int
 	var title, description, mediaSource sql.NullString
-	err = row.Scan(&retrievedPin.Id, &title, &mediaSource, &retrievedPin.MediaSourceColor, &description,
-		&retrievedPin.Author)
+	err = repo.db.QueryRow(createCmd, params.Title, url, avgColorStr, params.Description, params.Author).
+		Scan(&pin.Id, &title, &mediaSource, &pin.MediaSourceColor, &description, &authorID)
+	if err != nil {
+		return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
+	pin.Title = title.String
+	pin.Description = description.String
+	pin.MediaSource = mediaSource.String
+
+	author, err := repo.getAuthor(authorID)
 	if err != nil {
 		return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
-	retrievedPin.Title = title.String
-	retrievedPin.Description = description.String
-	retrievedPin.MediaSource = mediaSource.String
-	return retrievedPin, nil
+	pin.Author = *author
+	return pin, nil
 }
 
 const getCmd = `
-		SELECT id, title, description, media_source, media_source_color, n_likes, author_id
-		FROM pins
-		WHERE id = $1;`
+	SELECT p.id,
+			title,
+			description,
+			media_source,
+			media_source_color,
+			n_likes,
+			u.id,
+			u.username,
+			u.name,
+			u.profile_image,
+			u.website_url
+	FROM pins p
+			 JOIN users u ON p.author_id = u.id
+	WHERE p.id = $1;`
 
 func (repo *repository) Get(id int) (models.Pin, error) {
 	row := repo.db.QueryRow(getCmd, id)
 
 	pin := models.Pin{}
-	var title, description, mediaSource sql.NullString
-	err := row.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Author)
+	var title, description, mediaSource, profileImage, websiteUrl sql.NullString
+	err := row.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes,
+		&pin.Author.Id, &pin.Author.Username, &pin.Author.Name, &profileImage, &websiteUrl)
 	if err != nil {
-		repo.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", getCmd),
-			zap.Int("id", id))
-
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Pin{}, errors.Wrap(pkgErrors.ErrPinNotFound, err.Error())
-		} else {
-			return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
+
+		repo.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", getCmd),
+			zap.Int("id", id))
+		return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
 	pin.Title = title.String
 	pin.Description = description.String
 	pin.MediaSource = mediaSource.String
+	pin.Author.ProfileImage = profileImage.String
+	pin.Author.WebsiteUrl = websiteUrl.String
 	return pin, nil
 }
 
 const listByUserCmd = `
-		SELECT id, title, description, media_source, media_source_color, n_likes, author_id
-		FROM pins 
-		WHERE author_id = $1
-		ORDER BY created_at DESC 
-		LIMIT $2 OFFSET $3;`
+	SELECT p.id,
+		   title,
+		   description,
+		   media_source,
+		   media_source_color,
+		   n_likes,
+		   u.id,
+		   u.username,
+		   u.name,
+		   u.profile_image,
+		   u.website_url
+	FROM pins p
+			 JOIN users u ON p.author_id = u.id AND u.id = $1
+	ORDER BY created_at DESC
+	LIMIT $2 OFFSET $3;`
 
 func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listByUserCmd, userId, limit, (page-1)*limit)
@@ -113,16 +135,20 @@ func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin,
 
 	var pins []models.Pin
 	pin := models.Pin{}
-	var title, description, mediaSource sql.NullString
+	var title, description, mediaSource, profileImage, websiteUrl sql.NullString
 
 	for rows.Next() {
-		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Author)
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes,
+			&pin.Author.Id, &pin.Author.Username, &pin.Author.Name, &profileImage, &websiteUrl)
 		if err != nil {
 			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
+
 		pin.Title = title.String
 		pin.Description = description.String
 		pin.MediaSource = mediaSource.String
+		pin.Author.ProfileImage = profileImage.String
+		pin.Author.WebsiteUrl = websiteUrl.String
 		pins = append(pins, pin)
 	}
 
@@ -130,18 +156,23 @@ func (repo *repository) ListByAuthor(userId int, page, limit int) ([]models.Pin,
 }
 
 const listWithLikedFieldCmd = `
-		SELECT id,
-				title,
-				description,
-				media_source,
-				media_source_color,
-				n_likes,
-				CASE WHEN pin_likes.author_id IS NOT NULL THEN true ELSE false END AS liked,
-				pins.author_id 
-		FROM pins
-         	LEFT JOIN pin_likes ON pins.id = pin_likes.pin_id AND pin_likes.author_id = $1
-        ORDER BY pins.created_at DESC 
-		LIMIT $2 OFFSET $3;`
+	SELECT p.id,
+		   p.title,
+		   p.description,
+		   p.media_source,
+		   p.media_source_color,
+		   p.n_likes,
+		   CASE WHEN pin_likes.author_id IS NOT NULL THEN true ELSE false END AS liked,
+		   u.id,
+		   u.username,
+		   u.name,
+		   u.profile_image,
+		   u.website_url
+	FROM pins p
+			 LEFT JOIN pin_likes ON p.id = pin_likes.pin_id AND pin_likes.author_id = $1
+			 JOIN users u ON p.author_id = u.id
+	ORDER BY p.created_at DESC
+	LIMIT $2 OFFSET $3;`
 
 func (repo *repository) ListWithLikedField(userID int, page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listWithLikedFieldCmd, userID, limit, (page-1)*limit)
@@ -160,11 +191,11 @@ func (repo *repository) ListWithLikedField(userID int, page, limit int) ([]model
 
 	pins := []models.Pin{}
 	pin := models.Pin{}
-	var title, description, mediaSource sql.NullString
+	var title, description, mediaSource, profileImage, websiteUrl sql.NullString
 
 	for rows.Next() {
 		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Liked,
-			&pin.Author)
+			&pin.Author.Id, &pin.Author.Username, &pin.Author.Name, &profileImage, &websiteUrl)
 		if err != nil {
 			repo.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", listWithLikedFieldCmd),
 				zap.Int("page", page), zap.Int("limit", limit))
@@ -174,6 +205,8 @@ func (repo *repository) ListWithLikedField(userID int, page, limit int) ([]model
 		pin.Title = title.String
 		pin.Description = description.String
 		pin.MediaSource = mediaSource.String
+		pin.Author.ProfileImage = profileImage.String
+		pin.Author.WebsiteUrl = websiteUrl.String
 		pins = append(pins, pin)
 	}
 
@@ -181,17 +214,22 @@ func (repo *repository) ListWithLikedField(userID int, page, limit int) ([]model
 }
 
 const listCmd = `
-		SELECT id,
-				title,
-				description,
-				media_source,
-				media_source_color,
-				n_likes,
-				false AS liked,
-				pins.author_id 
-		FROM pins
-		ORDER BY created_at DESC 
-		LIMIT $1 OFFSET $2;`
+	SELECT p.id,
+		   p.title,
+		   p.description,
+		   p.media_source,
+		   p.media_source_color,
+		   p.n_likes,
+		   false AS liked,
+		   u.id,
+		   u.username,
+		   u.name,
+		   u.profile_image,
+		   u.website_url
+	FROM pins p
+			 JOIN users u ON p.author_id = u.id
+	ORDER BY created_at DESC
+	LIMIT $1 OFFSET $2;`
 
 func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listCmd, limit, (page-1)*limit)
@@ -209,11 +247,11 @@ func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 
 	pins := []models.Pin{}
 	pin := models.Pin{}
-	var title, description, mediaSource sql.NullString
+	var title, description, mediaSource, profileImage, websiteUrl sql.NullString
 
 	for rows.Next() {
 		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Liked,
-			&pin.Author)
+			&pin.Author.Id, &pin.Author.Username, &pin.Author.Name, &profileImage, &websiteUrl)
 		if err != nil {
 			repo.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", listCmd),
 				zap.Int("page", page), zap.Int("limit", limit))
@@ -223,6 +261,8 @@ func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 		pin.Title = title.String
 		pin.Description = description.String
 		pin.MediaSource = mediaSource.String
+		pin.Author.ProfileImage = profileImage.String
+		pin.Author.WebsiteUrl = websiteUrl.String
 		pins = append(pins, pin)
 	}
 
@@ -230,18 +270,23 @@ func (repo *repository) List(page, limit int) ([]models.Pin, error) {
 }
 
 const listLikedCmd = `
-		SELECT id,
-			   title,
-			   description,
-			   media_source,
-			   media_source_color,
-			   n_likes,
-			   true AS liked,
-			   pins.author_id
-		FROM pins
-			JOIN pin_likes ON pins.id = pin_likes.pin_id AND pin_likes.author_id = $1
-		ORDER BY pin_likes.created_at DESC 
-		LIMIT $2 OFFSET $3;`
+	SELECT p.id,
+		   p.title,
+		   p.description,
+		   p.media_source,
+		   p.media_source_color,
+		   p.n_likes,
+		   true AS liked,
+		   u.id,
+		   u.username,
+		   u.name,
+		   u.profile_image,
+		   u.website_url
+	FROM pins p
+			 JOIN pin_likes pl ON p.id = pl.pin_id AND pl.author_id = $1
+			 JOIN users u ON p.author_id = u.id
+	ORDER BY pl.created_at DESC
+	LIMIT $2 OFFSET $3;`
 
 func (repo *repository) ListLiked(userID int, page, limit int) ([]models.Pin, error) {
 	rows, err := repo.db.Query(listLikedCmd, userID, limit, (page-1)*limit)
@@ -259,11 +304,11 @@ func (repo *repository) ListLiked(userID int, page, limit int) ([]models.Pin, er
 
 	pins := []models.Pin{}
 	pin := models.Pin{}
-	var title, description, mediaSource sql.NullString
+	var title, description, mediaSource, profileImage, websiteUrl sql.NullString
 
 	for rows.Next() {
 		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes, &pin.Liked,
-			&pin.Author)
+			&pin.Author.Id, &pin.Author.Username, &pin.Author.Name, &profileImage, &websiteUrl)
 		if err != nil {
 			repo.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", listLikedCmd),
 				zap.Int("page", page), zap.Int("limit", limit))
@@ -273,6 +318,8 @@ func (repo *repository) ListLiked(userID int, page, limit int) ([]models.Pin, er
 		pin.Title = title.String
 		pin.Description = description.String
 		pin.MediaSource = mediaSource.String
+		pin.Author.ProfileImage = profileImage.String
+		pin.Author.WebsiteUrl = websiteUrl.String
 		pins = append(pins, pin)
 	}
 
@@ -287,16 +334,11 @@ const fullUpdateCmd = `
 		RETURNING id, title, description, media_source, media_source_color, author_id;`
 
 func (repo *repository) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin, error) {
-	row := repo.db.QueryRow(fullUpdateCmd,
-		params.Title,
-		params.Description,
-		params.Id,
-	)
-
-	retrievedPin := models.Pin{}
+	var pin models.Pin
+	var authorID int
 	var title, description, mediaSource sql.NullString
-	err := row.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.MediaSourceColor,
-		&retrievedPin.Author)
+	err := repo.db.QueryRow(fullUpdateCmd, params.Title, params.Description, params.Id).
+		Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &authorID)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return models.Pin{}, errors.Wrap(pkgErrors.ErrPinNotFound, err.Error())
@@ -304,11 +346,17 @@ func (repo *repository) FullUpdate(params *pkgPins.FullUpdateParams) (models.Pin
 			return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
 	}
+	pin.Title = title.String
+	pin.Description = description.String
+	pin.MediaSource = mediaSource.String
 
-	retrievedPin.Title = title.String
-	retrievedPin.Description = description.String
-	retrievedPin.MediaSource = mediaSource.String
-	return retrievedPin, nil
+	author, err := repo.getAuthor(authorID)
+	if err != nil {
+		return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
+
+	pin.Author = *author
+	return pin, nil
 }
 
 const deleteCmd = `
@@ -358,4 +406,24 @@ func (repo *repository) CheckWriteAccess(userId, pinId string) (bool, error) {
 
 func (repo *repository) CheckReadAccess(userId, pinId string) (bool, error) {
 	return true, nil
+}
+
+const getAuthorCmd = `
+	SELECT id, username, name, profile_image, website_url
+	FROM users
+	WHERE id = $1;`
+
+func (repo *repository) getAuthor(authorID int) (*models.Profile, error) {
+	author := &models.Profile{}
+	var profileImage, websiteUrl sql.NullString
+
+	err := repo.db.QueryRow(getAuthorCmd, authorID).
+		Scan(&author.Id, &author.Username, &author.Name, &profileImage, &websiteUrl)
+	if err != nil {
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
+
+	author.ProfileImage = profileImage.String
+	author.WebsiteUrl = websiteUrl.String
+	return author, nil
 }

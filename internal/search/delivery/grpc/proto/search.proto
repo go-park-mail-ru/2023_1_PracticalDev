@@ -6,41 +6,41 @@ option go_package = "./;search";
 package search;
 
 message Query {
-    string query = 1;
+  string query = 1;
 }
 
 message Pin {
-    int64 Id = 1;
-	string Title = 2;
-	string Description = 3;
-	string MediaSource = 4;
-	int64 NumLikes= 5;
-	bool Liked = 6;
-	int64 Author = 7;
+  int64 Id = 1;
+  string Title = 2;
+  string Description = 3;
+  string MediaSource = 4;
+  int64 NumLikes = 5;
+  bool Liked = 6;
+  Profile Author = 7;
 }
 
 message Board {
-	int64 Id = 1;
-	string Name = 2;
-	string Description = 3;
-	string Privacy = 4;
-	int64 UserId = 5;
+  int64 Id = 1;
+  string Name = 2;
+  string Description = 3;
+  string Privacy = 4;
+  int64 UserId = 5;
 }
 
 message Profile {
-	int64 Id = 1;
-    string Username = 2;
-    string Name = 3;
-    string ProfileImage = 4;
-    string WebsiteUrl = 5;
+  int64 Id = 1;
+  string Username = 2;
+  string Name = 3;
+  string ProfileImage = 4;
+  string WebsiteUrl = 5;
 }
 
 message QueryResult {
-    repeated Profile Users = 1;
-    repeated Board Boards = 2;
-    repeated Pin Pins = 3;
+  repeated Profile Users = 1;
+  repeated Board Boards = 2;
+  repeated Pin Pins = 3;
 }
 
 service SearchEngine {
-    rpc Get (Query) returns (QueryResult) {}
+  rpc Get (Query) returns (QueryResult) {}
 }

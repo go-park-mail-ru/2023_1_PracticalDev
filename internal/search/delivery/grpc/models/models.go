@@ -16,17 +16,23 @@ func NewQuery(q *proto.Query) string {
 }
 
 func NewProtoQueryResult(q *models.SearchRes) *proto.QueryResult {
-	pins := make([]*proto.Pin, 0)
-	for _, pin := range q.Pins {
-		pins = append(pins, &proto.Pin{
+	pins := make([]*proto.Pin, len(q.Pins))
+	for i, pin := range q.Pins {
+		pins[i] = &proto.Pin{
 			Id:          int64(pin.Id),
 			Title:       pin.Title,
 			Description: pin.Description,
 			MediaSource: pin.MediaSource,
 			NumLikes:    int64(pin.NumLikes),
 			Liked:       pin.Liked,
-			Author:      int64(pin.Author),
-		})
+			Author: &proto.Profile{
+				Id:           int64(pin.Author.Id),
+				Username:     pin.Author.Username,
+				Name:         pin.Author.Name,
+				ProfileImage: pin.Author.ProfileImage,
+				WebsiteUrl:   pin.Author.WebsiteUrl,
+			},
+		}
 	}
 	boards := make([]*proto.Board, 0)
 	for _, board := range q.Boards {
@@ -56,17 +62,23 @@ func NewProtoQueryResult(q *models.SearchRes) *proto.QueryResult {
 }
 
 func NewQueryResult(q *proto.QueryResult) *models.SearchRes {
-	pins := make([]models.Pin, 0)
-	for _, pin := range q.Pins {
-		pins = append(pins, models.Pin{
+	pins := make([]models.Pin, len(q.Pins))
+	for i, pin := range q.Pins {
+		pins[i] = models.Pin{
 			Id:          int(pin.Id),
 			Title:       pin.Title,
 			Description: pin.Description,
 			MediaSource: pin.MediaSource,
 			NumLikes:    int(pin.NumLikes),
 			Liked:       pin.Liked,
-			Author:      int(pin.Author),
-		})
+			Author: models.Profile{
+				Id:           int(pin.Author.Id),
+				Username:     pin.Author.Username,
+				Name:         pin.Author.Name,
+				ProfileImage: pin.Author.ProfileImage,
+				WebsiteUrl:   pin.Author.WebsiteUrl,
+			},
+		}
 	}
 	boards := make([]models.Board, 0)
 	for _, board := range q.Boards {

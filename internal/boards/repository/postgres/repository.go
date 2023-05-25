@@ -248,47 +248,47 @@ func (rep *repository) AddPin(boardId, pinId int) error {
 	return nil
 }
 
-const pinsListCmd = `SELECT pins.id, title, description, media_source, media_source_color, author_id 
-						FROM pins 
-						JOIN boards_pins AS b
-						ON b.board_id = $1 AND b.pin_id = pins.id
-						ORDER BY created_at DESC 
-						LIMIT $2 OFFSET $3;`
+const pinsListCmd = `
+	SELECT p.id,
+		   p.title,
+		   p.description,
+		   p.media_source,
+		   p.media_source_color,
+		   p.n_likes,
+		   u.id,
+		   u.username,
+		   u.name,
+		   u.profile_image,
+		   u.website_url
+	FROM pins p
+			 JOIN boards_pins AS bp ON bp.board_id = $1 AND bp.pin_id = p.id
+			 JOIN users u ON p.author_id = u.id
+	ORDER BY created_at DESC
+	LIMIT $2 OFFSET $3;`
 
 func (rep *repository) PinsList(boardId int, page, limit int) ([]models.Pin, error) {
-	const fnPinsList = "PinsList"
-
 	rows, err := rep.db.Query(pinsListCmd, boardId, limit, (page-1)*limit)
 	if err != nil {
-		return nil, errors.Wrap(pkgErrors.ErrDb,
-			pkgErrors.ErrRepositoryQuery{
-				Func:   fnPinsList,
-				Query:  pinsListCmd,
-				Params: []any{boardId, limit, (page - 1) * limit},
-				Err:    err,
-			}.Error())
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 
 	var pins []models.Pin
-	retrievedPin := models.Pin{}
-	var title, description, mediaSource sql.NullString
+	pin := models.Pin{}
+	var title, description, mediaSource, profileImage, websiteUrl sql.NullString
 
 	for rows.Next() {
-		err = rows.Scan(&retrievedPin.Id, &title, &description, &mediaSource, &retrievedPin.MediaSourceColor,
-			&retrievedPin.Author)
+		err = rows.Scan(&pin.Id, &title, &description, &mediaSource, &pin.MediaSourceColor, &pin.NumLikes,
+			&pin.Author.Id, &pin.Author.Username, &pin.Author.Name, &profileImage, &websiteUrl)
 		if err != nil {
-			return nil, errors.Wrap(pkgErrors.ErrDb,
-				pkgErrors.ErrRepositoryQuery{
-					Func:   fnPinsList,
-					Query:  pinsListCmd,
-					Params: []any{boardId, limit, (page - 1) * limit},
-					Err:    err,
-				}.Error())
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 		}
-		retrievedPin.Title = title.String
-		retrievedPin.Description = description.String
-		retrievedPin.MediaSource = mediaSource.String
-		pins = append(pins, retrievedPin)
+
+		pin.Title = title.String
+		pin.Description = description.String
+		pin.MediaSource = mediaSource.String
+		pin.Author.ProfileImage = profileImage.String
+		pin.Author.WebsiteUrl = websiteUrl.String
+		pins = append(pins, pin)
 	}
 
 	return pins, nil

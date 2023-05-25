@@ -9,12 +9,12 @@ import (
 
 // API responses
 type createResponse struct {
-	Id               int    `json:"id"`
-	Title            string `json:"title"`
-	Description      string `json:"description"`
-	MediaSource      string `json:"media_source"`
-	MediaSourceColor string `json:"media_source_color"`
-	Author           int    `json:"author_id"`
+	Id               int            `json:"id"`
+	Title            string         `json:"title"`
+	Description      string         `json:"description"`
+	MediaSource      string         `json:"media_source"`
+	MediaSourceColor string         `json:"media_source_color"`
+	Author           models.Profile `json:"author"`
 }
 
 func newCreateResponse(pin *models.Pin) *createResponse {
@@ -44,14 +44,14 @@ func newListResponse(pins []models.Pin) *listResponse {
 }
 
 type getResponse struct {
-	Id               int    `json:"id"`
-	Title            string `json:"title"`
-	Description      string `json:"description"`
-	MediaSource      string `json:"media_source"`
-	MediaSourceColor string `json:"media_source_color"`
-	NumLikes         int    `json:"n_likes"`
-	Liked            bool   `json:"liked"`
-	Author           int    `json:"author_id"`
+	Id               int            `json:"id"`
+	Title            string         `json:"title"`
+	Description      string         `json:"description"`
+	MediaSource      string         `json:"media_source"`
+	MediaSourceColor string         `json:"media_source_color"`
+	NumLikes         int            `json:"n_likes"`
+	Liked            bool           `json:"liked"`
+	Author           models.Profile `json:"author"`
 }
 
 func newGetResponse(pin *models.Pin) *getResponse {
@@ -68,12 +68,12 @@ func newGetResponse(pin *models.Pin) *getResponse {
 }
 
 type fullUpdateResponse struct {
-	Id               int    `json:"id"`
-	Title            string `json:"title"`
-	Description      string `json:"description"`
-	MediaSource      string `json:"media_source"`
-	MediaSourceColor string `json:"media_source_color"`
-	Author           int    `json:"author_id"`
+	Id               int            `json:"id"`
+	Title            string         `json:"title"`
+	Description      string         `json:"description"`
+	MediaSource      string         `json:"media_source"`
+	MediaSourceColor string         `json:"media_source_color"`
+	Author           models.Profile `json:"author"`
 }
 
 func newFullUpdateResponse(pin *models.Pin) *fullUpdateResponse {
