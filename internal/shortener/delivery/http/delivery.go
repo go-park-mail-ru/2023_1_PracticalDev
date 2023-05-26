@@ -23,7 +23,7 @@ func RegisterGetHandler(mux *httprouter.Router, logger *zap.Logger, serv shorten
 func RegisterPostHandler(mux *httprouter.Router, logger *zap.Logger, authorizer mw.Authorizer, csrf mw.CSRFMiddleware, serv shortener.ShortenerService, m *mw.HttpMetricsMiddleware) {
 	del := delivery{serv, logger}
 
-	mux.POST("/share/pin/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(authorizer(csrf(del.createPin))), logger), logger), logger))
+	mux.POST("/share/pin/:id", mw.HandleLogger(mw.ErrorHandler(m.MetricsMiddleware(mw.Cors(del.createPin), logger), logger), logger))
 }
 
 type delivery struct {

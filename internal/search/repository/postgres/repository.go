@@ -3,6 +3,7 @@ package postgres
 import (
 	"database/sql"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/constants"
+	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/utils"
 
 	"github.com/pkg/errors"
 	"go.uber.org/zap"
@@ -60,7 +61,7 @@ const getUsersCmd = `
 						 websearch_to_tsquery('russian', $1)),
 				 ts_rank(to_tsvector(username) || to_tsvector(name), websearch_to_tsquery($1)) DESC;`
 
-func (rep repository) Get(query string) (models.SearchRes, error) {
+func (rep repository) Search(query string) (models.SearchRes, error) {
 	rows, err := rep.db.Query(getPinsCmd, query)
 	if err != nil {
 		rep.log.Error(constants.DBQueryError, zap.String("sql_query", getPinsCmd),
@@ -132,4 +133,98 @@ func (rep repository) Get(query string) (models.SearchRes, error) {
 	}
 
 	return models.SearchRes{Pins: pins, Boards: boards, Users: users}, nil
+}
+
+const pinsSuggestionsCmd = `
+	SELECT title
+	FROM pins
+	WHERE websearch_to_tsquery('russian', $1) @@ to_tsvector('russian', title)
+	   OR websearch_to_tsquery($1) @@ to_tsvector(title)
+	   OR lower(title) LIKE lower('%' || $1 || '%')
+	ORDER BY ts_rank(to_tsvector('russian', title), websearch_to_tsquery('russian', $1)),
+			 ts_rank(to_tsvector(title), websearch_to_tsquery($1)) DESC;`
+
+const boardsSuggestionsCmd = `
+		SELECT name
+		FROM boards
+		WHERE websearch_to_tsquery('russian', $1) @@ to_tsvector('russian', name)
+		   OR websearch_to_tsquery($1) @@ to_tsvector(name)
+		   OR lower(name) LIKE lower('%' || $1 || '%')
+		ORDER BY ts_rank(to_tsvector('russian', name), websearch_to_tsquery('russian', $1)),
+				 ts_rank(to_tsvector(name), websearch_to_tsquery($1)) DESC;`
+
+const usersSuggestionsCmd = `
+		SELECT username, name
+		FROM users
+		WHERE websearch_to_tsquery('russian', $1) @@ (to_tsvector('russian', username) || to_tsvector('russian', name))
+		   OR websearch_to_tsquery($1) @@ (to_tsvector(username) || to_tsvector(name))
+		   OR lower(username) || lower(name) LIKE lower('%' || $1 || '%')
+		ORDER BY ts_rank(to_tsvector('russian', username) || to_tsvector('russian', name),
+						 websearch_to_tsquery('russian', $1)),
+				 ts_rank(to_tsvector(username) || to_tsvector(name), websearch_to_tsquery($1)) DESC;`
+
+func (rep repository) Suggestions(query string) ([]string, error) {
+	rows, err := rep.db.Query(pinsSuggestionsCmd, query)
+	if err != nil {
+		rep.log.Error(constants.DBQueryError, zap.String("sql_query", pinsSuggestionsCmd),
+			zap.String("search_query", query), zap.Error(err))
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
+
+	suggestions := []string{}
+	var title sql.NullString
+	for rows.Next() {
+		err = rows.Scan(&title)
+		if err != nil {
+			rep.log.Error(constants.DBScanError, zap.String("sql_query", pinsSuggestionsCmd),
+				zap.String("search_query", query), zap.Error(err))
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		}
+
+		suggestions = append(suggestions, title.String)
+	}
+
+	rows, err = rep.db.Query(usersSuggestionsCmd, query)
+	if err != nil {
+		rep.log.Error(constants.DBQueryError, zap.String("sql_query", usersSuggestionsCmd),
+			zap.String("search_query", query), zap.Error(err))
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
+
+	var username, name string
+	for rows.Next() {
+		err = rows.Scan(&username, &name)
+		if err != nil {
+			rep.log.Error(constants.DBScanError, zap.String("sql_query", usersSuggestionsCmd),
+				zap.String("search_query", query), zap.Error(err))
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		}
+
+		suggestions = append(suggestions, username, name)
+	}
+
+	rows, err = rep.db.Query(boardsSuggestionsCmd, query)
+	if err != nil {
+		rep.log.Error(constants.DBQueryError, zap.String("sql_query", boardsSuggestionsCmd),
+			zap.String("search_query", query), zap.Error(err))
+		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+	}
+
+	var boardName string
+	for rows.Next() {
+		err = rows.Scan(&boardName)
+		if err != nil {
+			rep.log.Error(constants.DBScanError, zap.String("sql_query", boardsSuggestionsCmd),
+				zap.String("search_query", query), zap.Error(err))
+			return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		}
+
+		suggestions = append(suggestions, boardName)
+	}
+
+	suggestions = utils.RemoveDuplicates(suggestions)
+	if len(suggestions) < 10 {
+		return suggestions, nil
+	}
+	return suggestions[:10], nil
 }

@@ -5,5 +5,6 @@ import (
 )
 
 type Repository interface {
-	Get(query string) (models.SearchRes, error)
+	Search(query string) (models.SearchRes, error)
+	Suggestions(query string) ([]string, error)
 }

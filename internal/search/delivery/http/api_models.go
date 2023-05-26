@@ -36,3 +36,11 @@ func newSearchResponse(searchRes *models.SearchRes) *searchResponse {
 		Users:  searchRes.Users,
 	}
 }
+
+type suggestionsResponse struct {
+	Items []string `json:"items"`
+}
+
+func newSuggestionsResponse(suggestions []string) *suggestionsResponse {
+	return &suggestionsResponse{Items: suggestions}
+}

@@ -15,8 +15,8 @@ func NewService(rep pkgSearch.Repository, serv pkgPins.Service) pkgSearch.Servic
 	return &service{rep, serv}
 }
 
-func (serv service) Get(userId int, query string) (models.SearchRes, error) {
-	res, err := serv.rep.Get(query)
+func (serv *service) Search(userId int, query string) (models.SearchRes, error) {
+	res, err := serv.rep.Search(query)
 	if err != nil {
 		return res, err
 	}
@@ -29,4 +29,8 @@ func (serv service) Get(userId int, query string) (models.SearchRes, error) {
 	}
 
 	return res, nil
+}
+
+func (serv *service) Suggestions(query string) ([]string, error) {
+	return serv.rep.Suggestions(query)
 }

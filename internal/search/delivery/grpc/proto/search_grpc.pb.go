@@ -18,7 +18,8 @@ const _ = grpc.SupportPackageIsVersion7
 //
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type SearchEngineClient interface {
-	Get(ctx context.Context, in *Query, opts ...grpc.CallOption) (*QueryResult, error)
+	Search(ctx context.Context, in *Query, opts ...grpc.CallOption) (*SearchResult, error)
+	Suggestions(ctx context.Context, in *Query, opts ...grpc.CallOption) (*SuggestionsResult, error)
 }
 
 type searchEngineClient struct {
@@ -29,9 +30,18 @@ func NewSearchEngineClient(cc grpc.ClientConnInterface) SearchEngineClient {
 	return &searchEngineClient{cc}
 }
 
-func (c *searchEngineClient) Get(ctx context.Context, in *Query, opts ...grpc.CallOption) (*QueryResult, error) {
-	out := new(QueryResult)
-	err := c.cc.Invoke(ctx, "/search.SearchEngine/Get", in, out, opts...)
+func (c *searchEngineClient) Search(ctx context.Context, in *Query, opts ...grpc.CallOption) (*SearchResult, error) {
+	out := new(SearchResult)
+	err := c.cc.Invoke(ctx, "/search.SearchEngine/Search", in, out, opts...)
+	if err != nil {
+		return nil, err
+	}
+	return out, nil
+}
+
+func (c *searchEngineClient) Suggestions(ctx context.Context, in *Query, opts ...grpc.CallOption) (*SuggestionsResult, error) {
+	out := new(SuggestionsResult)
+	err := c.cc.Invoke(ctx, "/search.SearchEngine/Suggestions", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +52,8 @@ func (c *searchEngineClient) Get(ctx context.Context, in *Query, opts ...grpc.Ca
 // All implementations must embed UnimplementedSearchEngineServer
 // for forward compatibility
 type SearchEngineServer interface {
-	Get(context.Context, *Query) (*QueryResult, error)
+	Search(context.Context, *Query) (*SearchResult, error)
+	Suggestions(context.Context, *Query) (*SuggestionsResult, error)
 	mustEmbedUnimplementedSearchEngineServer()
 }
 
@@ -50,8 +61,11 @@ type SearchEngineServer interface {
 type UnimplementedSearchEngineServer struct {
 }
 
-func (UnimplementedSearchEngineServer) Get(context.Context, *Query) (*QueryResult, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method Get not implemented")
+func (UnimplementedSearchEngineServer) Search(context.Context, *Query) (*SearchResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Search not implemented")
+}
+func (UnimplementedSearchEngineServer) Suggestions(context.Context, *Query) (*SuggestionsResult, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method Suggestions not implemented")
 }
 func (UnimplementedSearchEngineServer) mustEmbedUnimplementedSearchEngineServer() {}
 
@@ -66,20 +80,38 @@ func RegisterSearchEngineServer(s grpc.ServiceRegistrar, srv SearchEngineServer)
 	s.RegisterService(&SearchEngine_ServiceDesc, srv)
 }
 
-func _SearchEngine_Get_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+func _SearchEngine_Search_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
 	in := new(Query)
 	if err := dec(in); err != nil {
 		return nil, err
 	}
 	if interceptor == nil {
-		return srv.(SearchEngineServer).Get(ctx, in)
+		return srv.(SearchEngineServer).Search(ctx, in)
 	}
 	info := &grpc.UnaryServerInfo{
 		Server:     srv,
-		FullMethod: "/search.SearchEngine/Get",
+		FullMethod: "/search.SearchEngine/Search",
 	}
 	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(SearchEngineServer).Get(ctx, req.(*Query))
+		return srv.(SearchEngineServer).Search(ctx, req.(*Query))
+	}
+	return interceptor(ctx, in, info, handler)
+}
+
+func _SearchEngine_Suggestions_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(Query)
+	if err := dec(in); err != nil {
+		return nil, err
+	}
+	if interceptor == nil {
+		return srv.(SearchEngineServer).Suggestions(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/search.SearchEngine/Suggestions",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(SearchEngineServer).Suggestions(ctx, req.(*Query))
 	}
 	return interceptor(ctx, in, info, handler)
 }
@@ -92,8 +124,12 @@ var SearchEngine_ServiceDesc = grpc.ServiceDesc{
 	HandlerType: (*SearchEngineServer)(nil),
 	Methods: []grpc.MethodDesc{
 		{
-			MethodName: "Get",
-			Handler:    _SearchEngine_Get_Handler,
+			MethodName: "Search",
+			Handler:    _SearchEngine_Search_Handler,
+		},
+		{
+			MethodName: "Suggestions",
+			Handler:    _SearchEngine_Suggestions_Handler,
 		},
 	},
 	Streams:  []grpc.StreamDesc{},

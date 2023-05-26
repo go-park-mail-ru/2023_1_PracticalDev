@@ -2,7 +2,6 @@ package client
 
 import (
 	"context"
-
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/models"
 	pkgPins "github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pins"
 	"github.com/go-park-mail-ru/2023_1_PracticalDev/internal/pkg/errors"
@@ -25,11 +24,12 @@ func NewSearchClient(con *grpc.ClientConn, pinServ pkgPins.Service) search.Servi
 	}
 }
 
-func (c *client) Get(userId int, query string) (models.SearchRes, error) {
+func (c *client) Search(userId int, query string) (models.SearchRes, error) {
 	q := grpcModels.NewProtoQuery(query)
 
-	resp, err := c.searchClient.Get(context.TODO(), q)
-	res := *grpcModels.NewQueryResult(resp)
+	resp, err := c.searchClient.Search(context.TODO(), q)
+
+	res := *grpcModels.NewSearchResult(resp)
 	if err != nil {
 		return res, errors.RestoreHTTPError(errors.GRPCUnwrapper(err))
 	}
@@ -42,4 +42,16 @@ func (c *client) Get(userId int, query string) (models.SearchRes, error) {
 	}
 
 	return res, nil
+}
+
+func (c *client) Suggestions(query string) ([]string, error) {
+	q := grpcModels.NewProtoQuery(query)
+
+	resp, err := c.searchClient.Suggestions(context.TODO(), q)
+
+	if err != nil {
+		return nil, errors.RestoreHTTPError(errors.GRPCUnwrapper(err))
+	}
+
+	return grpcModels.NewSuggestionsResult(resp), nil
 }

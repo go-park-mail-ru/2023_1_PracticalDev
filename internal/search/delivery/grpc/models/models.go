@@ -15,7 +15,7 @@ func NewQuery(q *proto.Query) string {
 	return q.Query
 }
 
-func NewProtoQueryResult(q *models.SearchRes) *proto.QueryResult {
+func NewProtoSearchResult(q *models.SearchRes) *proto.SearchResult {
 	pins := make([]*proto.Pin, len(q.Pins))
 	for i, pin := range q.Pins {
 		pins[i] = &proto.Pin{
@@ -54,14 +54,14 @@ func NewProtoQueryResult(q *models.SearchRes) *proto.QueryResult {
 			WebsiteUrl:   user.WebsiteUrl,
 		})
 	}
-	return &proto.QueryResult{
+	return &proto.SearchResult{
 		Pins:   pins,
 		Boards: boards,
 		Users:  users,
 	}
 }
 
-func NewQueryResult(q *proto.QueryResult) *models.SearchRes {
+func NewSearchResult(q *proto.SearchResult) *models.SearchRes {
 	pins := make([]models.Pin, len(q.Pins))
 	for i, pin := range q.Pins {
 		pins[i] = models.Pin{
@@ -105,4 +105,12 @@ func NewQueryResult(q *proto.QueryResult) *models.SearchRes {
 		Boards: boards,
 		Pins:   pins,
 	}
+}
+
+func NewProtoSuggestionsResult(suggestions []string) *proto.SuggestionsResult {
+	return &proto.SuggestionsResult{Items: suggestions}
+}
+
+func NewSuggestionsResult(q *proto.SuggestionsResult) []string {
+	return q.Items
 }

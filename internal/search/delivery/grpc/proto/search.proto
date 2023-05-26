@@ -35,12 +35,17 @@ message Profile {
   string WebsiteUrl = 5;
 }
 
-message QueryResult {
+message SearchResult {
   repeated Profile Users = 1;
   repeated Board Boards = 2;
   repeated Pin Pins = 3;
 }
 
+message SuggestionsResult {
+  repeated string Items = 1;
+}
+
 service SearchEngine {
-  rpc Get (Query) returns (QueryResult) {}
+  rpc Search (Query) returns (SearchResult) {}
+  rpc Suggestions (Query) returns (SuggestionsResult) {}
 }
