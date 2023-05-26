@@ -588,11 +588,29 @@ func TestPinsList(t *testing.T) {
 			prepare: func(f *fields) {
 				f.serv.EXPECT().PinsList(3, 12, 1, 30).Return([]models.Pin{
 					{Id: 1, Title: "t1", MediaSource: "ms_url1", MediaSourceColor: "rgb(39, 102, 120)",
-						Description: "d1", Author: 12},
+						Description: "d1", Author: models.Profile{
+							Id:           12,
+							Username:     "un1",
+							Name:         "n1",
+							ProfileImage: "pi1",
+							WebsiteUrl:   "wu1",
+						}},
 					{Id: 2, Title: "t2", MediaSource: "ms_url2", MediaSourceColor: "rgb(39, 102, 120)",
-						Description: "d2", Author: 10},
+						Description: "d2", Author: models.Profile{
+							Id:           13,
+							Username:     "un2",
+							Name:         "n2",
+							ProfileImage: "pi2",
+							WebsiteUrl:   "wu2",
+						}},
 					{Id: 3, Title: "t3", MediaSource: "ms_url3", MediaSourceColor: "rgb(39, 102, 120)",
-						Description: "d3", Author: 3},
+						Description: "d3", Author: models.Profile{
+							Id:           14,
+							Username:     "un3",
+							Name:         "n3",
+							ProfileImage: "pi3",
+							WebsiteUrl:   "wu3",
+						}},
 				}, nil)
 			},
 			params: []httprouter.Param{
@@ -601,7 +619,7 @@ func TestPinsList(t *testing.T) {
 				{Key: "id", Value: "12"},
 				{Key: "user-id", Value: "3"},
 			},
-			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","media_source_color":"rgb(39, 102, 120)","n_likes":0,"liked":false,"author_id":12},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","media_source_color":"rgb(39, 102, 120)","n_likes":0,"liked":false,"author_id":10},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","media_source_color":"rgb(39, 102, 120)","n_likes":0,"liked":false,"author_id":3}]}`,
+			response: `{"pins":[{"id":1,"title":"t1","description":"d1","media_source":"ms_url1","media_source_color":"rgb(39, 102, 120)","n_likes":0,"liked":false,"author":{"id":12,"username":"un1","name":"n1","profile_image":"pi1","website_url":"wu1"}},{"id":2,"title":"t2","description":"d2","media_source":"ms_url2","media_source_color":"rgb(39, 102, 120)","n_likes":0,"liked":false,"author":{"id":13,"username":"un2","name":"n2","profile_image":"pi2","website_url":"wu2"}},{"id":3,"title":"t3","description":"d3","media_source":"ms_url3","media_source_color":"rgb(39, 102, 120)","n_likes":0,"liked":false,"author":{"id":14,"username":"un3","name":"n3","profile_image":"pi3","website_url":"wu3"}}]}`,
 			err:      nil,
 		},
 		"no pins": {

@@ -37,10 +37,16 @@ func TestDelivery_Create(t *testing.T) {
 					PinID:    21,
 					Text:     "Good pin!",
 				}).Return(models.Comment{
-					ID:       2,
-					AuthorID: 27,
-					PinID:    21,
-					Text:     "Good pin!",
+					ID: 2,
+					Author: models.Profile{
+						Id:           12,
+						Username:     "un1",
+						Name:         "n1",
+						ProfileImage: "pi1",
+						WebsiteUrl:   "wu1",
+					},
+					PinID: 21,
+					Text:  "Good pin!",
 				}, nil)
 			},
 			params: []httprouter.Param{
@@ -48,7 +54,7 @@ func TestDelivery_Create(t *testing.T) {
 				{Key: "id", Value: "21"},
 			},
 			request:  `{"text":"Good pin!"}`,
-			response: `{"id":2,"author_id":27,"pin_id":21,"text":"Good pin!","created_at":"0001-01-01T00:00:00Z"}`,
+			response: `{"id":2,"author":{"id":12,"username":"un1","name":"n1","profile_image":"pi1","website_url":"wu1"},"pin_id":21,"text":"Good pin!","created_at":"0001-01-01T00:00:00Z"}`,
 			err:      nil,
 		},
 		"invalid user id param": {

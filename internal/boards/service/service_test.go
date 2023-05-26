@@ -418,9 +418,30 @@ func TestPinsList(t *testing.T) {
 			prepare: func(f *fields) {
 				gomock.InOrder(
 					f.repo.EXPECT().PinsList(3, 1, 30).Return([]models.Pin{
-						{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
-						{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
-						{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
+						{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1",
+							Author: models.Profile{
+								Id:           12,
+								Username:     "un1",
+								Name:         "n1",
+								ProfileImage: "pi1",
+								WebsiteUrl:   "wu1",
+							}},
+						{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2",
+							Author: models.Profile{
+								Id:           13,
+								Username:     "un2",
+								Name:         "n2",
+								ProfileImage: "pi2",
+								WebsiteUrl:   "wu2",
+							}},
+						{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3",
+							Author: models.Profile{
+								Id:           14,
+								Username:     "un3",
+								Name:         "n3",
+								ProfileImage: "pi3",
+								WebsiteUrl:   "wu3",
+							}},
 					}, nil),
 					f.pinsServ.EXPECT().SetLikedField(gomock.Any(), 10).Return(nil).Times(3),
 				)
@@ -430,9 +451,30 @@ func TestPinsList(t *testing.T) {
 			boardId: 3,
 			userId:  10,
 			pins: []models.Pin{
-				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1", Author: 12},
-				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2", Author: 12},
-				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3", Author: 12},
+				{Id: 1, Title: "t1", MediaSource: "ms_url1", Description: "d1",
+					Author: models.Profile{
+						Id:           12,
+						Username:     "un1",
+						Name:         "n1",
+						ProfileImage: "pi1",
+						WebsiteUrl:   "wu1",
+					}},
+				{Id: 2, Title: "t2", MediaSource: "ms_url2", Description: "d2",
+					Author: models.Profile{
+						Id:           13,
+						Username:     "un2",
+						Name:         "n2",
+						ProfileImage: "pi2",
+						WebsiteUrl:   "wu2",
+					}},
+				{Id: 3, Title: "t3", MediaSource: "ms_url3", Description: "d3",
+					Author: models.Profile{
+						Id:           14,
+						Username:     "un3",
+						Name:         "n3",
+						ProfileImage: "pi3",
+						WebsiteUrl:   "wu3",
+					}},
 			},
 			err: nil,
 		},
