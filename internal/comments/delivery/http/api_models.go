@@ -15,17 +15,17 @@ type createRequest struct {
 
 // API responses
 type createResponse struct {
-	ID        int       `json:"id"`
-	AuthorID  int       `json:"author_id"`
-	PinID     int       `json:"pin_id"`
-	Text      string    `json:"text"`
-	CreatedAt time.Time `json:"created_at"`
+	ID        int            `json:"id"`
+	Author    models.Profile `json:"author"`
+	PinID     int            `json:"pin_id"`
+	Text      string         `json:"text"`
+	CreatedAt time.Time      `json:"created_at"`
 }
 
 func newCreateResponse(comment *models.Comment) *createResponse {
 	return &createResponse{
 		ID:        comment.ID,
-		AuthorID:  comment.AuthorID,
+		Author:    comment.Author,
 		PinID:     comment.PinID,
 		Text:      xss.Sanitize(comment.Text),
 		CreatedAt: comment.CreatedAt,

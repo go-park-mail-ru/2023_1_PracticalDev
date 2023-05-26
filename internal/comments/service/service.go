@@ -26,10 +26,10 @@ func (serv *service) Create(params *pkgComments.CreateParams) (models.Comment, e
 
 	go func(comment models.Comment) {
 		pin, err := serv.pinsRep.Get(comment.PinID)
-		if err == nil && pin.Author.Id != comment.AuthorID {
+		if err == nil && pin.Author.Id != comment.Author.Id {
 			_ = serv.notificationsServ.Create(pin.Author.Id, constants.NewComment, models.NewCommentNotification{
 				PinID:    comment.PinID,
-				AuthorID: comment.AuthorID,
+				AuthorID: comment.Author.Id,
 				Text:     comment.Text,
 			})
 		}

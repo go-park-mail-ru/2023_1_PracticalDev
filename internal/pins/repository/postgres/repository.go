@@ -62,7 +62,7 @@ func (repo *repository) Create(params *pkgPins.CreateParams) (models.Pin, error)
 
 	author, err := repo.getAuthor(authorID)
 	if err != nil {
-		return models.Pin{}, errors.Wrap(pkgErrors.ErrDb, err.Error())
+		return models.Pin{}, err
 	}
 
 	pin.Author = *author
@@ -404,7 +404,7 @@ func (repo *repository) CheckWriteAccess(userId, pinId string) (bool, error) {
 	return access, err
 }
 
-func (repo *repository) CheckReadAccess(userId, pinId string) (bool, error) {
+func (repo *repository) CheckReadAccess(_, _ string) (bool, error) {
 	return true, nil
 }
 
@@ -420,6 +420,8 @@ func (repo *repository) getAuthor(authorID int) (*models.Profile, error) {
 	err := repo.db.QueryRow(getAuthorCmd, authorID).
 		Scan(&author.Id, &author.Username, &author.Name, &profileImage, &websiteUrl)
 	if err != nil {
+		repo.log.Error(constants.DBScanError, zap.Error(err), zap.String("sql_query", getAuthorCmd),
+			zap.Any("author_id", authorID))
 		return nil, errors.Wrap(pkgErrors.ErrDb, err.Error())
 	}
 

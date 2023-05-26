@@ -45,7 +45,7 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalComment
 				in.Delim('[')
 				if out.Items == nil {
 					if !in.IsDelim(']') {
-						out.Items = make([]models.Comment, 0, 1)
+						out.Items = make([]models.Comment, 0, 0)
 					} else {
 						out.Items = []models.Comment{}
 					}
@@ -137,8 +137,8 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels(
 		switch key {
 		case "id":
 			out.ID = int(in.Int())
-		case "author_id":
-			out.AuthorID = int(in.Int())
+		case "author":
+			easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels1(in, &out.Author)
 		case "pin_id":
 			out.PinID = int(in.Int())
 		case "text":
@@ -167,9 +167,9 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels(
 		out.Int(int(in.ID))
 	}
 	{
-		const prefix string = ",\"author_id\":"
+		const prefix string = ",\"author\":"
 		out.RawString(prefix)
-		out.Int(int(in.AuthorID))
+		easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels1(out, in.Author)
 	}
 	{
 		const prefix string = ",\"pin_id\":"
@@ -185,6 +185,76 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels(
 		const prefix string = ",\"created_at\":"
 		out.RawString(prefix)
 		out.Raw((in.CreatedAt).MarshalJSON())
+	}
+	out.RawByte('}')
+}
+func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels1(in *jlexer.Lexer, out *models.Profile) {
+	isTopLevel := in.IsStart()
+	if in.IsNull() {
+		if isTopLevel {
+			in.Consumed()
+		}
+		in.Skip()
+		return
+	}
+	in.Delim('{')
+	for !in.IsDelim('}') {
+		key := in.UnsafeFieldName(false)
+		in.WantColon()
+		if in.IsNull() {
+			in.Skip()
+			in.WantComma()
+			continue
+		}
+		switch key {
+		case "id":
+			out.Id = int(in.Int())
+		case "username":
+			out.Username = string(in.String())
+		case "name":
+			out.Name = string(in.String())
+		case "profile_image":
+			out.ProfileImage = string(in.String())
+		case "website_url":
+			out.WebsiteUrl = string(in.String())
+		default:
+			in.SkipRecursive()
+		}
+		in.WantComma()
+	}
+	in.Delim('}')
+	if isTopLevel {
+		in.Consumed()
+	}
+}
+func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels1(out *jwriter.Writer, in models.Profile) {
+	out.RawByte('{')
+	first := true
+	_ = first
+	{
+		const prefix string = ",\"id\":"
+		out.RawString(prefix[1:])
+		out.Int(int(in.Id))
+	}
+	{
+		const prefix string = ",\"username\":"
+		out.RawString(prefix)
+		out.String(string(in.Username))
+	}
+	{
+		const prefix string = ",\"name\":"
+		out.RawString(prefix)
+		out.String(string(in.Name))
+	}
+	{
+		const prefix string = ",\"profile_image\":"
+		out.RawString(prefix)
+		out.String(string(in.ProfileImage))
+	}
+	{
+		const prefix string = ",\"website_url\":"
+		out.RawString(prefix)
+		out.String(string(in.WebsiteUrl))
 	}
 	out.RawByte('}')
 }
@@ -209,8 +279,8 @@ func easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalComment
 		switch key {
 		case "id":
 			out.ID = int(in.Int())
-		case "author_id":
-			out.AuthorID = int(in.Int())
+		case "author":
+			easyjsonC0ea9389DecodeGithubComGoParkMailRu20231PracticalDevInternalModels1(in, &out.Author)
 		case "pin_id":
 			out.PinID = int(in.Int())
 		case "text":
@@ -239,9 +309,9 @@ func easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalComment
 		out.Int(int(in.ID))
 	}
 	{
-		const prefix string = ",\"author_id\":"
+		const prefix string = ",\"author\":"
 		out.RawString(prefix)
-		out.Int(int(in.AuthorID))
+		easyjsonC0ea9389EncodeGithubComGoParkMailRu20231PracticalDevInternalModels1(out, in.Author)
 	}
 	{
 		const prefix string = ",\"pin_id\":"
