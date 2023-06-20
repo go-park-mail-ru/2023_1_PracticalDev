@@ -2,6 +2,14 @@ CREATE TYPE account_type AS ENUM ('personal', 'business');
 CREATE TYPE privacy AS ENUM ('public', 'secret');
 CREATE TYPE notification_type AS ENUM ('new_pin', 'new_like', 'new_comment', 'new_follower');
 
+
+-- В таблцие хранится информация о пользователях
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
+
 CREATE TABLE IF NOT EXISTS users
 (
     id              serial       NOT NULL PRIMARY KEY,
@@ -14,6 +22,13 @@ CREATE TABLE IF NOT EXISTS users
     account_type    account_type NOT NULL
 );
 
+-- Таблица хранит информацию о досках (коллекции пинов)
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
+
 CREATE TABLE IF NOT EXISTS boards
 (
     id          serial       NOT NULL PRIMARY KEY,
@@ -22,6 +37,13 @@ CREATE TABLE IF NOT EXISTS boards
     privacy     privacy      NOT NULL,
     user_id     int          NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
+
+-- Таблциа хранит информацию о пинах
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов      +
+-- 2NF: В таблице отсутствуют частичные зависимости     +
+-- 3NF: В таблице отсутствуют транзитивные зависимости  +
+-- Таблица соответствует 3НФ
 
 CREATE TABLE IF NOT EXISTS pins
 (
@@ -36,6 +58,14 @@ CREATE TABLE IF NOT EXISTS pins
     author_id          int       NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
+
+-- Таблциа хранит информацию о лайках
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости + 
+-- Таблица соответствует 3НФ
+
 CREATE TABLE IF NOT EXISTS pin_likes
 (
     pin_id     int       NOT NULL REFERENCES pins (id) ON DELETE CASCADE,
@@ -44,12 +74,26 @@ CREATE TABLE IF NOT EXISTS pin_likes
     PRIMARY KEY (pin_id, author_id)
 );
 
+-- Таблциа хранит информацию о том, какие пины относятся к доске
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
+
 CREATE TABLE IF NOT EXISTS boards_pins
 (
     board_id int NOT NULL REFERENCES boards (id) ON DELETE CASCADE,
     pin_id   int NOT NULL REFERENCES pins (id) ON DELETE CASCADE,
     PRIMARY KEY (board_id, pin_id)
 );
+
+-- Таблциа хранит информацию о комментариях к пинам
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
 
 CREATE TABLE IF NOT EXISTS comments
 (
@@ -60,13 +104,12 @@ CREATE TABLE IF NOT EXISTS comments
     created_at timestamp NOT NULL DEFAULT now()
 );
 
-CREATE TABLE IF NOT EXISTS comment_likes
-(
-    comment_id int       NOT NULL REFERENCES comments (id) ON DELETE CASCADE,
-    author_id  int       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
-    created_at timestamp NOT NULL DEFAULT now(),
-    PRIMARY KEY (comment_id, author_id)
-);
+-- Таблциа хранит информацию о подписках на пользователей
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
 
 CREATE TABLE IF NOT EXISTS followings
 (
@@ -75,6 +118,13 @@ CREATE TABLE IF NOT EXISTS followings
     created_at  timestamp NOT NULL DEFAULT now(),
     PRIMARY KEY (followee_id, follower_id)
 );
+
+-- Таблциа хранит информацию о чатах
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
 
 CREATE TABLE IF NOT EXISTS chats
 (
@@ -86,6 +136,13 @@ CREATE TABLE IF NOT EXISTS chats
     CONSTRAINT chats_user_pair UNIQUE (user1_id, user2_id)
 );
 
+-- Таблциа хранит информацию о сообщениях
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
+
 CREATE TABLE IF NOT EXISTS messages
 (
     id         serial    NOT NULL PRIMARY KEY,
@@ -94,6 +151,13 @@ CREATE TABLE IF NOT EXISTS messages
     text       text      NOT NULL,
     created_at timestamp NOT NULL DEFAULT now()
 );
+
+-- Таблциа хранит информацию о уведомлениях всех типов
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
 
 CREATE TABLE IF NOT EXISTS notifications
 (
@@ -104,11 +168,25 @@ CREATE TABLE IF NOT EXISTS notifications
     created_at timestamp         NOT NULL DEFAULT now()
 );
 
+-- Таблциа хранит информацию о уведомлениях на публикацию новых пинов
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
+
 CREATE TABLE IF NOT EXISTS new_pin_notifications
 (
     notification_id int NOT NULL REFERENCES notifications (id) ON DELETE CASCADE,
     pin_id          int NOT NULL REFERENCES pins (id) ON DELETE CASCADE
 );
+
+-- Таблциа хранит информацию о уведомлениях на лайк пина
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
 
 CREATE TABLE IF NOT EXISTS new_like_notifications
 (
@@ -117,6 +195,13 @@ CREATE TABLE IF NOT EXISTS new_like_notifications
     author_id       int NOT NULL REFERENCES users (id) ON DELETE CASCADE
 );
 
+-- Таблциа хранит информацию о уведомлениях на новые комментарии
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
+
 CREATE TABLE IF NOT EXISTS new_comment_notifications
 (
     notification_id int  NOT NULL REFERENCES notifications (id) ON DELETE CASCADE,
@@ -124,6 +209,14 @@ CREATE TABLE IF NOT EXISTS new_comment_notifications
     author_id       int  NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     text            text NOT NULL
 );
+
+
+-- Таблциа хранит информацию о уведомлениях на новые подписки
+-- Нормализация
+-- 1NF: Таблица не содержит многозначных атрибутов     +
+-- 2NF: В таблице отсутствуют частичные зависимости    +
+-- 3NF: В таблице отсутствуют транзитивные зависимости +
+-- Таблица соответствует 3НФ
 
 CREATE TABLE IF NOT EXISTS new_follower_notifications
 (
@@ -202,3 +295,4 @@ CREATE OR REPLACE TRIGGER new_follower_notification_delete
     ON new_follower_notifications
     FOR EACH ROW
 EXECUTE PROCEDURE on_specific_notification_delete();
+
