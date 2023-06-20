@@ -43,7 +43,7 @@ func DefaultGRPCSearchConfig() {
 	setGRPCServiceConfig("search", "0.0.0.0", 8089, 10, "search")
 	setupMetricsConfig("0.0.0.0:9004")
 
-	DefaultPostgresConfig()
+	DefaultSearchPostgresConfig()
 	DefaultConsulConfig()
 }
 

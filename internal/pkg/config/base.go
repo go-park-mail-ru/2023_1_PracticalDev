@@ -48,6 +48,22 @@ var PostgresConfig = struct {
 	SSLMode:  "POSTGRES_SSL",
 }
 
+var SearchPostgresConfig = struct {
+	Host     string
+	Port     string
+	DB       string
+	User     string
+	Password string
+	SSLMode  string
+}{
+	Host:     "PGHOST",
+	Port:     "PGPORT",
+	DB:       "POSTGRES_DB",
+	User:     "POSTGRES_USER",
+	Password: "POSTGRES_PASSWORD",
+	SSLMode:  "POSTGRES_SSL",
+}
+
 var RedisConfig = struct {
 	Host     string
 	Port     string

@@ -10,9 +10,9 @@ else
 docker run --rm \
     -e PGPASSWORD=pickpinpswd \
     --network=$network \
-    -v $(pwd)/scripts/migrations/:/scripts/migrations/ \
+    -v $(pwd)/scripts/:/scripts/ \
     postgres \
-      psql -h db -U pickpin -d pickpindb -f ./scripts/migrations/init.sql
+      psql -h db -U pickpin -d pickpindb -f ./scripts/migrations/init.sql -f ./scripts/db_conf/init_user.sql
 fi
 
 
