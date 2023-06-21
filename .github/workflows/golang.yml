@@ -40,9 +40,6 @@ jobs:
       - name: Start DB
         run: mkdir -m 777 ./logs && mkdir -m 777 ./logs/postgres  && make db && ./scripts/check_db_available.sh
 
-      - name: Populate DB with test data
-        run: ././scripts/populate_db.sh
-        
       - name: Run unit tests
         run: make unit-test
 
