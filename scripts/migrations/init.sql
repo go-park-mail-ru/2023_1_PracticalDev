@@ -14,7 +14,7 @@ CREATE TABLE IF NOT EXISTS users
 (
     id              serial       NOT NULL PRIMARY KEY,
     username        text         NOT NULL,
-    email           text         NOT NULL UNIQUE,
+    email           text         NOT NULL UNIQUE, -- идентификация пользователя происходит по email
     hashed_password bytea        NOT NULL,
     name            varchar(256) NOT NULL,
     profile_image   varchar,
@@ -133,7 +133,7 @@ CREATE TABLE IF NOT EXISTS chats
     user2_id   int       NOT NULL REFERENCES users (id) ON DELETE CASCADE,
     created_at timestamp NOT NULL DEFAULT now(),
     updated_at timestamp NOT NULL DEFAULT now(),
-    CONSTRAINT chats_user_pair UNIQUE (user1_id, user2_id)
+    CONSTRAINT chats_user_pair UNIQUE (user1_id, user2_id) -- чат между двумя пользователями только один
 );
 
 -- Таблциа хранит информацию о сообщениях
