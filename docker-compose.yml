@@ -24,11 +24,18 @@ services:
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     volumes:
-      - ./configs/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./configs/postgresql-prod.conf:/etc/postgresql/postgresql.conf
+      - ./logs/postgres:/var/log/postgresql
+      - ./scripts/migrations/init.sql:/docker-entrypoint-initdb.d/1.sql
+      - ./scripts/db_conf/init_user.sql:/docker-entrypoint-initdb.d/2.sql
+      - ./scripts/migrations/test_data.sql:/docker-entrypoint-initdb.d/3.sql
+      - ./scripts/copy_hba.sh:/docker-entrypoint-initdb.d/4.sh
+      - ./configs/pg_hba.conf:/configs/pg_hba.conf
     ports:
       - "5432:5432"
     networks:
-      - db-network
+      db-network:
+        ipv4_address: 172.32.0.5
     deploy:
       restart_policy:
         condition: on-failure
@@ -79,10 +86,11 @@ services:
       - shortener
       - consul
     networks:
-      - nginx-network
-      - db-network
-      - redis-network
-      - api-network
+        db-network:
+            ipv4_address: 172.32.0.6
+        nginx-network: {}
+        redis-network: {}
+        api-network: {}
     deploy:
       restart_policy:
         condition: on-failure
@@ -119,9 +127,10 @@ services:
     volumes:
       - ./configs/auth:/src/configs
     networks:
-      - api-network
-      - db-network
-      - redis-network
+        db-network:
+            ipv4_address: 172.32.0.7
+        api-network: {}
+        redis-network: {}
 
   search:
     build:
@@ -136,8 +145,10 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - api-network
-      - db-network
+        db-network:
+            ipv4_address: 172.32.0.8
+        api-network: {}
+ 
   
   shortener:
     build:
@@ -256,8 +267,11 @@ networks:
     driver: bridge
     name: nginx_network
   db-network:
-    driver: bridge
     name: db_network
+    driver: bridge
+    ipam:
+        config:
+            - subnet: 172.32.0.0/24
   redis-network:
     driver: bridge
     name: redis_network

@@ -84,3 +84,7 @@ push-images: build-images
 .PHONY: pull-images
 pull-images:
 	./scripts/pull_images.sh
+
+# postgres reports
+generate-pg-reports:
+	./scripts/gen_pg_reports.sh

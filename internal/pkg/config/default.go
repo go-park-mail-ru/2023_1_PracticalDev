@@ -22,7 +22,16 @@ func DefaultPostgresConfig() {
 	viper.Set(PostgresConfig.Host, "db")
 	viper.Set(PostgresConfig.Port, 5432)
 	viper.Set(PostgresConfig.DB, "pickpindb")
-	viper.Set(PostgresConfig.User, "pickpin")
+	viper.Set(PostgresConfig.User, "pickpin_main")
+	viper.Set(PostgresConfig.Password, "pickpinpswd")
+	viper.Set(PostgresConfig.SSLMode, "disable")
+}
+
+func DefaultSearchPostgresConfig() {
+	viper.Set(PostgresConfig.Host, "db")
+	viper.Set(PostgresConfig.Port, 5432)
+	viper.Set(PostgresConfig.DB, "pickpindb")
+	viper.Set(PostgresConfig.User, "pickpin_search")
 	viper.Set(PostgresConfig.Password, "pickpinpswd")
 	viper.Set(PostgresConfig.SSLMode, "disable")
 }
