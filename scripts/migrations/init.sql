@@ -296,3 +296,37 @@ CREATE OR REPLACE TRIGGER new_follower_notification_delete
     FOR EACH ROW
 EXECUTE PROCEDURE on_specific_notification_delete();
 
+
+-- Indexes
+
+-- Pins
+CREATE INDEX IF NOT EXISTS pins_author_id_fk ON pins(author_id);
+
+-- Boards
+CREATE INDEX IF NOT EXISTS boards_user_id_fk ON boards(user_id);
+
+-- Followings
+CREATE INDEX IF NOT EXISTS followings_follower_id_fk ON followings(follower_id);
+CREATE INDEX IF NOT EXISTS followings_followee_id_fk ON followings(followee_id);
+
+-- Comments
+CREATE INDEX IF NOT EXISTS comments_pin_id_fk ON comments(pin_id);
+
+-- Likes
+CREATE INDEX IF NOT EXISTS likes_author_id_fk on pin_likes(author_id);
+
+-- Notifications
+CREATE INDEX IF NOT EXISTS notifications_user_id_fk on notifications(user_id);
+
+-- Chats
+CREATE INDEX IF NOT EXISTS messages_chat_id_fk on messages(chat_id);
+
+-- User search
+CREATE INDEX IF NOT EXISTS user_search_by_username ON users(lower(username));
+CREATE INDEX IF NOT EXISTS user_search_by_name ON users(lower(name));
+
+-- Board search
+CREATE INDEX IF NOT EXISTS board_search ON boards(lower(name));
+
+-- Pin search
+CREATE INDEX IF NOT EXISTS pin_search ON pins(lower(title));
