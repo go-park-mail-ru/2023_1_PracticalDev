@@ -28,3 +28,6 @@ go.work
 
 # grafana stash
 configs/grafana/data
+
+# Logs
+logs

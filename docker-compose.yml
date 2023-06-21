@@ -24,12 +24,18 @@ services:
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     volumes:
-      - ./logs/postgres:/var/log/postgresql
-      - ./configs/postgresql.conf:/etc/postgresql/postgresql.conf
+      - ./configs/postgresql-prod.conf:/etc/postgresql/postgresql.conf
+      - ./logs:/var/log/postgresql
+      - ./scripts/migrations/init.sql:/docker-entrypoint-initdb.d/1.sql
+      - ./scripts/db_conf/init_user.sql:/docker-entrypoint-initdb.d/2.sql
+      - ./scripts/migrations/test_data.sql:/docker-entrypoint-initdb.d/3.sql
+      - ./scripts/copy_hba.sh:/docker-entrypoint-initdb.d/4.sh
+      - ./configs/pg_hba.conf:/configs/pg_hba.conf
     ports:
       - "5432:5432"
     networks:
-      - db-network
+      db-network:
+        ipv4_address: 172.32.0.5
     deploy:
       restart_policy:
         condition: on-failure
