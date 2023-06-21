@@ -24,6 +24,7 @@ services:
       POSTGRES_USER: "${POSTGRES_USER}"
       POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
     volumes:
+      - ./logs:/var/log/postgresql
       - ./configs/postgresql.conf:/etc/postgresql/postgresql.conf
     ports:
       - "5432:5432"
@@ -79,10 +80,11 @@ services:
       - shortener
       - consul
     networks:
-      - nginx-network
-      - db-network
-      - redis-network
-      - api-network
+        db-network:
+            ipv4_address: 172.32.0.6
+        nginx-network: {}
+        redis-network: {}
+        api-network: {}
     deploy:
       restart_policy:
         condition: on-failure
@@ -119,9 +121,10 @@ services:
     volumes:
       - ./configs/auth:/src/configs
     networks:
-      - api-network
-      - db-network
-      - redis-network
+        db-network:
+            ipv4_address: 172.32.0.7
+        api-network: {}
+        redis-network: {}
 
   search:
     build:
@@ -136,8 +139,10 @@ services:
       restart_policy:
         condition: on-failure
     networks:
-      - api-network
-      - db-network
+        db-network:
+            ipv4_address: 172.32.0.8
+        api-network: {}
+ 
   
   shortener:
     build:
@@ -256,8 +261,11 @@ networks:
     driver: bridge
     name: nginx_network
   db-network:
-    driver: bridge
     name: db_network
+    driver: bridge
+    ipam:
+        config:
+            - subnet: 172.32.0.0/24
   redis-network:
     driver: bridge
     name: redis_network
